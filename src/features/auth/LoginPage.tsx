@@ -91,10 +91,10 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-app-bg flex flex-col justify-center items-center p-4">
+    <div className="min-h-screen min-h-[100dvh] bg-app-bg flex flex-col justify-start sm:justify-center items-center p-4 pt-6 sm:pt-4 pb-8 sm:pb-4">
       {/* Brand Header */}
-      <div className="mb-6 text-center">
-        <div className="w-12 h-12 rounded-2xl bg-primary text-white font-bold text-2xl flex items-center justify-center mx-auto mb-3 shadow-raised">
+      <div className="mb-4 sm:mb-6 text-center mt-2 sm:mt-0">
+        <div className="w-12 h-12 rounded-2xl bg-primary text-white font-bold text-2xl flex items-center justify-center mx-auto mb-2.5 sm:mb-3 shadow-raised">
           B
         </div>
         <h1 className="text-2xl font-bold tracking-tight text-text-primary">Billify</h1>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Bell, Settings, LogOut } from 'lucide-react';
 import { BottomNav } from '../components/nav/BottomNav';
 import { ThemeToggle } from '../components/ui/ThemeToggle';
@@ -8,7 +8,9 @@ import { toast } from 'sonner';
 
 export const MobileShell: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const logout = useAuthStore((state) => state.logout);
+  const isNewBill = location.pathname === '/bills/new';
 
   const handleLogout = async () => {
     await logout();
@@ -59,14 +61,13 @@ export const MobileShell: React.FC = () => {
         </div>
       </header>
 
-      {/* Main Content — pb-20 clears bottom nav (64px) + FAB overhang */}
-      {/* A4: Reduced padding from p-4 to p-3 for density */}
+      {/* Main Content — pb-24 clears bottom nav or sticky action bar */}
       <main className="flex-1 p-3 pb-24 overflow-y-auto">
         <Outlet />
       </main>
 
-      {/* A3: Bottom Nav with centered FAB (no separate FloatingActionButton) */}
-      <BottomNav />
+      {/* A3: Bottom Nav with centered FAB (hidden on bill creation to prevent obscuring submit actions) */}
+      {!isNewBill && <BottomNav />}
     </div>
   );
 };

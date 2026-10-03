@@ -495,9 +495,10 @@ export const NewBillPage: React.FC = () => {
               />
             </div>
 
-            {/* Desktop Generate Button */}
-            <div className="hidden lg:block pt-3">
+            {/* Submit Bill Button */}
+            <div className="pt-3">
               <Button
+                id="submit-bill-card"
                 variant="primary"
                 size="lg"
                 className="w-full py-3 text-base shadow-raised"
@@ -506,11 +507,11 @@ export const NewBillPage: React.FC = () => {
                 onClick={() => createBillMutation.mutate()}
               >
                 <CheckCircle2 className="w-5 h-5 mr-2" />
-                Generate Bill ({validItems.length} items)
+                Submit Bill ({validItems.length} {validItems.length === 1 ? 'item' : 'items'})
               </Button>
               {!hasItems && (
                 <p className="text-xs text-center text-text-muted mt-2">
-                  Add at least 1 item with price to generate
+                  Add at least 1 item with price to submit
                 </p>
               )}
               {hasItems && !isPaymentValid && (
@@ -523,15 +524,18 @@ export const NewBillPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Sticky Mobile Bottom Generate Bar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border p-3 px-4 shadow-raised safe-bottom flex items-center justify-between gap-3"
-        style={{ backgroundColor: 'var(--bg-card)' }}>
+      {/* Sticky Mobile Bottom Submit Bar */}
+      <div
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-50 border-t border-border p-3 px-4 shadow-raised safe-bottom flex items-center justify-between gap-3"
+        style={{ backgroundColor: 'var(--bg-card)' }}
+      >
         <div>
           <span className="text-[11px] text-text-muted block">Total Payable</span>
           <Money value={totals.total} size="md" className="font-extrabold text-primary" />
         </div>
 
         <Button
+          id="submit-bill-mobile"
           variant="primary"
           size="md"
           className="flex-1 py-3 text-sm shadow-md"
@@ -540,7 +544,7 @@ export const NewBillPage: React.FC = () => {
           onClick={() => createBillMutation.mutate()}
         >
           <CheckCircle2 className="w-4 h-4 mr-1.5" />
-          Generate Bill
+          Submit Bill
         </Button>
       </div>
 
