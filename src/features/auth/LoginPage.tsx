@@ -11,6 +11,7 @@ import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
 import { getApiErrorMessage } from '../../lib/errors';
+import { checkApiHealth } from '../../lib/apiStatus';
 
 const loginSchema = z.object({
   tenant: z
@@ -31,6 +32,11 @@ export const LoginPage: React.FC = () => {
   const { setTokens, setUser, setTenantSlug, tenantSlug } = useAuthStore();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [backendOnline, setBackendOnline] = useState<boolean | null>(null);
+
+  React.useEffect(() => {
+    checkApiHealth().then((ok) => setBackendOnline(ok));
+  }, []);
 
   const {
     register,
@@ -93,6 +99,12 @@ export const LoginPage: React.FC = () => {
         <h1 className="text-2xl font-bold tracking-tight text-text-primary">Billify</h1>
         <p className="text-xs text-text-muted mt-1">Multi-tenant Retail Billing & POS</p>
       </div>
+
+      {backendOnline === false && (
+        <div className="mb-4 max-w-[400px] w-full p-2.5 rounded-card bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs text-center font-medium">
+          Backend server is currently starting up / under maintenance.
+        </div>
+      )}
 
       <Card className="w-full max-w-[400px] shadow-raised bg-card border-border">
         <div className="mb-6">
