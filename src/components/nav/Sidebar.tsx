@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { navItems } from './navItems';
 import { clsx } from 'clsx';
-import { ChevronLeft, ChevronRight, User } from 'lucide-react';
+import { ChevronLeft, ChevronRight, User, LogOut } from 'lucide-react';
 import { useAuthStore } from '../../stores/auth.store';
+import { toast } from 'sonner';
 
 interface SidebarProps {
   collapsed?: boolean;
@@ -26,6 +27,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
   }, [onToggleCollapse]);
 
   const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await logout();
+    toast.success('Logged out successfully');
+    navigate('/login', { replace: true });
+  };
 
   // Keyboard shortcut: Cmd+\ or Ctrl+\ to toggle collapse
   useEffect(() => {
@@ -121,11 +130,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
       <div className="p-3 border-t border-border">
         <div
           className={clsx(
-            'flex items-center rounded-button bg-slate-50 p-2',
-            isCollapsed ? 'justify-center' : 'space-x-3'
+            'flex items-center rounded-button bg-slate-50 dark:bg-slate-800/60 p-2',
+            isCollapsed ? 'flex-col gap-2' : 'space-x-3'
           )}
         >
-          <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-text-muted shrink-0">
+          <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center text-text-muted shrink-0">
             <User className="w-4 h-4" />
           </div>
           {!isCollapsed && (
@@ -138,6 +147,15 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </p>
             </div>
           )}
+          <button
+            type="button"
+            onClick={handleLogout}
+            title="Log out"
+            aria-label="Log out"
+            className="p-1.5 rounded-lg text-text-muted hover:text-danger hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors shrink-0"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
         </div>
       </div>
     </aside>

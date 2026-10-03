@@ -1,11 +1,20 @@
 import React from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { Bell, Settings } from 'lucide-react';
+import { Bell, Settings, LogOut } from 'lucide-react';
 import { BottomNav } from '../components/nav/BottomNav';
 import { ThemeToggle } from '../components/ui/ThemeToggle';
+import { useAuthStore } from '../stores/auth.store';
+import { toast } from 'sonner';
 
 export const MobileShell: React.FC = () => {
   const navigate = useNavigate();
+  const logout = useAuthStore((state) => state.logout);
+
+  const handleLogout = async () => {
+    await logout();
+    toast.success('Logged out successfully');
+    navigate('/login', { replace: true });
+  };
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--bg-app)', color: 'var(--text-primary)' }}>
@@ -25,7 +34,7 @@ export const MobileShell: React.FC = () => {
           <ThemeToggle />
           <button
             type="button"
-            className="p-2 rounded-full text-text-muted hover:text-text-primary hover:bg-slate-100 transition-colors"
+            className="p-2 rounded-full text-text-muted hover:text-text-primary hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             aria-label="Notifications"
           >
             <Bell className="w-5 h-5" />
@@ -33,10 +42,19 @@ export const MobileShell: React.FC = () => {
           <button
             type="button"
             onClick={() => navigate('/settings')}
-            className="p-2 rounded-full text-text-muted hover:text-text-primary hover:bg-slate-100 transition-colors"
+            className="p-2 rounded-full text-text-muted hover:text-text-primary hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             aria-label="Settings"
           >
             <Settings className="w-5 h-5" />
+          </button>
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="p-2 rounded-full text-text-muted hover:text-danger hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+            aria-label="Log out"
+            title="Log out"
+          >
+            <LogOut className="w-5 h-5" />
           </button>
         </div>
       </header>

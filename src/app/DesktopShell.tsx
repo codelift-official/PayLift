@@ -1,15 +1,24 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Plus } from 'lucide-react';
+import { Plus, LogOut } from 'lucide-react';
 import { Sidebar } from '../components/nav/Sidebar';
 import { ThemeToggle } from '../components/ui/ThemeToggle';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
+import { useAuthStore } from '../stores/auth.store';
+import { toast } from 'sonner';
 import { clsx } from 'clsx';
 
 export const DesktopShell: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const logout = useAuthStore((state) => state.logout);
+
+  const handleLogout = async () => {
+    await logout();
+    toast.success('Logged out successfully');
+    navigate('/login', { replace: true });
+  };
 
   // Activate desktop keyboard shortcuts (N, G+H, G+B, Esc)
   useKeyboardShortcuts();
@@ -52,6 +61,16 @@ export const DesktopShell: React.FC = () => {
           <div className="flex items-center gap-2">
             {/* A6: Theme toggle in desktop header */}
             <ThemeToggle />
+            <button
+              type="button"
+              onClick={handleLogout}
+              title="Log out"
+              aria-label="Log out"
+              className="px-3 py-1.5 rounded-button text-text-muted hover:text-danger hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors flex items-center gap-1.5 text-xs font-semibold border border-transparent hover:border-red-200 dark:hover:border-red-900/40"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="hidden sm:inline">Logout</span>
+            </button>
             <button
               type="button"
               onClick={() => navigate('/bills/new')}
