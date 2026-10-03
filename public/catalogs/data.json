@@ -1,0 +1,694 @@
+{
+  "catalogs": [
+    {
+      "id": "clothing",
+      "name": "Clothing",
+      "icon": "Shirt",
+      "description": "Apparel & fashion items",
+      "categories": [
+        {
+          "id": "shirts",
+          "name": "Shirts",
+          "icon": "Shirt",
+          "products": [
+            {
+              "id": "shirt-001",
+              "name": "Formal Shirt",
+              "defaultPrice": 850,
+              "gstRate": 5,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "shirt-002",
+              "name": "Casual Shirt",
+              "defaultPrice": 650,
+              "gstRate": 5,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "shirt-003",
+              "name": "Check Shirt",
+              "defaultPrice": 750,
+              "gstRate": 5,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            }
+          ],
+          "imageUrl": "/catalogs/images/shirts.webp"
+        },
+        {
+          "id": "tshirts",
+          "name": "T-Shirts",
+          "icon": "ShirtIcon",
+          "products": [
+            {
+              "id": "ts-001",
+              "name": "Round Neck T-Shirt",
+              "defaultPrice": 350,
+              "gstRate": 5,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "ts-002",
+              "name": "Polo T-Shirt",
+              "defaultPrice": 500,
+              "gstRate": 5,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "ts-003",
+              "name": "V-Neck T-Shirt",
+              "defaultPrice": 400,
+              "gstRate": 5,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            }
+          ],
+          "imageUrl": "/catalogs/images/tshirts.webp"
+        },
+        {
+          "id": "jeans",
+          "name": "Jeans",
+          "icon": "Layers",
+          "products": [
+            {
+              "id": "jeans-001",
+              "name": "Slim Fit Jeans",
+              "defaultPrice": 1200,
+              "gstRate": 12,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "jeans-002",
+              "name": "Straight Fit Jeans",
+              "defaultPrice": 1100,
+              "gstRate": 12,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "jeans-003",
+              "name": "Distressed Jeans",
+              "defaultPrice": 1400,
+              "gstRate": 12,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            }
+          ],
+          "imageUrl": "/catalogs/images/jeans.webp"
+        },
+        {
+          "id": "sarees",
+          "name": "Sarees",
+          "icon": "Sparkles",
+          "products": [
+            {
+              "id": "saree-001",
+              "name": "Cotton Saree",
+              "defaultPrice": 800,
+              "gstRate": 5,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "saree-002",
+              "name": "Silk Saree",
+              "defaultPrice": 2500,
+              "gstRate": 5,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "saree-003",
+              "name": "Georgette Saree",
+              "defaultPrice": 1500,
+              "gstRate": 5,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            }
+          ],
+          "imageUrl": "/catalogs/images/sarees.webp"
+        },
+        {
+          "id": "kurtas",
+          "name": "Kurtas",
+          "icon": "User",
+          "products": [
+            {
+              "id": "kurta-001",
+              "name": "Cotton Kurta",
+              "defaultPrice": 600,
+              "gstRate": 5,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "kurta-002",
+              "name": "Silk Kurta",
+              "defaultPrice": 1200,
+              "gstRate": 5,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "kurta-003",
+              "name": "Kurta Set",
+              "defaultPrice": 1800,
+              "gstRate": 5,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            }
+          ],
+          "imageUrl": "/catalogs/images/kurtas.webp"
+        },
+        {
+          "id": "trousers",
+          "name": "Trousers",
+          "icon": "Layers",
+          "products": [
+            {
+              "id": "trouser-001",
+              "name": "Formal Trousers",
+              "defaultPrice": 900,
+              "gstRate": 12,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "trouser-002",
+              "name": "Chinos",
+              "defaultPrice": 1000,
+              "gstRate": 12,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "trouser-003",
+              "name": "Linen Trousers",
+              "defaultPrice": 1100,
+              "gstRate": 12,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            }
+          ],
+          "imageUrl": "/catalogs/images/trousers.webp"
+        }
+      ],
+      "imageUrl": "/catalogs/images/clothing.webp"
+    },
+    {
+      "id": "bakery",
+      "name": "Bakery",
+      "icon": "Cookie",
+      "description": "Baked goods & dairy",
+      "categories": [
+        {
+          "id": "dairy",
+          "name": "Dairy",
+          "icon": "Milk",
+          "products": [
+            {
+              "id": "dairy-001",
+              "name": "Full Cream Milk (1L)",
+              "defaultPrice": 68,
+              "gstRate": 0,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "dairy-002",
+              "name": "Paneer (200g)",
+              "defaultPrice": 80,
+              "gstRate": 5,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "dairy-003",
+              "name": "Curd (400g)",
+              "defaultPrice": 50,
+              "gstRate": 0,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            }
+          ],
+          "imageUrl": "/catalogs/images/dairy.webp"
+        },
+        {
+          "id": "breads",
+          "name": "Breads",
+          "icon": "Wheat",
+          "products": [
+            {
+              "id": "bread-001",
+              "name": "White Bread",
+              "defaultPrice": 45,
+              "gstRate": 0,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "bread-002",
+              "name": "Brown Bread",
+              "defaultPrice": 55,
+              "gstRate": 0,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "bread-003",
+              "name": "Multigrain Bread",
+              "defaultPrice": 70,
+              "gstRate": 0,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            }
+          ],
+          "imageUrl": "/catalogs/images/breads.webp"
+        },
+        {
+          "id": "cakes",
+          "name": "Cakes",
+          "icon": "Cake",
+          "products": [
+            {
+              "id": "cake-001",
+              "name": "Chocolate Cake (500g)",
+              "defaultPrice": 350,
+              "gstRate": 5,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "cake-002",
+              "name": "Vanilla Cake (500g)",
+              "defaultPrice": 300,
+              "gstRate": 5,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "cake-003",
+              "name": "Black Forest Cake (500g)",
+              "defaultPrice": 400,
+              "gstRate": 5,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            }
+          ],
+          "imageUrl": "/catalogs/images/cakes.webp"
+        },
+        {
+          "id": "pastries",
+          "name": "Pastries",
+          "icon": "Cookie",
+          "products": [
+            {
+              "id": "pastry-001",
+              "name": "Chocolate Pastry",
+              "defaultPrice": 80,
+              "gstRate": 5,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "pastry-002",
+              "name": "Fruit Pastry",
+              "defaultPrice": 90,
+              "gstRate": 5,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "pastry-003",
+              "name": "Croissant",
+              "defaultPrice": 60,
+              "gstRate": 5,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            }
+          ],
+          "imageUrl": "/catalogs/images/pastries.webp"
+        },
+        {
+          "id": "snacks-bakery",
+          "name": "Snacks",
+          "icon": "Cookie",
+          "products": [
+            {
+              "id": "snk-b-001",
+              "name": "Khari Biscuit",
+              "defaultPrice": 30,
+              "gstRate": 5,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "snk-b-002",
+              "name": "Rusk (200g)",
+              "defaultPrice": 40,
+              "gstRate": 5,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "snk-b-003",
+              "name": "Muffin",
+              "defaultPrice": 50,
+              "gstRate": 5,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            }
+          ],
+          "imageUrl": "/catalogs/images/snacks-bakery.webp"
+        }
+      ],
+      "imageUrl": "/catalogs/images/bakery.webp"
+    },
+    {
+      "id": "grocery",
+      "name": "Grocery",
+      "icon": "ShoppingBasket",
+      "description": "Staples, snacks & household",
+      "categories": [
+        {
+          "id": "staples",
+          "name": "Staples",
+          "icon": "Wheat",
+          "products": [
+            {
+              "id": "st-001",
+              "name": "Basmati Rice (5kg)",
+              "defaultPrice": 450,
+              "gstRate": 0,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "st-002",
+              "name": "Atta / Wheat Flour (10kg)",
+              "defaultPrice": 380,
+              "gstRate": 0,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "st-003",
+              "name": "Toor Dal (1kg)",
+              "defaultPrice": 140,
+              "gstRate": 0,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "st-004",
+              "name": "Refined Oil (1L)",
+              "defaultPrice": 130,
+              "gstRate": 5,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            }
+          ],
+          "imageUrl": "/catalogs/images/staples.webp"
+        },
+        {
+          "id": "snacks-grocery",
+          "name": "Snacks",
+          "icon": "Cookie",
+          "products": [
+            {
+              "id": "sng-001",
+              "name": "Lays Chips (26g)",
+              "defaultPrice": 20,
+              "gstRate": 12,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "sng-002",
+              "name": "Kurkure (90g)",
+              "defaultPrice": 30,
+              "gstRate": 12,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "sng-003",
+              "name": "Biscuits (Parle-G 80g)",
+              "defaultPrice": 10,
+              "gstRate": 12,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            }
+          ],
+          "imageUrl": "/catalogs/images/snacks-grocery.webp"
+        },
+        {
+          "id": "beverages",
+          "name": "Beverages",
+          "icon": "Coffee",
+          "products": [
+            {
+              "id": "bev-001",
+              "name": "Coca Cola (600ml)",
+              "defaultPrice": 40,
+              "gstRate": 28,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "bev-002",
+              "name": "Mineral Water (1L)",
+              "defaultPrice": 20,
+              "gstRate": 18,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "bev-003",
+              "name": "Fruit Juice (200ml)",
+              "defaultPrice": 25,
+              "gstRate": 12,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            }
+          ],
+          "imageUrl": "/catalogs/images/beverages.webp"
+        },
+        {
+          "id": "household",
+          "name": "Household",
+          "icon": "Home",
+          "products": [
+            {
+              "id": "hh-001",
+              "name": "Surf Excel (1kg)",
+              "defaultPrice": 200,
+              "gstRate": 18,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "hh-002",
+              "name": "Vim Bar (155g)",
+              "defaultPrice": 25,
+              "gstRate": 18,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "hh-003",
+              "name": "Harpic 500ml",
+              "defaultPrice": 100,
+              "gstRate": 18,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            }
+          ],
+          "imageUrl": "/catalogs/images/household.webp"
+        }
+      ],
+      "imageUrl": "/catalogs/images/grocery.webp"
+    },
+    {
+      "id": "electronics",
+      "name": "Electronics",
+      "icon": "Smartphone",
+      "description": "Mobiles, accessories & cables",
+      "categories": [
+        {
+          "id": "mobile",
+          "name": "Mobile",
+          "icon": "Smartphone",
+          "products": [
+            {
+              "id": "mob-001",
+              "name": "Screen Guard (Universal)",
+              "defaultPrice": 150,
+              "gstRate": 18,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "mob-002",
+              "name": "Mobile Cover (Generic)",
+              "defaultPrice": 100,
+              "gstRate": 18,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "mob-003",
+              "name": "Tempered Glass",
+              "defaultPrice": 200,
+              "gstRate": 18,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            }
+          ],
+          "imageUrl": "/catalogs/images/mobile.webp"
+        },
+        {
+          "id": "accessories",
+          "name": "Accessories",
+          "icon": "Headphones",
+          "products": [
+            {
+              "id": "acc-001",
+              "name": "Earphones (Wired)",
+              "defaultPrice": 250,
+              "gstRate": 18,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "acc-002",
+              "name": "TWS Earbuds",
+              "defaultPrice": 999,
+              "gstRate": 18,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "acc-003",
+              "name": "Power Bank 10000mAh",
+              "defaultPrice": 1200,
+              "gstRate": 18,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            }
+          ],
+          "imageUrl": "/catalogs/images/accessories.webp"
+        },
+        {
+          "id": "cables",
+          "name": "Cables",
+          "icon": "Zap",
+          "products": [
+            {
+              "id": "cab-001",
+              "name": "USB-C Cable (1m)",
+              "defaultPrice": 200,
+              "gstRate": 18,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "cab-002",
+              "name": "Lightning Cable (1m)",
+              "defaultPrice": 300,
+              "gstRate": 18,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "cab-003",
+              "name": "Micro USB Cable (1m)",
+              "defaultPrice": 150,
+              "gstRate": 18,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            }
+          ],
+          "imageUrl": "/catalogs/images/cables.webp"
+        },
+        {
+          "id": "batteries",
+          "name": "Batteries",
+          "icon": "Battery",
+          "products": [
+            {
+              "id": "bat-001",
+              "name": "AA Battery (Pack of 4)",
+              "defaultPrice": 80,
+              "gstRate": 12,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "bat-002",
+              "name": "AAA Battery (Pack of 4)",
+              "defaultPrice": 80,
+              "gstRate": 12,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "bat-003",
+              "name": "9V Battery",
+              "defaultPrice": 60,
+              "gstRate": 12,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            }
+          ],
+          "imageUrl": "/catalogs/images/batteries.webp"
+        }
+      ],
+      "imageUrl": "/catalogs/images/electronics.webp"
+    },
+    {
+      "id": "cosmetics",
+      "name": "Cosmetics",
+      "icon": "Sparkles",
+      "description": "Skincare, makeup & haircare",
+      "categories": [
+        {
+          "id": "skincare",
+          "name": "Skincare",
+          "icon": "Sparkles",
+          "products": [
+            {
+              "id": "sk-001",
+              "name": "Moisturizer (100ml)",
+              "defaultPrice": 250,
+              "gstRate": 18,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "sk-002",
+              "name": "Sunscreen SPF 50 (60g)",
+              "defaultPrice": 300,
+              "gstRate": 18,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "sk-003",
+              "name": "Face Wash (100ml)",
+              "defaultPrice": 180,
+              "gstRate": 18,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            }
+          ],
+          "imageUrl": "/catalogs/images/skincare.webp"
+        },
+        {
+          "id": "makeup",
+          "name": "Makeup",
+          "icon": "Brush",
+          "products": [
+            {
+              "id": "mk-001",
+              "name": "Lipstick",
+              "defaultPrice": 350,
+              "gstRate": 18,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "mk-002",
+              "name": "Foundation",
+              "defaultPrice": 450,
+              "gstRate": 18,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "mk-003",
+              "name": "Kajal",
+              "defaultPrice": 120,
+              "gstRate": 18,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            }
+          ],
+          "imageUrl": "/catalogs/images/makeup.webp"
+        },
+        {
+          "id": "haircare",
+          "name": "Haircare",
+          "icon": "Wind",
+          "products": [
+            {
+              "id": "hc-001",
+              "name": "Shampoo (200ml)",
+              "defaultPrice": 200,
+              "gstRate": 18,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "hc-002",
+              "name": "Conditioner (200ml)",
+              "defaultPrice": 220,
+              "gstRate": 18,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            },
+            {
+              "id": "hc-003",
+              "name": "Hair Oil (200ml)",
+              "defaultPrice": 150,
+              "gstRate": 18,
+              "imageUrl": "/catalogs/images/product-placeholder.webp"
+            }
+          ],
+          "imageUrl": "/catalogs/images/haircare.webp"
+        }
+      ],
+      "imageUrl": "/catalogs/images/cosmetics.webp"
+    }
+  ]
+}
