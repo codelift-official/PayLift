@@ -199,14 +199,6 @@ export const NewBillPage: React.FC = () => {
     };
   }, [items, billDiscount, isStrictMode, negotiatedTotal]);
 
-  // Auto-add new empty row when the last row has a valid name and price
-  useEffect(() => {
-    const lastItem = items[items.length - 1];
-    if (lastItem && lastItem.itemName.trim() !== '' && lastItem.price > 0) {
-      setItems((prev) => [...prev, EMPTY_ITEM()]);
-    }
-  }, [items]);
-
   const handleUpdateItem = (id: string, updates: Partial<BillItemFormState>) => {
     setItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...updates } : item)));
   };
