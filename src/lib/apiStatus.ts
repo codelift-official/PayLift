@@ -5,7 +5,7 @@ export async function checkApiHealth(): Promise<boolean> {
   }
 
   try {
-    const res = await fetch(`${apiUrl}/health`, { method: 'HEAD' });
+    const res = await fetch(`${apiUrl}/health`, { method: 'GET' });
     return res.ok;
   } catch {
     return false;
