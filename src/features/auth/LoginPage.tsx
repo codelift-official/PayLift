@@ -35,6 +35,7 @@ export const LoginPage: React.FC = () => {
   const [backendOnline, setBackendOnline] = useState<boolean | null>(null);
 
   React.useEffect(() => {
+    document.title = 'Sign In | Billify POS';
     checkApiHealth().then((ok) => setBackendOnline(ok));
   }, []);
 
