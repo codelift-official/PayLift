@@ -3,8 +3,8 @@ dist
 dist-ssr
 *.local
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
 screenshots/
 *.cjs
 scripts/
