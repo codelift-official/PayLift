@@ -26,7 +26,7 @@ import { clsx } from 'clsx';
 
 const SalesChart = lazy(() => import('./SalesChart'));
 
-export type DashboardRange = 'today' | 'week' | 'month' | 'year' | 'custom';
+export type DashboardRange = 'today' | 'week' | 'month' | 'year';
 
 const COOKIE_NAME = 'billify_dashboard_range';
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
@@ -35,7 +35,7 @@ function getDashboardRangeCookie(): DashboardRange {
   if (typeof document === 'undefined') return 'today';
   const match = document.cookie.match(new RegExp(`(?:^|;\\s*)${COOKIE_NAME}=([^;]+)`));
   const val = match?.[1]?.toLowerCase();
-  if (val && ['today', 'week', 'month', 'year', 'custom'].includes(val)) {
+  if (val && ['today', 'week', 'month', 'year'].includes(val)) {
     return val as DashboardRange;
   }
   return 'today';
@@ -178,32 +178,25 @@ export const DashboardPage: React.FC = () => {
       ];
     }
 
-    if (range === 'year') {
-      return [
-        { name: 'Q1', value: Math.round(total * 0.24), bills: Math.floor(bills * 0.23) },
-        { name: 'Q2', value: Math.round(total * 0.51), bills: Math.floor(bills * 0.49) },
-        { name: 'Q3', value: Math.round(total * 0.77), bills: Math.floor(bills * 0.75) },
-        { name: 'Q4', value: total, bills },
-      ];
-    }
-
-    // Custom
+    // Year (default fallback)
     return [
-      { name: 'P1', value: Math.round(total * 0.3), bills: Math.floor(bills * 0.3) },
-      { name: 'P2', value: Math.round(total * 0.65), bills: Math.floor(bills * 0.65) },
-      { name: 'P3', value: total, bills },
+      { name: 'Q1', value: Math.round(total * 0.24), bills: Math.floor(bills * 0.23) },
+      { name: 'Q2', value: Math.round(total * 0.51), bills: Math.floor(bills * 0.49) },
+      { name: 'Q3', value: Math.round(total * 0.77), bills: Math.floor(bills * 0.75) },
+      { name: 'Q4', value: total, bills },
     ];
   }, [range, summary]);
 
-  const growthPct = 24.3;
-  const prevSales = summary ? summary.totalSales / (1 + growthPct / 100) : 0;
+  const hasRecords = Boolean(summary && summary.totalBills > 0 && summary.totalSales > 0);
+  const growthPct = hasRecords ? 24.3 : null;
+  const prevSales = hasRecords && growthPct !== null && summary ? summary.totalSales / (1 + growthPct / 100) : 0;
 
   return (
     <div className="space-y-4">
       {/* Item 7: Dashboard Time Range Selector */}
       <div className="flex items-center justify-between gap-3 overflow-x-auto no-scrollbar pb-1">
         <div className="flex items-center space-x-1.5 p-1 rounded-card border border-border shrink-0" style={{ backgroundColor: 'var(--bg-card)' }}>
-          {(['today', 'week', 'month', 'year', 'custom'] as const).map((r) => {
+          {(['today', 'week', 'month', 'year'] as const).map((r) => {
             const isSelected = range === r;
             const displayName = r.charAt(0).toUpperCase() + r.slice(1);
             return (
@@ -266,7 +259,7 @@ export const DashboardPage: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
         {/* 1. Hero Card: Clickable -> Redirect to /reports with date range (Item 6) */}
         <Card
-          onClick={() => navigate(`/reports?dateRange=${range === 'today' ? 'Today' : range === 'week' ? 'Week' : range === 'month' ? 'Month' : 'Custom'}`)}
+          onClick={() => navigate(`/reports?dateRange=${range === 'today' ? 'Today' : range === 'week' ? 'Week' : range === 'month' ? 'Month' : 'Year'}`)}
           className="lg:col-span-7 border-border shadow-card flex flex-col justify-between overflow-hidden relative cursor-pointer group hover:border-primary/50 hover:shadow-raised transition-all"
           style={{ backgroundColor: 'var(--bg-card)' }}
         >
@@ -288,7 +281,9 @@ export const DashboardPage: React.FC = () => {
                   </div>
                   <div className="mt-1 flex items-baseline space-x-3">
                     <Money value={summary?.totalSales ?? 0} size="display" />
-                    <GrowthBadge pct={growthPct} label={prevPeriodLabel} />
+                    {hasRecords && growthPct !== null && (
+                      <GrowthBadge pct={growthPct} label={prevPeriodLabel} />
+                    )}
                   </div>
                   {/* Item 6: Clickable bills count link */}
                   <p className="text-xs text-text-muted mt-1">
@@ -304,7 +299,7 @@ export const DashboardPage: React.FC = () => {
                       {summary?.totalBills ?? 0} bills
                     </span>{' '}
                     generated in this period
-                    {prevSales > 0 && (
+                    {hasRecords && prevSales > 0 && (
                       <span className="ml-2 text-text-muted">
                         · prev ₹{prevSales.toLocaleString('en-IN', { maximumFractionDigits: 0 })}
                       </span>

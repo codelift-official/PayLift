@@ -23,15 +23,32 @@ import {
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
+export type ReportDateRange = 'Today' | 'Week' | 'Month' | 'Year';
+
+const DATE_RANGE_OPTIONS: { id: ReportDateRange; label: string }[] = [
+  { id: 'Today', label: 'Today' },
+  { id: 'Week', label: 'Weekly' },
+  { id: 'Month', label: 'Month' },
+  { id: 'Year', label: 'Year' },
+];
+
+function parseInitialRange(raw: string | null): ReportDateRange {
+  if (!raw) return 'Month';
+  const lower = raw.toLowerCase();
+  if (lower.startsWith('today')) return 'Today';
+  if (lower.startsWith('week')) return 'Week';
+  if (lower.startsWith('month')) return 'Month';
+  if (lower.startsWith('year')) return 'Year';
+  return 'Month';
+}
+
 export const ReportsPage: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const initialRange = searchParams.get('dateRange') || searchParams.get('range') || 'Month';
+  const initialRange = searchParams.get('dateRange') || searchParams.get('range');
   const initialShop = searchParams.get('shopID') || searchParams.get('shop') || 'All';
 
-  const [dateRange, setDateRange] = useState<'Today' | 'Week' | 'Month' | 'Custom'>(
-    (['Today', 'Week', 'Month', 'Custom'].includes(initialRange) ? initialRange : 'Month') as any
-  );
+  const [dateRange, setDateRange] = useState<ReportDateRange>(() => parseInitialRange(initialRange));
   const [selectedShopId, setSelectedShopId] = useState<string>(initialShop);
 
   // Sync state with URL params
@@ -46,7 +63,7 @@ export const ReportsPage: React.FC = () => {
     setSearchParams(next, { replace: true });
   };
 
-  const handleRangeChange = (r: 'Today' | 'Week' | 'Month' | 'Custom') => {
+  const handleRangeChange = (r: ReportDateRange) => {
     setDateRange(r);
     updateUrl(r, selectedShopId);
   };
@@ -74,8 +91,8 @@ export const ReportsPage: React.FC = () => {
       from.setDate(now.getDate() - 7);
     } else if (dateRange === 'Month') {
       from.setDate(now.getDate() - 30);
-    } else {
-      from.setDate(now.getDate() - 90);
+    } else if (dateRange === 'Year') {
+      from.setDate(now.getDate() - 365);
     }
 
     return { fromDate: from.toISOString(), toDate: to };
@@ -121,19 +138,19 @@ export const ReportsPage: React.FC = () => {
         {/* Date Range Chips */}
         <div className="flex items-center space-x-1.5 overflow-x-auto no-scrollbar pb-0.5 sm:pb-0">
           <Calendar className="w-4 h-4 text-text-muted mr-1 shrink-0" />
-          {(['Today', 'Week', 'Month', 'Custom'] as const).map((r) => (
+          {DATE_RANGE_OPTIONS.map((opt) => (
             <button
-              key={r}
+              key={opt.id}
               type="button"
-              onClick={() => handleRangeChange(r)}
+              onClick={() => handleRangeChange(opt.id)}
               className={clsx(
                 'px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors duration-150 shrink-0',
-                dateRange === r
+                dateRange === opt.id
                   ? 'bg-primary text-white shadow-sm'
                   : 'bg-slate-100 dark:bg-slate-800 text-text-muted hover:text-text-primary hover:bg-slate-200 dark:hover:bg-slate-700'
               )}
             >
-              {r}
+              {opt.label}
             </button>
           ))}
         </div>
@@ -168,7 +185,7 @@ export const ReportsPage: React.FC = () => {
           </span>
           {dateRange !== 'Month' && (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 font-semibold">
-              Range: {dateRange}
+              Range: {DATE_RANGE_OPTIONS.find((o) => o.id === dateRange)?.label || dateRange}
               <button
                 type="button"
                 onClick={() => handleRangeChange('Month')}
