@@ -1,5 +1,5 @@
 import React from 'react';
-import { Trash2, Plus, Minus } from 'lucide-react';
+import { Trash2, Plus, Minus, BookOpen } from 'lucide-react';
 import { Money } from '../../components/Money';
 
 export interface BillItemFormState {
@@ -18,6 +18,7 @@ export interface ItemRowProps {
   isStrictMode: boolean;
   onUpdate: (id: string, updates: Partial<BillItemFormState>) => void;
   onRemove: (id: string) => void;
+  onBrowseCatalog?: () => void;
   autoFocus?: boolean;
 }
 
@@ -28,6 +29,7 @@ export const ItemRow: React.FC<ItemRowProps> = ({
   isStrictMode,
   onUpdate,
   onRemove,
+  onBrowseCatalog,
   autoFocus = false,
 }) => {
   const lineSubtotal = (item.qty || 0) * (item.price || 0);
@@ -41,8 +43,8 @@ export const ItemRow: React.FC<ItemRowProps> = ({
 
   return (
     <div className="bg-white border border-border rounded-button p-3 sm:p-4 shadow-sm space-y-3">
-      <div className="flex items-center justify-between gap-2">
-        <div className="flex-1">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex-1 min-w-0">
           <input
             type="text"
             value={item.itemName}
@@ -53,16 +55,30 @@ export const ItemRow: React.FC<ItemRowProps> = ({
           />
         </div>
 
-        {canRemove && (
-          <button
-            type="button"
-            onClick={() => onRemove(item.id)}
-            className="p-1.5 rounded text-text-muted hover:text-danger hover:bg-red-50 transition-colors"
-            title="Remove item"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        )}
+        <div className="flex items-center gap-1.5 shrink-0">
+          {!item.itemName && onBrowseCatalog && (
+            <button
+              type="button"
+              onClick={onBrowseCatalog}
+              className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 dark:bg-primary/20 dark:hover:bg-primary/30 rounded-button transition-colors"
+              title="Pick item from product catalog"
+            >
+              <BookOpen className="w-3.5 h-3.5" />
+              <span>Catalog</span>
+            </button>
+          )}
+
+          {canRemove && (
+            <button
+              type="button"
+              onClick={() => onRemove(item.id)}
+              className="p-1.5 rounded-button text-text-muted hover:text-danger hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+              title="Remove item"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 items-center pt-1 border-t border-border text-xs">

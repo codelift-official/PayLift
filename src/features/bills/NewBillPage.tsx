@@ -407,27 +407,17 @@ export const NewBillPage: React.FC = () => {
 
             <div className="space-y-2.5">
               {items.map((item, index) => (
-                <div key={item.id} className="relative group">
-                  <ItemRow
-                    item={item}
-                    index={index}
-                    canRemove={items.length > 1}
-                    isStrictMode={isStrictMode}
-                    onUpdate={handleUpdateItem}
-                    onRemove={handleRemoveItem}
-                    autoFocus={index === 0}
-                  />
-                  {/* B2: Per-row catalog browse link */}
-                  {!item.itemName && (
-                    <button
-                      type="button"
-                      onClick={() => handleBrowseCatalog(item.id)}
-                      className="absolute right-10 top-2 text-[11px] text-info/70 hover:text-info transition-colors"
-                    >
-                      Browse →
-                    </button>
-                  )}
-                </div>
+                <ItemRow
+                  key={item.id}
+                  item={item}
+                  index={index}
+                  canRemove={items.length > 1}
+                  isStrictMode={isStrictMode}
+                  onUpdate={handleUpdateItem}
+                  onRemove={handleRemoveItem}
+                  onBrowseCatalog={() => handleBrowseCatalog(item.id)}
+                  autoFocus={index === 0}
+                />
               ))}
             </div>
           </div>
