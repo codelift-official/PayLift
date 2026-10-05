@@ -84,11 +84,17 @@ export const ExchangeSheet: React.FC<ExchangeSheetProps> = ({ bill, isOpen, onCl
   const totalItemsCount = Object.values(quantities).reduce((a, b) => a + b, 0);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 dark:bg-black/60 backdrop-blur-sm p-0 sm:p-4">
       {/* Container: Bottom sheet on mobile, centered modal on desktop */}
-      <div className="bg-white w-full sm:max-w-[560px] h-[90vh] sm:h-auto sm:max-h-[85vh] rounded-t-2xl sm:rounded-card shadow-modal flex flex-col overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
+      <div
+        className="w-full sm:max-w-[560px] h-[90vh] sm:h-auto sm:max-h-[85vh] rounded-t-2xl sm:rounded-card shadow-modal flex flex-col overflow-hidden animate-in slide-in-from-bottom sm:zoom-in-95 duration-200"
+        style={{ backgroundColor: 'var(--bg-card)' }}
+      >
         {/* Header */}
-        <div className="px-5 py-4 border-b border-border flex items-center justify-between bg-slate-50">
+        <div
+          className="px-5 py-4 border-b border-border flex items-center justify-between"
+          style={{ backgroundColor: 'var(--bg-app)' }}
+        >
           <div>
             <h2 className="text-base font-bold text-text-primary">Exchange Items</h2>
             <p className="text-xs text-text-muted">
@@ -128,7 +134,7 @@ export const ExchangeSheet: React.FC<ExchangeSheetProps> = ({ bill, isOpen, onCl
                       type="button"
                       onClick={() => handleQtyChange(item.id, -1, item.qty)}
                       disabled={currentQty === 0}
-                      className="w-8 h-8 rounded-lg border border-border flex items-center justify-center text-text-primary hover:bg-slate-100 disabled:opacity-30 disabled:pointer-events-none"
+                      className="w-8 h-8 rounded-lg border border-border flex items-center justify-center text-text-primary hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-colors"
                     >
                       <Minus className="w-4 h-4" />
                     </button>
@@ -139,7 +145,7 @@ export const ExchangeSheet: React.FC<ExchangeSheetProps> = ({ bill, isOpen, onCl
                       type="button"
                       onClick={() => handleQtyChange(item.id, 1, item.qty)}
                       disabled={currentQty >= item.qty}
-                      className="w-8 h-8 rounded-lg border border-border flex items-center justify-center text-text-primary hover:bg-slate-100 disabled:opacity-30 disabled:pointer-events-none"
+                      className="w-8 h-8 rounded-lg border border-border flex items-center justify-center text-text-primary hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-30 disabled:pointer-events-none transition-colors"
                     >
                       <Plus className="w-4 h-4" />
                     </button>
@@ -166,7 +172,10 @@ export const ExchangeSheet: React.FC<ExchangeSheetProps> = ({ bill, isOpen, onCl
         </div>
 
         {/* Footer */}
-        <div className="px-5 py-4 border-t border-border bg-slate-50 space-y-3">
+        <div
+          className="px-5 py-4 border-t border-border space-y-3"
+          style={{ backgroundColor: 'var(--bg-app)' }}
+        >
           <div className="flex justify-between items-center text-sm">
             <span className="text-text-muted">
               Exchanging {totalItemsCount} {totalItemsCount === 1 ? 'item' : 'items'}:
@@ -180,7 +189,8 @@ export const ExchangeSheet: React.FC<ExchangeSheetProps> = ({ bill, isOpen, onCl
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-2.5 border border-border bg-white text-text-primary rounded-button text-xs font-semibold hover:bg-slate-100 transition-colors"
+              className="flex-1 py-2.5 border border-border text-text-primary rounded-button text-xs font-semibold transition-colors"
+              style={{ backgroundColor: 'var(--bg-card)' }}
             >
               Cancel
             </button>

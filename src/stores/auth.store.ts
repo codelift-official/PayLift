@@ -1,13 +1,18 @@
 import { create } from 'zustand';
 import axios from 'axios';
+import { queryClient } from '../lib/queryClient';
+
+export type Role = 'BusinessAdmin' | 'Manager' | 'Staff';
 
 export interface AuthUser {
   userID: string;
   tenantID: number;
-  role: string;
+  role: Role;
   email?: string | null;
   mobile?: string;
   name?: string;
+  defaultShopID?: string | null;
+  assignedShopIDs?: string[];
 }
 
 export interface AuthState {
@@ -23,6 +28,37 @@ export interface AuthState {
   logout: () => Promise<void>;
   hydrate: () => void;
 }
+
+// ─── Role Selector Helpers ────────────────────────────────────────────────────
+
+export const isBusinessAdmin = (user?: AuthUser | null): boolean => {
+  const u = user !== undefined ? user : useAuthStore.getState().user;
+  return u?.role === 'BusinessAdmin';
+};
+
+export const isManager = (user?: AuthUser | null): boolean => {
+  const u = user !== undefined ? user : useAuthStore.getState().user;
+  return u?.role === 'Manager';
+};
+
+export const isStaff = (user?: AuthUser | null): boolean => {
+  const u = user !== undefined ? user : useAuthStore.getState().user;
+  return u?.role === 'Staff';
+};
+
+export const canManageUsers = (user?: AuthUser | null): boolean =>
+  isBusinessAdmin(user);
+
+export const canManageSettings = (user?: AuthUser | null): boolean =>
+  isBusinessAdmin(user) || isManager(user);
+
+export const canViewReports = (user?: AuthUser | null): boolean =>
+  isBusinessAdmin(user) || isManager(user);
+
+export const canManageCatalog = (user?: AuthUser | null): boolean =>
+  isBusinessAdmin(user);
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 const STORAGE_KEYS = {
   AT: 'billify.auth.at',
@@ -98,6 +134,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         localStorage.removeItem(STORAGE_KEYS.RT);
         localStorage.removeItem(STORAGE_KEYS.USER);
       }
+      queryClient.clear();
       set({
         accessToken: null,
         refreshToken: null,

@@ -33,7 +33,7 @@ export const Pagination: React.FC<PaginationProps> = ({
   const endItem = Math.min(page * pageSize, totalCount);
 
   return (
-    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 py-3 px-4 bg-white border border-border rounded-b-card text-xs text-text-muted select-none">
+    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 py-3 px-4 bg-card border border-border rounded-b-card text-xs text-text-muted select-none">
       {/* Total count and range text */}
       <div>
         <span>
@@ -50,7 +50,7 @@ export const Pagination: React.FC<PaginationProps> = ({
           <select
             value={pageSize}
             onChange={(e) => onPageSizeChange(Number(e.target.value))}
-            className="bg-slate-50 border border-border rounded-button px-2 py-1 text-text-primary focus:border-primary cursor-pointer text-xs font-medium"
+            className="bg-card border border-border rounded-button px-2 py-1 text-text-primary focus:border-primary cursor-pointer text-xs font-medium"
           >
             <option value={25}>25</option>
             <option value={50}>50</option>
@@ -65,7 +65,7 @@ export const Pagination: React.FC<PaginationProps> = ({
             disabled={isFirstPage}
             onClick={onFirst}
             title="First page"
-            className="p-1.5 rounded-button border border-border bg-white text-text-primary hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="p-1.5 rounded-button border border-border bg-card text-text-primary hover:bg-app-bg disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronsLeft className="w-3.5 h-3.5" />
           </button>
@@ -74,7 +74,7 @@ export const Pagination: React.FC<PaginationProps> = ({
             disabled={isFirstPage}
             onClick={onPrev}
             title="Previous page"
-            className="p-1.5 rounded-button border border-border bg-white text-text-primary hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="p-1.5 rounded-button border border-border bg-card text-text-primary hover:bg-app-bg disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
           </button>
@@ -88,7 +88,7 @@ export const Pagination: React.FC<PaginationProps> = ({
             disabled={isLastPage}
             onClick={onNext}
             title="Next page"
-            className="p-1.5 rounded-button border border-border bg-white text-text-primary hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="p-1.5 rounded-button border border-border bg-card text-text-primary hover:bg-app-bg disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
@@ -97,7 +97,7 @@ export const Pagination: React.FC<PaginationProps> = ({
             disabled={isLastPage}
             onClick={onLast}
             title="Last page"
-            className="p-1.5 rounded-button border border-border bg-white text-text-primary hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+            className="p-1.5 rounded-button border border-border bg-card text-text-primary hover:bg-app-bg disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronsRight className="w-3.5 h-3.5" />
           </button>

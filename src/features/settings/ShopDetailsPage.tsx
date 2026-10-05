@@ -18,7 +18,6 @@ export const ShopDetailsPage: React.FC = () => {
   });
 
   const activeShop = shops?.find((s) => s.id === shopID) || shops?.[0];
-  const targetShopId = activeShop?.id || shopID || '';
 
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
@@ -35,13 +34,16 @@ export const ShopDetailsPage: React.FC = () => {
   }, [activeShop]);
 
   const mutation = useMutation({
-    mutationFn: () =>
-      shopsApi.updateShop(targetShopId, {
+    mutationFn: () => {
+      const effectiveId = (shops?.some((s) => s.id === shopID) ? shopID : undefined) || activeShop?.id || shops?.[0]?.id;
+      if (!effectiveId) throw new Error('No valid shop found');
+      return shopsApi.updateShop(effectiveId, {
         name,
         address,
         mobile,
         gst: gst || null,
-      }),
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shops'] });
       toast.success('Shop profile updated');
@@ -81,7 +83,7 @@ export const ShopDetailsPage: React.FC = () => {
         }
       />
 
-      <Card className="bg-white border-border shadow-card p-6 space-y-5">
+      <Card className="border-border shadow-card p-6 space-y-5" style={{ backgroundColor: 'var(--bg-card)' }}>
         {/* Name */}
         <div className="space-y-1.5">
           <label className="text-xs font-bold uppercase tracking-wider text-text-muted flex items-center">
@@ -138,7 +140,7 @@ export const ShopDetailsPage: React.FC = () => {
       </Card>
 
       {/* Sticky Mobile Save Button */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-border p-3 px-4 shadow-raised safe-bottom">
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border p-3 px-4 shadow-raised safe-bottom" style={{ backgroundColor: 'var(--bg-card)' }}>
         <button
           type="button"
           onClick={() => mutation.mutate()}

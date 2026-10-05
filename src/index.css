@@ -31,6 +31,8 @@
   html {
     background-color: var(--bg-app);
     color: var(--text-primary);
+    overflow-x: hidden;
+    max-width: 100vw;
   }
 
   body {
@@ -40,7 +42,25 @@
     margin: 0;
     padding: 0;
     min-height: 100vh;
+    overflow-x: hidden;
+    max-width: 100vw;
     -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Sleek modern non-intrusive scrollbars */
+  ::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.3);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(148, 163, 184, 0.6);
   }
 
   button {

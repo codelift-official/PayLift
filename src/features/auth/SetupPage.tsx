@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { authApi } from '../../api/auth';
-import { useAuthStore } from '../../stores/auth.store';
+import { useAuthStore, type Role } from '../../stores/auth.store';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Card } from '../../components/ui/Card';
@@ -107,7 +107,7 @@ export const SetupPage: React.FC = () => {
       setUser({
         userID: loginRes.userID,
         tenantID: loginRes.tenantID,
-        role: loginRes.role,
+        role: (loginRes.role as Role) || 'BusinessAdmin',
         email: data.ownerEmail,
         name: data.ownerName,
         mobile: data.ownerMobile,
@@ -221,6 +221,13 @@ export const SetupPage: React.FC = () => {
           </div>
         </form>
       </Card>
+
+      {/* Footer Legal */}
+      <div className="mt-6 text-center text-xs space-x-3" style={{ color: 'var(--text-muted)' }}>
+        <Link to="/terms" className="hover:underline">Terms</Link>
+        <span>·</span>
+        <Link to="/privacy" className="hover:underline">Privacy</Link>
+      </div>
     </div>
   );
 };

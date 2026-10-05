@@ -3,6 +3,8 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Plus, LogOut } from 'lucide-react';
 import { Sidebar } from '../components/nav/Sidebar';
 import { ThemeToggle } from '../components/ui/ThemeToggle';
+import { SubscriptionBanner } from '../components/SubscriptionBanner';
+import { ImpersonationBanner } from '../components/ImpersonationBanner';
 import { useKeyboardShortcuts } from '../hooks/useKeyboardShortcuts';
 import { useAuthStore } from '../stores/auth.store';
 import { toast } from 'sonner';
@@ -37,7 +39,7 @@ export const DesktopShell: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen flex"
+      className="min-h-screen flex overflow-x-hidden"
       style={{ backgroundColor: 'var(--bg-app)', color: 'var(--text-primary)' }}
     >
       {/* Fixed Sidebar */}
@@ -81,6 +83,10 @@ export const DesktopShell: React.FC = () => {
             </button>
           </div>
         </header>
+
+        {/* Impersonation & Subscription Banners */}
+        <ImpersonationBanner />
+        <SubscriptionBanner />
 
         {/* A4: Full-width page content, no max-w-5xl constraint */}
         <main className="flex-1 p-6">

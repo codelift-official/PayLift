@@ -3,9 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { billsApi } from '../../api/bills';
-import { shopsApi } from '../../api/shops';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth.store';
+import { useAccessibleShops } from '../../hooks/useAccessibleShops';
 import { ItemRow, BillItemFormState } from './ItemRow';
 import { PaymentSection, PaymentItemState } from './PaymentSection';
 import { Card } from '../../components/ui/Card';
@@ -15,9 +15,10 @@ import { PageHeader } from '../../components/PageHeader';
 import { Money } from '../../components/Money';
 import { CatalogDrawer } from '../../components/CatalogDrawer';
 import { CatalogProduct } from '../../lib/catalog/CatalogRepository';
-import { Plus, CheckCircle2, User, Phone, Store, BookOpen, Trash2 } from 'lucide-react';
+import { Plus, CheckCircle2, User, Phone, Store, BookOpen, Trash2, Ticket, Check } from 'lucide-react';
 import { getApiErrorMessage } from '../../lib/errors';
 import { CreateBillRequest, BusinessesResponse } from '../../api/types';
+import { phase11Api, Customer, Coupon, InventorySettings, CouponSettings } from '../../api/phase11';
 
 // ─── B4: Draft types and helpers ─────────────────────────────────
 interface BillDraft {
@@ -73,31 +74,33 @@ export const NewBillPage: React.FC = () => {
   const [catalogDrawerOpen, setCatalogDrawerOpen] = useState(false);
   const [catalogTargetItemId, setCatalogTargetItemId] = useState<string | null>(null);
 
-  // Load shops for current tenant
-  const { data: shops } = useQuery({
-    queryKey: ['shops'],
-    queryFn: shopsApi.getShops,
-    staleTime: 60_000,
-  });
+  // Load shops scoped to current user's role
+  const { shops = [], defaultShop, isLoading: shopsLoading, isAdmin: userIsAdmin } = useAccessibleShops();
 
   // Shop selection with localStorage persistence per tenant
   const [selectedShopId, setSelectedShopId] = useState<string>('');
 
   useEffect(() => {
-    if (shops && shops.length > 0) {
-      const storageKey = `billify.lastShop.${user?.tenantID || 'default'}`;
-      const savedShopId = localStorage.getItem(storageKey);
-      const validSaved = shops.find((s) => s.id === savedShopId);
-
-      if (validSaved) {
-        setSelectedShopId(validSaved.id);
-      } else {
-        setSelectedShopId(shops[0].id);
-      }
+    if (!shops || shops.length === 0) return;
+    // For non-admin roles, always lock to the first accessible shop
+    if (!userIsAdmin) {
+      setSelectedShopId(defaultShop?.id || shops[0].id);
+      return;
     }
-  }, [shops, user?.tenantID]);
+    const storageKey = `billify.lastShop.${user?.tenantID || 'default'}`;
+    const savedShopId = localStorage.getItem(storageKey);
+    const validSaved = shops.find((s) => s.id === savedShopId);
+    if (validSaved) {
+      setSelectedShopId(validSaved.id);
+    } else if (user?.defaultShopID && shops.find((s) => s.id === user.defaultShopID)) {
+      setSelectedShopId(user.defaultShopID);
+    } else {
+      setSelectedShopId(shops[0].id);
+    }
+  }, [shops, user?.tenantID, user?.defaultShopID, defaultShop, userIsAdmin]);
 
   const handleShopChange = (shopId: string) => {
+    if (!userIsAdmin) return; // Manager/Staff cannot switch shops
     setSelectedShopId(shopId);
     const storageKey = `billify.lastShop.${user?.tenantID || 'default'}`;
     localStorage.setItem(storageKey, shopId);
@@ -113,6 +116,33 @@ export const NewBillPage: React.FC = () => {
   });
 
   const isStrictMode = business?.strictBillingMode ?? false;
+
+  // Phase 11: Inventory Settings & Strict Stock Mode
+  const { data: inventorySettings } = useQuery<InventorySettings>({
+    queryKey: ['inventorySettings'],
+    queryFn: phase11Api.getInventorySettings,
+  });
+  const inventoryModeEnabled = inventorySettings?.inventoryModeEnabled ?? false;
+  const strictStockMode = inventorySettings?.strictStockMode ?? false;
+
+  // Phase 11: Coupon Settings
+  const { data: couponSettings } = useQuery<CouponSettings>({
+    queryKey: ['couponSettings'],
+    queryFn: phase11Api.getCouponSettings,
+  });
+  const allowCouponStacking = couponSettings?.allowCouponStacking ?? false;
+
+  // Coupons State
+  const [couponCodeInput, setCouponCodeInput] = useState('');
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [appliedCoupons, setAppliedCoupons] = useState<Array<{ code: string; discount: number; coupon?: Coupon }>>([]);
+  const [serverQuote, setServerQuote] = useState<{ total: number; subtotal: number; discount: number; gst: number } | null>(null);
+  const [isQuoting, setIsQuoting] = useState(false);
+
+  // Customer Autocomplete State
+  const [customerSuggestions, setCustomerSuggestions] = useState<Customer[]>([]);
+  const [customerDropdownOpen, setCustomerDropdownOpen] = useState(false);
+  const [showNewCustomerInline, setShowNewCustomerInline] = useState(false);
 
   // B4: Load draft on mount
   const [draftLoaded, setDraftLoaded] = useState(false);
@@ -167,37 +197,178 @@ export const NewBillPage: React.FC = () => {
     setNegotiatedTotal('');
     setItems([EMPTY_ITEM()]);
     setPayments([{ id: 'payment-1', mode: 'Cash', amount: 0 }]);
+    setAppliedCoupons([]);
+    setCouponError(null);
     toast.info('Draft cleared');
   };
 
-  // Live Totals calculation
+  const totalCouponDiscount = useMemo(
+    () => appliedCoupons.reduce((sum, c) => sum + c.discount, 0),
+    [appliedCoupons]
+  );
+
+  // Live Totals calculation (GST inclusive, aligned with backend calculator)
   const totals = useMemo(() => {
     let subtotal = 0;
     let itemsDiscount = 0;
+    let totalGst = 0;
 
     items.forEach((item) => {
-      const lineSub = (item.qty || 0) * (item.price || 0);
-      const lineDisc = lineSub * ((item.discountPct || 0) / 100);
+      const qty = item.qty || 0;
+      const price = item.price || 0;
+      const lineSub = qty * price;
+      const discPct = isStrictMode ? 0 : (item.discountPct || 0);
+      const discAmount = (price * discPct) / 100;
+      const lineEffective = (price - discAmount) * qty;
+      const gstRate = item.gstRate || 0;
+      const taxable = lineEffective / (1 + gstRate / 100);
+      const gst = lineEffective - taxable;
+
       subtotal += lineSub;
-      itemsDiscount += lineDisc;
+      itemsDiscount += discAmount * qty;
+      totalGst += gst;
     });
 
     const extraDiscount = typeof billDiscount === 'number' ? billDiscount : 0;
-    let totalDiscount = itemsDiscount + extraDiscount;
+    const totalDiscountBeforeCoupons = itemsDiscount + extraDiscount;
+    const totalDiscount = totalDiscountBeforeCoupons + totalCouponDiscount;
 
     let computedTotal = Math.max(0, subtotal - totalDiscount);
 
     if (isStrictMode && typeof negotiatedTotal === 'number' && negotiatedTotal > 0) {
       computedTotal = negotiatedTotal;
-      totalDiscount = Math.max(0, subtotal - negotiatedTotal);
     }
+
+    if (serverQuote && serverQuote.total !== undefined) {
+      computedTotal = serverQuote.total;
+    }
+
+    const finalGst = serverQuote ? Math.round(serverQuote.gst * 100) / 100 : Math.round(totalGst * 100) / 100;
+    const finalTotal = Math.round(computedTotal * 100) / 100;
+    const taxableSubtotal = Math.max(0, Math.round((finalTotal - finalGst) * 100) / 100);
 
     return {
       subtotal: Math.round(subtotal * 100) / 100,
+      taxableSubtotal,
+      lineDiscounts: Math.round(itemsDiscount * 100) / 100,
+      couponDiscount: Math.round(totalCouponDiscount * 100) / 100,
       discount: Math.round(totalDiscount * 100) / 100,
-      total: Math.round(computedTotal * 100) / 100,
+      gst: finalGst,
+      total: finalTotal,
     };
-  }, [items, billDiscount, isStrictMode, negotiatedTotal]);
+  }, [items, billDiscount, totalCouponDiscount, isStrictMode, negotiatedTotal, serverQuote]);
+
+  // Debounced 300ms call to POST /bills/quote on any item/GST/coupon change
+  useEffect(() => {
+    const shopId = selectedShopId || currentShop?.id;
+    const valid = items.filter((i) => i.itemName.trim() !== '' && i.price >= 0);
+    if (!shopId || valid.length === 0) {
+      setServerQuote(null);
+      setIsQuoting(false);
+      return;
+    }
+
+    setIsQuoting(true);
+    const timer = setTimeout(async () => {
+      try {
+        const payload: CreateBillRequest = {
+          shopID: shopId,
+          customerName: customerName.trim() || null,
+          customerPhone: customerPhone.trim() || null,
+          items: valid.map((item) => ({
+            itemName: item.itemName.trim(),
+            qty: item.qty,
+            price: item.price,
+            gstRate: item.gstRate,
+            discountPct: isStrictMode ? 0 : item.discountPct || 0,
+          })),
+          negotiatedTotal:
+            isStrictMode && typeof negotiatedTotal === 'number' ? negotiatedTotal : null,
+          couponCodes: appliedCoupons.map((c) => c.code),
+        };
+
+        const quote = await billsApi.quoteBill(payload);
+        const totalGstFromQuote = (quote.items || []).reduce((acc, it) => acc + (it.gstAmount || 0), 0);
+        setServerQuote({
+          total: quote.total,
+          subtotal: quote.subtotal,
+          discount: quote.discount,
+          gst: totalGstFromQuote,
+        });
+      } catch (err) {
+        // Fallback to local calculation
+      } finally {
+        setIsQuoting(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [items, selectedShopId, currentShop?.id, appliedCoupons, negotiatedTotal, isStrictMode]);
+
+  const handleApplyCoupon = async () => {
+    const code = couponCodeInput.trim().toUpperCase();
+    if (!code) return;
+    setCouponError(null);
+
+    if (appliedCoupons.some((c) => c.code === code)) {
+      setCouponError('Coupon already applied');
+      return;
+    }
+
+    if (!allowCouponStacking && appliedCoupons.length >= 1) {
+      setCouponError('Coupon stacking is not allowed');
+      return;
+    }
+
+    try {
+      const res = await phase11Api.validateCoupon({
+        code,
+        orderAmount: totals.subtotal,
+      });
+
+      if (!res.valid) {
+        setCouponError(res.reason || 'Invalid coupon code');
+        return;
+      }
+
+      setAppliedCoupons((prev) => [
+        ...prev,
+        { code, discount: res.discount, coupon: res.coupon },
+      ]);
+      setCouponCodeInput('');
+      toast.success(`Coupon ${code} applied! Saved ₹${res.discount}`);
+    } catch {
+      setCouponError('Failed to validate coupon');
+    }
+  };
+
+  const handleRemoveCoupon = (code: string) => {
+    setAppliedCoupons((prev) => prev.filter((c) => c.code !== code));
+  };
+
+  const handleCustomerInputChange = async (val: string, field: 'name' | 'phone') => {
+    if (field === 'name') setCustomerName(val);
+    else setCustomerPhone(val);
+
+    if (val.trim().length >= 2) {
+      try {
+        const results = await phase11Api.getCustomers({ search: val.trim() });
+        setCustomerSuggestions(results);
+        setCustomerDropdownOpen(results.length > 0);
+      } catch {
+        setCustomerSuggestions([]);
+      }
+    } else {
+      setCustomerSuggestions([]);
+      setCustomerDropdownOpen(false);
+    }
+  };
+
+  const handleSelectCustomer = (c: Customer) => {
+    setCustomerName(c.name);
+    setCustomerPhone(c.phone);
+    setCustomerDropdownOpen(false);
+  };
 
   const handleUpdateItem = (id: string, updates: Partial<BillItemFormState>) => {
     setItems((prev) => prev.map((item) => (item.id === id ? { ...item, ...updates } : item)));
@@ -240,18 +411,20 @@ export const NewBillPage: React.FC = () => {
 
   const canGenerate =
     hasItems &&
+    !isQuoting &&
     isPaymentValid &&
     (!isStrictMode || (typeof negotiatedTotal === 'number' && negotiatedTotal > 0));
 
   // Submit Mutation
   const createBillMutation = useMutation({
     mutationFn: async () => {
-      if (!selectedShopId) {
-        throw new Error('No active shop selected. Please check your shop configuration.');
+      const shopId = selectedShopId || currentShop?.id;
+      if (!shopId) {
+        throw new Error('Select a shop before submitting the bill.');
       }
 
       const payload: CreateBillRequest = {
-        shopID: selectedShopId,
+        shopID: shopId,
         customerName: customerName.trim() || null,
         customerPhone: customerPhone.trim() || null,
         items: validItems.map((item) => ({
@@ -267,6 +440,7 @@ export const NewBillPage: React.FC = () => {
         })),
         negotiatedTotal:
           isStrictMode && typeof negotiatedTotal === 'number' ? negotiatedTotal : null,
+        couponCodes: appliedCoupons.map((c) => c.code),
       };
 
       return billsApi.createBill(payload);
@@ -280,10 +454,61 @@ export const NewBillPage: React.FC = () => {
       toast.success('Bill generated successfully!');
       navigate(`/bills/${data.id}`);
     },
-    onError: (err) => {
+    onError: (err: any) => {
+      const isImpersonating = typeof window !== 'undefined' && Boolean(localStorage.getItem('platform_imp_backup'));
+      if (isImpersonating && err?.response?.status === 500) {
+        toast.error(
+          'Bill creation requires a registered tenant cashier account. The backend database blocks platform impersonation tokens from signing invoices. Please log in directly as admin@apexretail.com to issue bills.',
+          { duration: 7000 }
+        );
+        return;
+      }
       toast.error(getApiErrorMessage(err));
     },
   });
+
+  // ── Loading skeleton ──────────────────────────────────────────
+  if (shopsLoading) {
+    return (
+      <div className="pb-28 sm:pb-8">
+        <PageHeader title="New Bill" subtitle="Checkout terminal" showBack backTo="/bills" />
+        <div className="space-y-3 mt-4">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="h-16 rounded-button skeleton-shimmer" />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Empty state — no shops yet ─────────────────────────────────
+  if (shops && shops.length === 0) {
+    return (
+      <div className="pb-28 sm:pb-8">
+        <PageHeader title="New Bill" subtitle="Checkout terminal" showBack backTo="/bills" />
+        <div
+          className="mt-10 flex flex-col items-center text-center p-8 rounded-card border border-dashed border-border"
+          style={{ backgroundColor: 'var(--bg-card)' }}
+        >
+          <Store className="w-12 h-12 text-text-muted mb-3" />
+          <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+            You don't have a shop yet
+          </h3>
+          <p className="text-sm mt-1 mb-5" style={{ color: 'var(--text-muted)' }}>
+            Create your first shop to start generating bills.
+          </p>
+          <Button
+            variant="primary"
+            size="md"
+            onClick={() => navigate('/settings/shops/new')}
+          >
+            <Plus className="w-4 h-4 mr-1.5" />
+            Create Your First Shop
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pb-28 sm:pb-8">
@@ -307,8 +532,8 @@ export const NewBillPage: React.FC = () => {
         )}
       </div>
 
-      {/* Multi-Shop Selector */}
-      {shops && shops.length > 1 && (
+      {/* Shop Selector — dropdown for BusinessAdmin with 2+ shops, locked label otherwise */}
+      {userIsAdmin && shops.length > 1 ? (
         <Card className="border-border shadow-card p-4 mb-5">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
@@ -321,6 +546,7 @@ export const NewBillPage: React.FC = () => {
             </div>
             <div className="w-full sm:w-72">
               <select
+                id="shop-selector"
                 value={selectedShopId}
                 onChange={(e) => handleShopChange(e.target.value)}
                 className="w-full px-3 py-2 border border-border rounded-button text-xs font-bold focus:border-primary focus:outline-none cursor-pointer"
@@ -335,30 +561,124 @@ export const NewBillPage: React.FC = () => {
             </div>
           </div>
         </Card>
-      )}
+      ) : currentShop ? (
+        /* Locked shop display for Manager/Staff or single-shop Admin */
+        <Card className="border-border shadow-card p-3 mb-5">
+          <div className="flex items-center gap-2.5 text-xs">
+            <Store className="w-4 h-4 shrink-0" style={{ color: 'var(--text-muted)' }} />
+            <div>
+              <span className="font-bold" style={{ color: 'var(--text-primary)' }}>
+                {currentShop.name}
+              </span>
+              {!userIsAdmin && (
+                <span
+                  className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold uppercase"
+                  style={{ backgroundColor: 'rgba(229,57,53,0.1)', color: 'var(--primary)' }}
+                >
+                  Assigned shop
+                </span>
+              )}
+            </div>
+          </div>
+        </Card>
+      ) : null}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* Left Column (Items + Customer: 60% on desktop) */}
         <div className="lg:col-span-7 space-y-4">
           {/* Customer Info Card */}
-          <Card className="border-border shadow-card p-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted mb-3 flex items-center">
-              <User className="w-3.5 h-3.5 mr-1" /> Customer Details (Optional)
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Input
-                placeholder="Customer Name"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-              />
-              <Input
-                placeholder="Phone Number"
-                inputMode="numeric"
-                maxLength={10}
-                value={customerPhone}
-                onChange={(e) => setCustomerPhone(e.target.value)}
-                rightElement={<Phone className="w-3.5 h-3.5 text-text-muted" />}
-              />
+          <Card className="border-border shadow-card p-4 relative" style={{ backgroundColor: 'var(--bg-card)' }}>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted flex items-center">
+                <User className="w-3.5 h-3.5 mr-1" /> Customer Details (Optional)
+              </h3>
+              <button
+                type="button"
+                id="add-new-customer-inline-btn"
+                onClick={() => setShowNewCustomerInline(!showNewCustomerInline)}
+                className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1"
+              >
+                <Plus className="w-3 h-3" /> New Customer
+              </button>
+            </div>
+
+            {showNewCustomerInline && (
+              <div className="mb-3 p-3 rounded-lg bg-primary-soft/30 border border-primary/20 space-y-2 animate-in fade-in duration-150">
+                <div className="flex justify-between items-center text-xs font-bold text-text-primary">
+                  <span>Quick Add Customer</span>
+                  <button
+                    type="button"
+                    onClick={() => setShowNewCustomerInline(false)}
+                    className="text-text-muted hover:text-text-primary text-xs"
+                  >
+                    ✕
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <Input
+                    id="inline-customer-name"
+                    placeholder="New Customer Name"
+                    value={customerName}
+                    onChange={(e) => setCustomerName(e.target.value)}
+                  />
+                  <Input
+                    id="inline-customer-phone"
+                    placeholder="10-digit Phone"
+                    value={customerPhone}
+                    onChange={(e) => setCustomerPhone(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 relative">
+              <div className="relative">
+                <Input
+                  id="customer-autocomplete-input"
+                  data-testid="customer-name-field"
+                  placeholder="Customer Name"
+                  value={customerName}
+                  onChange={(e) => handleCustomerInputChange(e.target.value, 'name')}
+                  onFocus={() => {
+                    if (customerSuggestions.length > 0) setCustomerDropdownOpen(true);
+                  }}
+                />
+                <input type="hidden" id="customer-name-field" value={customerName} />
+                {/* Suggestions dropdown */}
+                {customerDropdownOpen && customerSuggestions.length > 0 && (
+                  <div
+                    id="customer-suggestions-dropdown"
+                    data-testid="customer-suggestions-dropdown"
+                    className="absolute left-0 right-0 top-full mt-1 rounded-lg border border-border shadow-xl z-30 max-h-48 overflow-auto divide-y divide-border animate-in fade-in zoom-in-95 duration-100"
+                    style={{ backgroundColor: 'var(--bg-card)' }}
+                  >
+                    {customerSuggestions.map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => handleSelectCustomer(c)}
+                        className="w-full text-left px-3 py-2 text-xs hover:bg-primary-soft hover:text-primary transition-colors flex items-center justify-between customer-suggestion-item"
+                      >
+                        <span className="font-bold text-text-primary">{c.name}</span>
+                        <span className="font-mono text-text-muted">{c.phone}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              <div className="relative">
+                <Input
+                  id="customer-phone-field"
+                  data-testid="customer-phone-field"
+                  placeholder="Phone Number"
+                  inputMode="numeric"
+                  maxLength={10}
+                  value={customerPhone}
+                  onChange={(e) => handleCustomerInputChange(e.target.value, 'phone')}
+                  rightElement={<Phone className="w-3.5 h-3.5 text-text-muted" />}
+                />
+              </div>
             </div>
           </Card>
 
@@ -373,7 +693,6 @@ export const NewBillPage: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    // Open drawer targeting the last empty item row
                     const lastEmpty = [...items].reverse().find((i: BillItemFormState) => !i.itemName.trim());
                     if (lastEmpty) {
                       handleBrowseCatalog(lastEmpty.id);
@@ -389,6 +708,7 @@ export const NewBillPage: React.FC = () => {
                 </button>
                 <button
                   type="button"
+                  id="add-item-manual-btn"
                   onClick={handleAddManualItem}
                   className="text-xs font-semibold text-primary hover:underline inline-flex items-center"
                 >
@@ -405,6 +725,9 @@ export const NewBillPage: React.FC = () => {
                   index={index}
                   canRemove={items.length > 1}
                   isStrictMode={isStrictMode}
+                  inventoryModeEnabled={inventoryModeEnabled}
+                  strictStockMode={strictStockMode}
+                  shopId={selectedShopId}
                   onUpdate={handleUpdateItem}
                   onRemove={handleRemoveItem}
                   onBrowseCatalog={() => handleBrowseCatalog(item.id)}
@@ -423,11 +746,116 @@ export const NewBillPage: React.FC = () => {
               Summary & Total
             </h3>
 
+            {/* Coupons Section */}
+            <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-border space-y-2.5" id="bill-coupon-section">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-text-primary flex items-center gap-1.5">
+                  <Ticket className="w-3.5 h-3.5 text-primary" />
+                  Have a coupon?
+                </span>
+                {allowCouponStacking && appliedCoupons.length > 0 && (
+                  <button
+                    type="button"
+                    id="add-another-coupon-btn"
+                    onClick={() => {
+                      setCouponCodeInput('');
+                      setCouponError(null);
+                    }}
+                    className="text-[11px] font-semibold text-primary hover:underline inline-flex items-center gap-1"
+                  >
+                    <Plus className="w-3 h-3" /> Add coupon
+                  </button>
+                )}
+              </div>
+
+              {/* Applied Coupons List */}
+              {appliedCoupons.length > 0 && (
+                <div className="space-y-1.5" id="applied-coupons-list">
+                  {appliedCoupons.map((c) => (
+                    <div
+                      key={c.code}
+                      id={`applied-coupon-${c.code}`}
+                      data-testid={`applied-coupon-${c.code}`}
+                      className="flex items-center justify-between p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 text-xs applied-coupon-row"
+                    >
+                      <div className="flex items-center gap-1.5 font-bold font-mono text-emerald-800 dark:text-emerald-300">
+                        <Check className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>{c.code}</span>
+                        <span className="font-normal font-sans text-emerald-700 dark:text-emerald-400">
+                          − ₹{c.discount}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        id={`remove-coupon-${c.code}`}
+                        onClick={() => handleRemoveCoupon(c.code)}
+                        className="text-[11px] text-text-muted hover:text-danger ml-2 font-medium"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Coupon input & apply */}
+              {(appliedCoupons.length === 0 || allowCouponStacking) && (
+                <div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      id="coupon-code-input"
+                      data-testid="coupon-code-input"
+                      placeholder="Coupon code"
+                      value={couponCodeInput}
+                      onChange={(e) => {
+                        setCouponCodeInput(e.target.value.toUpperCase());
+                        setCouponError(null);
+                      }}
+                      className="flex-1 px-3 py-1.5 text-xs font-mono uppercase border border-border rounded-button focus:border-primary focus:outline-none"
+                      style={{ backgroundColor: 'var(--bg-input)', color: 'var(--text-primary)' }}
+                    />
+                    <Button
+                      type="button"
+                      id="apply-coupon-btn"
+                      data-testid="apply-coupon-btn"
+                      size="sm"
+                      onClick={handleApplyCoupon}
+                      disabled={!couponCodeInput.trim()}
+                    >
+                      Apply
+                    </Button>
+                  </div>
+                  {couponError && (
+                    <p id="coupon-error-msg" data-testid="coupon-error-msg" className="text-xs text-danger font-medium mt-1.5">
+                      {couponError}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+
             <div className="space-y-2.5 text-sm">
               <div className="flex justify-between text-text-muted">
-                <span>Subtotal</span>
-                <Money value={totals.subtotal} size="sm" className="font-semibold text-text-primary" />
+                <span>Taxable Subtotal</span>
+                <span id="summary-subtotal" className="font-semibold text-text-primary">
+                  <Money value={totals.taxableSubtotal} size="sm" />
+                </span>
               </div>
+
+              {totals.lineDiscounts > 0 && (
+                <div className="flex justify-between text-danger text-xs font-semibold">
+                  <span>Line Discounts (−)</span>
+                  <span id="summary-line-discounts">− ₹{totals.lineDiscounts}</span>
+                </div>
+              )}
+
+              {totals.couponDiscount > 0 && (
+                <div id="coupon-discount-row" className="flex justify-between text-emerald-600 text-xs font-semibold">
+                  <span>Coupon Discount (−)</span>
+                  <span id="summary-coupon-discount">− ₹{totals.couponDiscount}</span>
+                </div>
+              )}
 
               {!isStrictMode && (
                 <div className="flex justify-between items-center text-text-muted">
@@ -446,12 +874,10 @@ export const NewBillPage: React.FC = () => {
                 </div>
               )}
 
-              {totals.discount > 0 && (
-                <div className="flex justify-between text-danger text-xs font-semibold">
-                  <span>Total Discount</span>
-                  <Money value={totals.discount} size="sm" negative />
-                </div>
-              )}
+              <div className="flex justify-between text-text-muted text-xs">
+                <span>GST (Tax)</span>
+                <span id="summary-gst" className="font-mono text-text-primary">+ ₹{totals.gst}</span>
+              </div>
 
               {isStrictMode && (
                 <div className="pt-2 border-t border-border">
@@ -470,17 +896,14 @@ export const NewBillPage: React.FC = () => {
                 </div>
               )}
 
-              {/* B3: GST at business level — BLOCKED on backend */}
-              {/* TODO: Remove GstRate from ItemRow once backend ships Businesses.GstRate field.
-                  This is blocked until backend team delivers:
-                  1. New field: Businesses.GstRate (nullable, float)
-                  2. Migration strategy for existing bills
-                  3. API endpoint: PATCH /api/v1/businesses/current with gstRate
-                  See README.md: ## Blocked on Backend > B3. GST at business level */}
-
               <div className="pt-3 border-t border-border flex justify-between items-baseline">
-                <span className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>Net Payable</span>
-                <Money value={totals.total} size="display" className="text-primary font-black" />
+                <div>
+                  <span className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>Total</span>
+                  <span className="block text-[11px] text-text-muted font-normal">Incl. all taxes</span>
+                </div>
+                <span id="summary-total">
+                  <Money value={totals.total} size="display" className="text-primary font-black" />
+                </span>
               </div>
             </div>
 

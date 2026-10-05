@@ -1,6 +1,6 @@
 import React, { lazy, Suspense, useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { reportsApi } from '../../api/reports';
 import { billsApi } from '../../api/bills';
 import { Money } from '../../components/Money';
@@ -8,6 +8,8 @@ import { Card } from '../../components/ui/Card';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import { formatDate } from '../../lib/format';
 import { useResponsive } from '../../hooks/useResponsive';
+import { useAuthStore, isStaff } from '../../stores/auth.store';
+import { useAccessibleShops } from '../../hooks/useAccessibleShops';
 import {
   TrendingUp,
   TrendingDown,
@@ -21,6 +23,7 @@ import {
   BarChart3,
   ChevronRight,
   Calendar,
+  Store,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
@@ -77,6 +80,12 @@ const CardSkeleton: React.FC<{ className?: string }> = ({ className }) => (
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();
   const { isMobile } = useResponsive();
+  const user = useAuthStore((s) => s.user);
+
+  // Staff cannot view dashboard — redirect to /bills
+  if (isStaff(user)) {
+    return <Navigate to="/bills" replace />;
+  }
 
   // Item 7: Dashboard time range selector stored in cookie
   const [range, setRange] = useState<DashboardRange>(() => getDashboardRangeCookie());
@@ -125,19 +134,24 @@ export const DashboardPage: React.FC = () => {
     };
   }, [range]);
 
-  // Summary query with range dates
+  const { shops, defaultShop, isAdmin } = useAccessibleShops();
+  const assignedShopId = !isAdmin ? (defaultShop?.id || (shops.length > 0 ? shops[0].id : undefined)) : undefined;
+
+  // Summary query with range dates and manager shop scoping
   const { data: summary, isLoading: isSummaryLoading } = useQuery({
-    queryKey: ['dashboard', 'summary', range, fromDate, toDate],
-    queryFn: () => reportsApi.getSummary({ fromDate, toDate }),
-    staleTime: 30_000,
+    queryKey: ['dashboard', 'summary', range, assignedShopId],
+    queryFn: () => reportsApi.getSummary({ fromDate, toDate, shopID: assignedShopId }),
+    staleTime: Infinity,
+    gcTime: 1000 * 60 * 60 * 24,
   });
 
-  // Recent bills query
+  // Recent bills query scoped to assigned shop
   const pageSize = isMobile ? 5 : 10;
   const { data: billsData, isLoading: isBillsLoading } = useQuery({
-    queryKey: ['dashboard', 'recent-bills', pageSize],
-    queryFn: () => billsApi.getBills({ page: 1, pageSize }),
-    staleTime: 30_000,
+    queryKey: ['dashboard', 'recent-bills', pageSize, assignedShopId],
+    queryFn: () => billsApi.getBills({ page: 1, pageSize, shopID: assignedShopId }),
+    staleTime: Infinity,
+    gcTime: 1000 * 60 * 60 * 24,
   });
 
   const recentBills = billsData?.items || [];
@@ -217,10 +231,19 @@ export const DashboardPage: React.FC = () => {
           })}
         </div>
 
-        <span className="hidden md:flex items-center text-xs text-text-muted">
-          <Calendar className="w-3.5 h-3.5 mr-1" />
-          Range saved in cookie
-        </span>
+        <div className="hidden md:flex items-center gap-3">
+          {!isAdmin && (defaultShop || shops[0]) && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-card border border-border text-xs font-semibold" style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}>
+              <Store className="w-3.5 h-3.5 text-primary" />
+              <span>{defaultShop?.name || shops[0]?.name}</span>
+              <span className="px-1.5 py-0.5 rounded text-[10px] uppercase font-bold bg-primary/10 text-primary">Scoped</span>
+            </span>
+          )}
+          <span className="flex items-center text-xs text-text-muted">
+            <Calendar className="w-3.5 h-3.5 mr-1" />
+            Range saved in cookie
+          </span>
+        </div>
       </div>
 
       {/* Quick Actions (Mobile only) */}

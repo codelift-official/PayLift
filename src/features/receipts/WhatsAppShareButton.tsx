@@ -57,8 +57,8 @@ export const WhatsAppShareButton: React.FC<WhatsAppShareButtonProps> = ({
     variant === 'primary'
       ? 'bg-primary hover:bg-primary-hover text-white shadow-sm px-4 py-2'
       : variant === 'outline'
-      ? 'border border-border bg-white text-text-primary hover:bg-slate-50 px-3 py-1.5'
-      : 'bg-slate-100 hover:bg-slate-200 text-text-primary px-3 py-1.5';
+      ? 'border border-border bg-card text-text-primary hover:bg-app-bg px-3 py-1.5'
+      : 'bg-app-bg border border-border hover:opacity-80 text-text-primary px-3 py-1.5';
 
   return (
     <>
@@ -78,8 +78,8 @@ export const WhatsAppShareButton: React.FC<WhatsAppShareButtonProps> = ({
 
       {/* WhatsApp Preview Modal */}
       {isOpen && data && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-in fade-in duration-150">
-          <div className="bg-white rounded-card shadow-modal max-w-md w-full p-6 space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 dark:bg-black/60 p-4 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-card rounded-card shadow-modal max-w-md w-full p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-border pb-3">
               <div className="flex items-center space-x-2">
                 <div className="w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center text-white">
@@ -98,7 +98,7 @@ export const WhatsAppShareButton: React.FC<WhatsAppShareButtonProps> = ({
 
             <div className="space-y-2">
               <label className="text-xs font-semibold text-text-muted">Message Preview</label>
-              <div className="bg-slate-50 border border-border rounded-lg p-3 max-h-48 overflow-y-auto text-xs font-mono whitespace-pre-wrap text-text-primary">
+              <div className="bg-app-bg border border-border rounded-lg p-3 max-h-48 overflow-y-auto text-xs font-mono whitespace-pre-wrap text-text-primary">
                 {data.message}
               </div>
             </div>
@@ -107,7 +107,7 @@ export const WhatsAppShareButton: React.FC<WhatsAppShareButtonProps> = ({
               <button
                 type="button"
                 onClick={handleCopy}
-                className="inline-flex items-center px-3 py-2 border border-border rounded-button text-xs font-medium hover:bg-slate-50 transition-colors"
+                className="inline-flex items-center px-3 py-2 border border-border rounded-button text-xs font-medium text-text-primary hover:bg-app-bg transition-colors"
               >
                 {copied ? (
                   <>

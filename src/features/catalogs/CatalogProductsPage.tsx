@@ -62,7 +62,7 @@ export const CatalogProductsPage: React.FC<CatalogProductsPageProps> = ({
               style={{ backgroundColor: 'var(--bg-card)' }}
             >
               <div className="flex items-center gap-3 text-left">
-                <div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-100 flex items-center justify-center shrink-0">
+                <div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
                   <CatalogImage
                     src={product.imageUrl}
                     alt={product.name}

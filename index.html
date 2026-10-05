@@ -9,6 +9,16 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <script>
+      (function() {
+        try {
+          var match = document.cookie.match(/(?:^|;\s*)billify_theme=([^;]+)/);
+          if (match && match[1] === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
     <title>Billify — Retail Billing &amp; POS</title>
   </head>
   <body class="bg-app-bg text-text-primary antialiased min-h-screen">

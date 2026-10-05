@@ -142,7 +142,7 @@ export const ReturnSheet: React.FC<ReturnSheetProps> = ({ bill, isOpen, onClose 
   const totalItemsCount = Object.values(quantities).reduce((a, b) => a + b, 0);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm p-0 sm:p-4">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 dark:bg-black/60 backdrop-blur-sm p-0 sm:p-4">
       {/* Container: Bottom sheet on mobile, centered modal on desktop */}
       <div
         className="w-full sm:max-w-[560px] h-[90vh] sm:h-auto sm:max-h-[85vh] rounded-t-2xl sm:rounded-card shadow-modal flex flex-col overflow-hidden"

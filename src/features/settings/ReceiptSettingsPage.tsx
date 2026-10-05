@@ -19,7 +19,6 @@ export const ReceiptSettingsPage: React.FC = () => {
   });
 
   const activeShop = shops?.find((s) => s.id === shopID) || shops?.[0];
-  const targetShopId = activeShop?.id || shopID || '';
 
   const [exchangePolicyDays, setExchangePolicyDays] = useState(7);
   const [receiptFooter, setReceiptFooter] = useState('');
@@ -32,11 +31,14 @@ export const ReceiptSettingsPage: React.FC = () => {
   }, [activeShop]);
 
   const mutation = useMutation({
-    mutationFn: () =>
-      settingsApi.updateReceiptSettings(targetShopId, {
+    mutationFn: () => {
+      const effectiveId = (shops?.some((s) => s.id === shopID) ? shopID : undefined) || activeShop?.id || shops?.[0]?.id;
+      if (!effectiveId) throw new Error('No valid shop found');
+      return settingsApi.updateReceiptSettings(effectiveId, {
         exchangePolicyDays,
         receiptFooter,
-      }),
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shops'] });
       toast.success('Receipt settings updated');
@@ -78,7 +80,7 @@ export const ReceiptSettingsPage: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left Column: Form */}
-        <Card className="bg-white border-border shadow-card p-6 space-y-5">
+        <Card className="border-border shadow-card p-6 space-y-5" style={{ backgroundColor: 'var(--bg-card)' }}>
           {/* Exchange Policy */}
           <div className="space-y-1.5">
             <label className="text-xs font-bold uppercase tracking-wider text-text-muted">
@@ -116,7 +118,7 @@ export const ReceiptSettingsPage: React.FC = () => {
         </Card>
 
         {/* Right Column: Live Mock Receipt Box */}
-        <Card className="bg-slate-50 border-border shadow-card p-6 space-y-3 font-mono text-xs flex flex-col justify-between">
+        <Card className="border-border shadow-card p-6 space-y-3 font-mono text-xs flex flex-col justify-between" style={{ backgroundColor: 'var(--bg-border)' }}>
           <div>
             <div className="flex items-center space-x-2 text-text-muted border-b border-dashed border-slate-300 pb-2 mb-3">
               <Receipt className="w-4 h-4 text-primary" />
@@ -168,7 +170,7 @@ export const ReceiptSettingsPage: React.FC = () => {
       </div>
 
       {/* Sticky Mobile Save Button */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-border p-3 px-4 shadow-raised safe-bottom">
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border p-3 px-4 shadow-raised safe-bottom" style={{ backgroundColor: 'var(--bg-card)' }}>
         <button
           type="button"
           onClick={() => mutation.mutate()}

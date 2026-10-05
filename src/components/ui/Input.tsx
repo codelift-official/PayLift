@@ -5,11 +5,13 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
   label?: string;
   error?: string;
   hint?: string;
+  leftElement?: React.ReactNode;
   rightElement?: React.ReactNode;
+  icon?: React.ReactNode;
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, label, error, hint, rightElement, id, ...props }, ref) => {
+  ({ className, label, error, hint, leftElement, rightElement, icon, id, ...props }, ref) => {
     const inputId = id || props.name || Math.random().toString(36).substring(7);
 
     return (
@@ -20,6 +22,11 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           </label>
         )}
         <div className="relative flex items-center">
+          {(leftElement || icon) && (
+            <div className="absolute left-3.5 flex items-center pointer-events-none text-text-muted">
+              {leftElement || icon}
+            </div>
+          )}
           <input
             id={inputId}
             ref={ref}
@@ -28,6 +35,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               error
                 ? 'border-danger focus-visible:ring-danger'
                 : 'border-border focus:border-primary',
+              (leftElement || icon) && 'pl-10',
               rightElement && 'pr-10',
               className
             )}

@@ -18,3 +18,12 @@ pnpm-debug.log*
 !.vscode/extensions.json
 .idea
 .DS_Store
+
+
+
+.nx/cache
+.nx/workspace-data
+.nx/migrate-runs
+test-results/
+.openpost/
+tests/

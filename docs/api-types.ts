@@ -87,6 +87,8 @@ export interface AuthResponse {
   userID: string;
   tenantID: number;
   role: string;
+  /** ID of the default shop created during business setup */
+  defaultShopID?: string | null;
 }
 
 export interface SendOtpRequest {
@@ -230,6 +232,7 @@ export interface CreateBillRequest {
   items: BillItemRequest[];
   payments?: PaymentRequest[] | null;
   negotiatedTotal?: number | null;
+  couponCodes?: string[] | null;
 }
 
 export interface BillItemResponse {

@@ -133,7 +133,7 @@ export const CatalogDrawer: React.FC<CatalogDrawerProps> = ({
   const canGoBack = level !== 'catalogs' && !(level === 'categories' && catalogs.length === 1);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 dark:bg-black/60 backdrop-blur-sm">
       <div
         className="w-full sm:max-w-[500px] h-[85vh] sm:h-[75vh] rounded-t-2xl sm:rounded-card shadow-modal flex flex-col overflow-hidden"
         style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}

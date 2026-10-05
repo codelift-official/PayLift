@@ -3,6 +3,8 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Bell, Settings, LogOut } from 'lucide-react';
 import { BottomNav } from '../components/nav/BottomNav';
 import { ThemeToggle } from '../components/ui/ThemeToggle';
+import { SubscriptionBanner } from '../components/SubscriptionBanner';
+import { ImpersonationBanner } from '../components/ImpersonationBanner';
 import { useAuthStore } from '../stores/auth.store';
 import { toast } from 'sonner';
 
@@ -19,7 +21,7 @@ export const MobileShell: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'var(--bg-app)', color: 'var(--text-primary)' }}>
+    <div className="min-h-screen flex flex-col overflow-x-hidden" style={{ backgroundColor: 'var(--bg-app)', color: 'var(--text-primary)' }}>
       {/* Mobile Header (56px) */}
       <header
         className="sticky top-0 z-30 h-14 border-b border-border px-4 flex items-center justify-between safe-top"
@@ -61,8 +63,12 @@ export const MobileShell: React.FC = () => {
         </div>
       </header>
 
+      {/* Impersonation & Subscription Banners */}
+      <ImpersonationBanner />
+      <SubscriptionBanner />
+
       {/* Main Content — pb-24 clears bottom nav or sticky action bar */}
-      <main className="flex-1 p-3 pb-24 overflow-y-auto">
+      <main className="flex-1 p-3 pb-24 overflow-y-auto overflow-x-hidden">
         <Outlet />
       </main>
 

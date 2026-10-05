@@ -19,7 +19,6 @@ export const NotificationSettingsPage: React.FC = () => {
   });
 
   const activeShop = shops?.find((s) => s.id === shopID) || shops?.[0];
-  const targetShopId = activeShop?.id || shopID || '';
 
   const [whatsAppEnabled, setWhatsAppEnabled] = useState(true);
   const [notificationEmail, setNotificationEmail] = useState('');
@@ -34,12 +33,15 @@ export const NotificationSettingsPage: React.FC = () => {
   }, [activeShop]);
 
   const mutation = useMutation({
-    mutationFn: () =>
-      settingsApi.updateNotificationSettings(targetShopId, {
+    mutationFn: () => {
+      const effectiveId = (shops?.some((s) => s.id === shopID) ? shopID : undefined) || activeShop?.id || shops?.[0]?.id;
+      if (!effectiveId) throw new Error('No valid shop found');
+      return settingsApi.updateNotificationSettings(effectiveId, {
         whatsAppEnabled,
         notificationEmail,
         notificationSms,
-      }),
+      });
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shops'] });
       toast.success('Notification preferences updated');
@@ -79,7 +81,7 @@ export const NotificationSettingsPage: React.FC = () => {
         }
       />
 
-      <Card className="bg-white border-border shadow-card p-6 space-y-6">
+      <Card className="border-border shadow-card p-6 space-y-6" style={{ backgroundColor: 'var(--bg-card)' }}>
         {/* WhatsApp Toggles */}
         <div className="flex items-center justify-between pb-4 border-b border-border">
           <div className="space-y-0.5">
@@ -142,7 +144,7 @@ export const NotificationSettingsPage: React.FC = () => {
       </Card>
 
       {/* Sticky Mobile Save Button */}
-      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-border p-3 px-4 shadow-raised safe-bottom">
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border p-3 px-4 shadow-raised safe-bottom" style={{ backgroundColor: 'var(--bg-card)' }}>
         <button
           type="button"
           onClick={() => mutation.mutate()}

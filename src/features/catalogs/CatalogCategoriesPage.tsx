@@ -42,7 +42,7 @@ export const CatalogCategoriesPage: React.FC = () => {
               className="group flex flex-col items-start p-3.5 rounded-card border border-border transition-all duration-150 active:scale-95 hover:border-primary hover:shadow-raised overflow-hidden text-left"
               style={{ backgroundColor: 'var(--bg-card)' }}
             >
-              <div className="w-full h-24 rounded-lg overflow-hidden mb-2.5 bg-slate-100 flex items-center justify-center">
+              <div className="w-full h-24 rounded-lg overflow-hidden mb-2.5 bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
                 <CatalogImage
                   src={category.imageUrl}
                   alt={category.name}

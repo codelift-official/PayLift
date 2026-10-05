@@ -13,16 +13,65 @@ import {
   KeyRound,
   LogOut,
   ChevronRight,
-  Shield,
   User,
   Loader2,
+  Users,
+  Package,
+  Boxes,
   Layers,
+  Ticket,
+  Megaphone,
 } from 'lucide-react';
 import { toast } from 'sonner';
+
+// ─── Reusable themed row component ────────────────────────────────
+const SettingsRow: React.FC<{
+  to: string;
+  icon: React.ReactNode;
+  iconBg: string;
+  iconColor: string;
+  title: string;
+  subtitle?: string;
+  badge?: React.ReactNode;
+  dataTestId?: string;
+}> = ({ to, icon, iconBg, iconColor, title, subtitle, badge, dataTestId }) => (
+  <Link
+    to={to}
+    data-testid={dataTestId}
+    className="px-5 py-3.5 flex items-center justify-between group transition-colors settings-row-link"
+    style={{ color: 'inherit' }}
+    onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = 'var(--bg-app)')}
+    onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = '')}
+  >
+    <div className="flex items-center space-x-3">
+      <div
+        className={`w-8 h-8 rounded-lg ${iconBg} ${iconColor} flex items-center justify-center shrink-0`}
+      >
+        {icon}
+      </div>
+      <div>
+        <div className="flex items-center space-x-2">
+          <p className="text-sm font-semibold group-hover:text-primary transition-colors row-title" style={{ color: 'var(--text-primary)' }}>
+            {title}
+          </p>
+          {badge}
+        </div>
+        {subtitle && (
+          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{subtitle}</p>
+        )}
+      </div>
+    </div>
+    <ChevronRight className="w-4 h-4 group-hover:text-primary transition-colors" style={{ color: 'var(--text-muted)' }} />
+  </Link>
+);
 
 export const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, tenantSlug, logout } = useAuthStore();
+
+  const role = user?.role || 'Staff';
+  const isAdmin = role === 'BusinessAdmin';
+  const isManager = role === 'Manager';
 
   const { data: shops, isLoading } = useQuery({
     queryKey: ['shops'],
@@ -30,7 +79,7 @@ export const SettingsPage: React.FC = () => {
   });
 
   const activeShop = shops?.[0];
-  const shopId = activeShop?.id || '11111111-1111-1111-1111-111111111111';
+  const shopId = activeShop?.id || '';
 
   const handleLogout = async () => {
     try {
@@ -43,195 +92,270 @@ export const SettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto space-y-6 pb-20 sm:pb-6">
+    <div className="max-w-2xl mx-auto space-y-6 pb-20 sm:pb-6" id="settings-page-container">
       <PageHeader
         title="Settings & Preferences"
-        subtitle="Manage hardware, store configuration, and terminal account"
+        subtitle="Manage business catalog, hardware, team, and security settings"
       />
 
-      {/* Terminal / Store Settings */}
-      <Card className="bg-white border-border shadow-card overflow-hidden">
-        <div className="px-5 py-3 border-b border-border bg-slate-50">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted flex items-center">
-            <Store className="w-3.5 h-3.5 mr-1.5" />
-            Store & Hardware Configuration
-          </h3>
-        </div>
-
+      {/* Main Settings Section Card */}
+      <Card className="border-border shadow-card overflow-hidden" style={{ backgroundColor: 'var(--bg-card)' }}>
         {isLoading ? (
-          <div className="p-6 flex justify-center">
+          <div className="p-8 flex justify-center">
             <Loader2 className="w-6 h-6 animate-spin text-primary" />
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {/* Shop Details */}
-            <Link
-              to={`/settings/shop/${shopId}`}
-              className="px-5 py-3.5 flex items-center justify-between hover:bg-slate-50 transition-colors group"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                  <Store className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-text-primary group-hover:text-primary transition-colors">
-                    Shop Details
-                  </p>
-                  <p className="text-xs text-text-muted">
-                    {activeShop?.name || 'Kirana Mart'} • {activeShop?.mobile || 'Store Phone'}
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-primary transition-colors" />
-            </Link>
+            {/* ── ADMIN SECTION 1: Catalog & Management ── */}
+            {isAdmin && (
+              <>
+                <SettingsRow
+                  to="/settings/shops"
+                  icon={<Store className="w-4 h-4" />}
+                  iconBg="bg-violet-50 dark:bg-violet-950/30"
+                  iconColor="text-violet-600"
+                  title="Shops"
+                  subtitle={`${shops?.length ?? 0} ${(shops?.length ?? 0) === 1 ? 'location' : 'locations'} configured`}
+                  dataTestId="settings-row-shops"
+                />
 
-            {/* Printer Settings */}
-            <Link
-              to={`/settings/printer/${shopId}`}
-              className="px-5 py-3.5 flex items-center justify-between hover:bg-slate-50 transition-colors group"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-lg bg-emerald-50 text-success flex items-center justify-center">
-                  <Printer className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-text-primary group-hover:text-primary transition-colors">
-                    Printer Settings
-                  </p>
-                  <p className="text-xs text-text-muted">
-                    {activeShop?.printerType || 'Thermal'} • {activeShop?.printerName || 'Bluetooth ESC/POS'}
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-primary transition-colors" />
-            </Link>
+                <SettingsRow
+                  to="/settings/users"
+                  icon={<Users className="w-4 h-4" />}
+                  iconBg="bg-teal-50 dark:bg-teal-950/30"
+                  iconColor="text-teal-600"
+                  title="Staff & Access"
+                  subtitle="Manage team members & permissions"
+                  dataTestId="settings-row-staff"
+                />
 
-            {/* Notification Settings */}
-            <Link
-              to={`/settings/notifications/${shopId}`}
-              className="px-5 py-3.5 flex items-center justify-between hover:bg-slate-50 transition-colors group"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center">
-                  <Bell className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-text-primary group-hover:text-primary transition-colors">
-                    Notification Settings
-                  </p>
-                  <p className="text-xs text-text-muted">
-                    WhatsApp receipts & email sales reports
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-primary transition-colors" />
-            </Link>
+                <SettingsRow
+                  to="/settings/inventory"
+                  icon={<Package className="w-4 h-4" />}
+                  iconBg="bg-blue-50 dark:bg-blue-950/30"
+                  iconColor="text-blue-600"
+                  title="Inventory"
+                  subtitle="Catalog mode & strict stock enforcement"
+                  dataTestId="settings-row-inventory"
+                />
 
-            {/* Receipt Settings */}
-            <Link
-              to={`/settings/receipt/${shopId}`}
-              className="px-5 py-3.5 flex items-center justify-between hover:bg-slate-50 transition-colors group"
-            >
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
-                  <Receipt className="w-4 h-4" />
-                </div>
-                <div>
-                  <p className="text-sm font-semibold text-text-primary group-hover:text-primary transition-colors">
-                    Receipt Settings
-                  </p>
-                  <p className="text-xs text-text-muted">
-                    {activeShop?.exchangePolicyDays || 7} days exchange • Custom footer note
-                  </p>
-                </div>
-              </div>
-              <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-primary transition-colors" />
-            </Link>
+                <SettingsRow
+                  to="/settings/products"
+                  icon={<Boxes className="w-4 h-4" />}
+                  iconBg="bg-amber-50 dark:bg-amber-950/30"
+                  iconColor="text-amber-600"
+                  title="Products"
+                  subtitle="Item pricing, barcodes & tax rates"
+                  dataTestId="settings-row-products"
+                />
 
-            {/* Catalog Configuration (Admin) */}
-            <Link
-              to="/settings/catalogs"
-              className="px-5 py-3.5 flex items-center justify-between hover:bg-slate-50 transition-colors group"
+                <SettingsRow
+                  to="/settings/stock"
+                  icon={<Layers className="w-4 h-4" />}
+                  iconBg="bg-emerald-50 dark:bg-emerald-950/30"
+                  iconColor="text-emerald-600"
+                  title="Stock"
+                  subtitle="Real-time quantities, alerts & purchases"
+                  dataTestId="settings-row-stock"
+                />
+
+                <SettingsRow
+                  to="/settings/customers"
+                  icon={<User className="w-4 h-4" />}
+                  iconBg="bg-pink-50 dark:bg-pink-950/30"
+                  iconColor="text-pink-600"
+                  title="Customers"
+                  subtitle="Customer profiles & visit history"
+                  dataTestId="settings-row-customers"
+                />
+
+                <SettingsRow
+                  to="/settings/coupons"
+                  icon={<Ticket className="w-4 h-4" />}
+                  iconBg="bg-purple-50 dark:bg-purple-950/30"
+                  iconColor="text-purple-600"
+                  title="Coupons"
+                  subtitle="Discount codes & stacking rules"
+                  dataTestId="settings-row-coupons"
+                />
+
+                <SettingsRow
+                  to="/settings/offers"
+                  icon={<Megaphone className="w-4 h-4" />}
+                  iconBg="bg-indigo-50 dark:bg-indigo-950/30"
+                  iconColor="text-indigo-600"
+                  title="Offers"
+                  subtitle="WhatsApp broadcast promotions"
+                  dataTestId="settings-row-offers"
+                />
+              </>
+            )}
+
+            {/* ── MANAGER SECTION 1: Catalog & Customers ── */}
+            {isManager && (
+              <>
+                <SettingsRow
+                  to="/settings/products"
+                  icon={<Boxes className="w-4 h-4" />}
+                  iconBg="bg-amber-50 dark:bg-amber-950/30"
+                  iconColor="text-amber-600"
+                  title="Products"
+                  subtitle="Item pricing, barcodes & tax rates"
+                  dataTestId="settings-row-products"
+                />
+
+                <SettingsRow
+                  to="/settings/stock"
+                  icon={<Layers className="w-4 h-4" />}
+                  iconBg="bg-emerald-50 dark:bg-emerald-950/30"
+                  iconColor="text-emerald-600"
+                  title="Stock"
+                  subtitle="Real-time quantities, alerts & purchases"
+                  dataTestId="settings-row-stock"
+                />
+
+                <SettingsRow
+                  to="/settings/customers"
+                  icon={<User className="w-4 h-4" />}
+                  iconBg="bg-pink-50 dark:bg-pink-950/30"
+                  iconColor="text-pink-600"
+                  title="Customers"
+                  subtitle="Customer profiles & visit history"
+                  dataTestId="settings-row-customers"
+                />
+
+                <SettingsRow
+                  to="/settings/coupons"
+                  icon={<Ticket className="w-4 h-4" />}
+                  iconBg="bg-purple-50 dark:bg-purple-950/30"
+                  iconColor="text-purple-600"
+                  title="Coupons"
+                  subtitle="Discount codes & stacking rules"
+                  dataTestId="settings-row-coupons"
+                />
+
+                <SettingsRow
+                  to="/settings/offers"
+                  icon={<Megaphone className="w-4 h-4" />}
+                  iconBg="bg-indigo-50 dark:bg-indigo-950/30"
+                  iconColor="text-indigo-600"
+                  title="Offers"
+                  subtitle="WhatsApp broadcast promotions"
+                  dataTestId="settings-row-offers"
+                />
+              </>
+            )}
+
+            {/* ── HARDWARE & COMMUNICATIONS SECTION ── */}
+            {/* Printer is visible to ALL roles (Admin, Manager, Staff) */}
+            <SettingsRow
+              to={shopId ? `/settings/printer/${shopId}` : '/settings/printer'}
+              icon={<Printer className="w-4 h-4" />}
+              iconBg="bg-emerald-50 dark:bg-emerald-950/30"
+              iconColor="text-success"
+              title="Printer"
+              subtitle={`${activeShop?.printerType || 'Thermal'} • ${activeShop?.printerName || 'Bluetooth ESC/POS'}`}
+              dataTestId="settings-row-printer"
+            />
+
+            {/* Notifications & Receipt: Admin only */}
+            {isAdmin && (
+              <>
+                <SettingsRow
+                  to={shopId ? `/settings/notifications/${shopId}` : '/settings/notifications'}
+                  icon={<Bell className="w-4 h-4" />}
+                  iconBg="bg-purple-50 dark:bg-purple-950/30"
+                  iconColor="text-purple-600"
+                  title="Notifications"
+                  subtitle="WhatsApp receipts & email sales reports"
+                  dataTestId="settings-row-notifications"
+                />
+
+                <SettingsRow
+                  to={shopId ? `/settings/receipt/${shopId}` : '/settings/receipt'}
+                  icon={<Receipt className="w-4 h-4" />}
+                  iconBg="bg-amber-50 dark:bg-amber-950/30"
+                  iconColor="text-amber-600"
+                  title="Receipt"
+                  subtitle={`${activeShop?.exchangePolicyDays || 7} days exchange • Custom footer note`}
+                  dataTestId="settings-row-receipt"
+                />
+              </>
+            )}
+
+            {/* ── ACCOUNT SECTION ── */}
+            {/* Account is visible to ALL roles */}
+            <SettingsRow
+              to="/settings/account"
+              icon={<User className="w-4 h-4" />}
+              iconBg="bg-indigo-50 dark:bg-indigo-950/30"
+              iconColor="text-indigo-600 dark:text-indigo-400"
+              title="Account"
+              subtitle="Data export, system version & business details"
+              dataTestId="settings-row-account"
+            />
+
+            {/* Change Password: Admin only in the settings list */}
+            {isAdmin && (
+              <SettingsRow
+                to="/settings/account/change-password"
+                icon={<KeyRound className="w-4 h-4" />}
+                iconBg="bg-slate-100 dark:bg-slate-800"
+                iconColor="text-slate-600 dark:text-slate-300"
+                title="Change Password"
+                subtitle="Update your sign-in password"
+                dataTestId="settings-row-change-password"
+              />
+            )}
+
+            {/* ── LOGOUT (red, last row for ALL roles) ── */}
+            <button
+              type="button"
+              id="settings-logout-btn"
+              onClick={handleLogout}
+              className="w-full px-5 py-3.5 flex items-center justify-between hover:bg-red-50 dark:hover:bg-red-950/20 text-danger transition-colors font-semibold text-sm text-left group"
             >
               <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 rounded-lg bg-rose-50 text-primary flex items-center justify-center">
-                  <Layers className="w-4 h-4" />
+                <div className="w-8 h-8 rounded-lg bg-red-50 dark:bg-red-950/30 text-danger flex items-center justify-center shrink-0">
+                  <LogOut className="w-4 h-4" />
                 </div>
-                <div>
-                  <div className="flex items-center space-x-2">
-                    <p className="text-sm font-semibold text-text-primary group-hover:text-primary transition-colors">
-                      Catalog Configuration
-                    </p>
-                    <span className="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded bg-primary/10 text-primary">
-                      Admin
-                    </span>
-                  </div>
-                  <p className="text-xs text-text-muted">
-                    Enable, disable & reorder bill checkout catalogs
-                  </p>
-                </div>
+                <span className="row-title">Logout</span>
               </div>
-              <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-primary transition-colors" />
-            </Link>
+              <ChevronRight className="w-4 h-4 text-danger/50 group-hover:text-danger transition-colors" />
+            </button>
           </div>
         )}
       </Card>
 
-      {/* Account Info */}
-      <Card className="bg-white border-border shadow-card p-5 space-y-3">
-        <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted flex items-center">
+      {/* Account Info Details Card */}
+      <Card className="border-border shadow-card p-5 space-y-3" style={{ backgroundColor: 'var(--bg-card)' }}>
+        <h3 className="text-xs font-bold uppercase tracking-wider flex items-center" style={{ color: 'var(--text-muted)' }}>
           <User className="w-3.5 h-3.5 mr-1.5" /> Account Details
         </h3>
-        <div className="space-y-2.5 text-xs sm:text-sm">
-          <div className="flex justify-between py-2 border-b border-slate-100">
-            <span className="text-text-muted">Shop Slug</span>
-            <span className="font-mono font-bold text-text-primary">{tenantSlug || 'kirana-mart'}</span>
+        <div className="space-y-0 divide-y divide-border text-xs sm:text-sm">
+          <div className="flex justify-between py-2.5">
+            <span style={{ color: 'var(--text-muted)' }}>Shop Slug</span>
+            <span className="font-mono font-bold" style={{ color: 'var(--text-primary)' }}>{tenantSlug || 'kirana-mart'}</span>
           </div>
-          <div className="flex justify-between py-2 border-b border-slate-100">
-            <span className="text-text-muted">Email</span>
-            <span className="font-semibold text-text-primary">{user?.email || 'admin@kiranamart.com'}</span>
+          <div className="flex justify-between py-2.5">
+            <span style={{ color: 'var(--text-muted)' }}>Email</span>
+            <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>{user?.email || 'admin@kiranamart.com'}</span>
           </div>
-          <div className="flex justify-between py-2 border-b border-slate-100">
-            <span className="text-text-muted">Role</span>
-            <span className="font-semibold text-text-primary capitalize">{user?.role || 'BusinessAdmin'}</span>
+          <div className="flex justify-between py-2.5">
+            <span style={{ color: 'var(--text-muted)' }}>Role</span>
+            <span className="font-semibold capitalize" style={{ color: 'var(--text-primary)' }}>{user?.role || 'Staff'}</span>
           </div>
         </div>
       </Card>
 
-      {/* Security & Logout Actions */}
-      <Card className="bg-white border-border shadow-card overflow-hidden">
-        <div className="px-5 py-3 border-b border-border bg-slate-50">
-          <h3 className="text-xs font-bold uppercase tracking-wider text-text-muted flex items-center">
-            <Shield className="w-3.5 h-3.5 mr-1.5" /> Security & Session
-          </h3>
-        </div>
-
-        <div className="divide-y divide-border">
-          <Link
-            to="/settings/account/change-password"
-            className="px-5 py-3.5 flex items-center justify-between hover:bg-slate-50 transition-colors group"
-          >
-            <div className="flex items-center space-x-3">
-              <KeyRound className="w-4 h-4 text-text-muted group-hover:text-primary transition-colors" />
-              <span className="text-sm font-semibold text-text-primary group-hover:text-primary transition-colors">
-                Change Password
-              </span>
-            </div>
-            <ChevronRight className="w-4 h-4 text-text-muted group-hover:text-primary transition-colors" />
-          </Link>
-
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="w-full px-5 py-3.5 flex items-center justify-between hover:bg-red-50 text-danger transition-colors font-semibold text-sm text-left"
-          >
-            <div className="flex items-center space-x-3">
-              <LogOut className="w-4 h-4" />
-              <span>Log Out</span>
-            </div>
-          </button>
-        </div>
-      </Card>
+      {/* Legal Footer Links */}
+      <div className="text-center text-xs space-x-3 pt-2" style={{ color: 'var(--text-muted)' }}>
+        <Link to="/terms" className="hover:underline">Terms</Link>
+        <span>·</span>
+        <Link to="/privacy" className="hover:underline">Privacy</Link>
+        <span>·</span>
+        <Link to="/refund-policy" className="hover:underline">Refund Policy</Link>
+      </div>
     </div>
   );
 };

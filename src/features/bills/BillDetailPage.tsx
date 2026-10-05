@@ -8,7 +8,7 @@ import { Card } from '../../components/ui/Card';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import { Money } from '../../components/Money';
 import { Button } from '../../components/ui/Button';
-import { formatDateTime, formatDate, formatPhone } from '../../lib/format';
+import { formatDateTime, formatDate, formatPhone, formatMoney } from '../../lib/format';
 import { ThermalPrintButton } from '../receipts/ThermalPrintButton';
 import { WhatsAppShareButton } from '../receipts/WhatsAppShareButton';
 import { ReturnSheet } from '../returns/ReturnSheet';
@@ -24,8 +24,12 @@ import {
   MoreVertical,
   Undo2,
   Trash2,
+  MessageSquare,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuthStore, isBusinessAdmin } from '../../stores/auth.store';
+import { whatsappApi } from '../../api/whatsapp';
+import { SendMessageModal } from '../settings/whatsapp/SendMessageModal';
 
 export const BillDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -34,6 +38,11 @@ export const BillDetailPage: React.FC = () => {
   const [isReturnOpen, setIsReturnOpen] = useState(false);
   const [isExchangeOpen, setIsExchangeOpen] = useState(false);
   const [showMobileMore, setShowMobileMore] = useState(false);
+  const [isWaModalOpen, setIsWaModalOpen] = useState(false);
+
+  const user = useAuthStore((s) => s.user);
+  const isAdmin = isBusinessAdmin(user);
+  const canSendWhatsApp = isAdmin || user?.role === 'Manager';
 
   // Item 2: Two queries for bill and returns
   const { data: bill, isLoading: isBillLoading, error } = useQuery({
@@ -48,6 +57,16 @@ export const BillDetailPage: React.FC = () => {
     queryFn: () => returnsApi.getBillReturns(id || ''),
     enabled: !!id,
     staleTime: 30_000,
+  });
+
+  const { data: waConfig } = useQuery({
+    queryKey: ['whatsapp-config', bill?.shopID],
+    queryFn: async () => {
+      if (!bill?.shopID) return null;
+      return whatsappApi.getConfig(bill.shopID);
+    },
+    enabled: !!bill?.shopID && canSendWhatsApp,
+    staleTime: 60_000,
   });
 
   const billReturns: any[] = useMemo(() => {
@@ -161,6 +180,17 @@ export const BillDetailPage: React.FC = () => {
             </button>
             <ThermalPrintButton billId={bill.id} variant="primary" />
             <WhatsAppShareButton billId={bill.id} variant="outline" />
+            {waConfig?.isActive && canSendWhatsApp && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsWaModalOpen(true)}
+                className="text-xs text-emerald-600 dark:text-emerald-400 border-emerald-500/30 hover:bg-emerald-50 dark:hover:bg-emerald-950/40"
+              >
+                <MessageSquare className="w-3.5 h-3.5 mr-1" />
+                Send on WhatsApp Business
+              </Button>
+            )}
             {/* Item 3: Visible Exchange secondary button */}
             <Button
               variant="outline"
@@ -542,6 +572,19 @@ export const BillDetailPage: React.FC = () => {
                 <RefreshCw className="w-3.5 h-3.5 mr-2" />
                 Exchange
               </button>
+              {waConfig?.isActive && canSendWhatsApp && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowMobileMore(false);
+                    setIsWaModalOpen(true);
+                  }}
+                  className="w-full text-left px-3 py-2 text-xs font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center border-t border-border"
+                >
+                  <MessageSquare className="w-3.5 h-3.5 mr-2" />
+                  Send on WhatsApp Business
+                </button>
+              )}
               <button
                 type="button"
                 onClick={() => {
@@ -583,6 +626,22 @@ export const BillDetailPage: React.FC = () => {
         isOpen={isExchangeOpen}
         onClose={() => setIsExchangeOpen(false)}
       />
+
+      {/* WhatsApp Send Modal */}
+      {bill && (
+        <SendMessageModal
+          open={isWaModalOpen}
+          onClose={() => setIsWaModalOpen(false)}
+          shopId={bill.shopID}
+          initialRecipientPhone={bill.customerPhone || ''}
+          initialTemplate="bill_receipt_v1"
+          initialParams={[
+            bill.customerName || 'Customer',
+            formatMoney(bill.total),
+            bill.billNumber || bill.id,
+          ]}
+        />
+      )}
     </div>
   );
 };

@@ -29,7 +29,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             id={selectId}
             ref={ref}
             className={clsx(
-              'w-full px-3.5 py-2.5 bg-white border rounded-button text-sm text-text-primary appearance-none cursor-pointer pr-10 transition-colors',
+              'w-full px-3.5 py-2.5 border rounded-button text-sm text-text-primary appearance-none cursor-pointer pr-10 transition-colors',
               error
                 ? 'border-danger focus-visible:ring-danger'
                 : 'border-border focus:border-primary',

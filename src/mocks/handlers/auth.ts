@@ -20,14 +20,58 @@ export const authHandlers = [
       return HttpResponse.json({ error: 'Business suspended.' }, { status: 403 });
     }
 
+    let userRole = seedStore.users[0].role;
+    let userId = seedStore.users[0].userID;
+
+    if (body.email && body.email.toLowerCase().includes('staff')) {
+      userRole = 'Staff';
+      userId = 'cccccccc-cccc-cccc-cccc-cccccccccccc';
+    } else if (body.email && body.email.toLowerCase().includes('manager')) {
+      userRole = 'Manager';
+      userId = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+    }
+
     const authRes: AuthResponse = {
       accessToken: 'mock-access-token-xyz-12345',
       refreshToken: 'mock-refresh-token-abc-67890',
       expiresIn: 3600,
       tokenType: 'Bearer',
-      userID: seedStore.users[0].userID,
+      userID: userId,
       tenantID: seedStore.business.id,
-      role: seedStore.users[0].role,
+      role: userRole,
+    };
+    return HttpResponse.json(authRes, { status: 200 });
+  }),
+
+  // POST /auth/login (relative path alias)
+  http.post('/auth/login', async ({ request }) => {
+    const body = (await request.json()) as LoginRequest;
+    if (body.email && body.email.includes('wrong')) {
+      return HttpResponse.json({ error: 'Invalid credentials.' }, { status: 401 });
+    }
+    if (body.tenant === 'suspended') {
+      return HttpResponse.json({ error: 'Business suspended.' }, { status: 403 });
+    }
+
+    let userRole = seedStore.users[0].role;
+    let userId = seedStore.users[0].userID;
+
+    if (body.email && body.email.toLowerCase().includes('staff')) {
+      userRole = 'Staff';
+      userId = 'cccccccc-cccc-cccc-cccc-cccccccccccc';
+    } else if (body.email && body.email.toLowerCase().includes('manager')) {
+      userRole = 'Manager';
+      userId = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+    }
+
+    const authRes: AuthResponse = {
+      accessToken: 'mock-access-token-xyz-12345',
+      refreshToken: 'mock-refresh-token-abc-67890',
+      expiresIn: 3600,
+      tokenType: 'Bearer',
+      userID: userId,
+      tenantID: seedStore.business.id,
+      role: userRole,
     };
     return HttpResponse.json(authRes, { status: 200 });
   }),

@@ -81,8 +81,8 @@ export const ThermalPrintButton: React.FC<ThermalPrintButtonProps> = ({
     variant === 'primary'
       ? 'bg-primary hover:bg-primary-hover text-white shadow-sm px-4 py-2'
       : variant === 'outline'
-      ? 'border border-border bg-white text-text-primary hover:bg-slate-50 px-3 py-1.5'
-      : 'bg-slate-100 hover:bg-slate-200 text-text-primary px-3 py-1.5';
+      ? 'border border-border bg-card text-text-primary hover:bg-app-bg px-3 py-1.5'
+      : 'bg-app-bg border border-border hover:opacity-80 text-text-primary px-3 py-1.5';
 
   return (
     <button

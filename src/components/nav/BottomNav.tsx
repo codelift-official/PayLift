@@ -1,7 +1,9 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Home, Receipt, Undo2, Menu, Plus, LucideIcon } from 'lucide-react';
+import { Plus, LucideIcon } from 'lucide-react';
 import { clsx } from 'clsx';
+import { useAuthStore } from '../../stores/auth.store';
+import { navItemsForRole } from './navItems';
 
 interface NavSlot {
   key: string;
@@ -9,16 +11,6 @@ interface NavSlot {
   label: string;
   path: string;
 }
-
-const leftSlots: NavSlot[] = [
-  { key: 'home', icon: Home, label: 'Home', path: '/dashboard' },
-  { key: 'bills', icon: Receipt, label: 'Bills', path: '/bills' },
-];
-
-const rightSlots: NavSlot[] = [
-  { key: 'returns', icon: Undo2, label: 'Returns', path: '/returns' },
-  { key: 'more', icon: Menu, label: 'Menu', path: '/settings' },
-];
 
 const NavSlotLink: React.FC<{ slot: NavSlot }> = ({ slot }) => {
   const Icon = slot.icon;
@@ -46,18 +38,32 @@ const NavSlotLink: React.FC<{ slot: NavSlot }> = ({ slot }) => {
 
 export const BottomNav: React.FC = () => {
   const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
+
+  // Role-filtered nav items (mobile: split around FAB)
+  const allItems = navItemsForRole(user?.role);
+
+  // Split: left side gets items before FAB slot, right side after
+  // FAB is always centered — we place 2 on each side (or 1+1 for Staff's 4 items)
+  const half = Math.floor(allItems.length / 2);
+  const leftSlots = allItems.slice(0, half);
+  const rightSlots = allItems.slice(half);
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-md border-t border-border flex justify-around items-center h-16 safe-bottom"
-      style={{ backdropFilter: 'blur(12px)' }}
+      className="fixed bottom-0 left-0 right-0 z-40 backdrop-blur-md border-t border-border flex justify-around items-center h-16 safe-bottom"
+      style={{
+        backgroundColor: 'var(--bg-card)',
+        backdropFilter: 'blur(12px)',
+        WebkitBackdropFilter: 'blur(12px)',
+      }}
     >
-      {/* Left 2 slots */}
+      {/* Left slots */}
       {leftSlots.map((slot) => (
         <NavSlotLink key={slot.key} slot={slot} />
       ))}
 
-      {/* Center FAB slot */}
+      {/* Center FAB slot — always present regardless of role */}
       <div className="flex flex-col items-center justify-center flex-1 relative">
         <button
           type="button"
@@ -71,7 +77,7 @@ export const BottomNav: React.FC = () => {
         </button>
       </div>
 
-      {/* Right 2 slots */}
+      {/* Right slots */}
       {rightSlots.map((slot) => (
         <NavSlotLink key={slot.key} slot={slot} />
       ))}
