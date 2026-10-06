@@ -637,6 +637,28 @@ export const phase11Handlers = [
     });
     return HttpResponse.json(newProduct, { status: 201 });
   }),
+  http.post('/api/v1/products', async ({ request }) => {
+    const body = (await request.json()) as Omit<Product, 'id'>;
+    const newProduct: Product = {
+      ...body,
+      id: `prod-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+    };
+    mockProducts.unshift(newProduct);
+    mockStockItems.push({
+      id: `stock-${Date.now()}`,
+      shopId: '11111111-1111-1111-1111-111111111111',
+      productId: newProduct.id,
+      productName: newProduct.name,
+      sku: newProduct.sku,
+      quantity: 10,
+      unit: newProduct.unit,
+      lowStockThreshold: 5,
+      unitCost: newProduct.costPrice,
+      isLowStock: false,
+    });
+    return HttpResponse.json(newProduct, { status: 201 });
+  }),
   http.put('/products/:id', async ({ params, request }) => {
     const idx = mockProducts.findIndex((item) => item.id === params.id);
     if (idx === -1) return HttpResponse.json({ error: 'Product not found' }, { status: 404 });
@@ -644,10 +666,33 @@ export const phase11Handlers = [
     mockProducts[idx] = { ...mockProducts[idx], ...body };
     return HttpResponse.json(mockProducts[idx]);
   }),
+  http.put('/api/v1/products/:id', async ({ params, request }) => {
+    const idx = mockProducts.findIndex((item) => item.id === params.id);
+    if (idx === -1) return HttpResponse.json({ error: 'Product not found' }, { status: 404 });
+    const body = (await request.json()) as Partial<Product>;
+    mockProducts[idx] = { ...mockProducts[idx], ...body };
+    return HttpResponse.json(mockProducts[idx]);
+  }),
   http.post('/products/bulk', async ({ request }) => {
-    const body = (await request.json()) as { products: Array<Omit<Product, 'id'>> };
+    const rawBody = (await request.json()) as any;
+    const items = Array.isArray(rawBody) ? rawBody : (rawBody?.products || []);
     const imported: Product[] = [];
-    for (const item of body.products || []) {
+    for (const item of items) {
+      const p: Product = {
+        ...item,
+        id: `prod-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        createdAt: new Date().toISOString(),
+      };
+      mockProducts.unshift(p);
+      imported.push(p);
+    }
+    return HttpResponse.json({ importedCount: imported.length }, { status: 200 });
+  }),
+  http.post('/api/v1/products/bulk', async ({ request }) => {
+    const rawBody = (await request.json()) as any;
+    const items = Array.isArray(rawBody) ? rawBody : (rawBody?.products || []);
+    const imported: Product[] = [];
+    for (const item of items) {
       const p: Product = {
         ...item,
         id: `prod-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,

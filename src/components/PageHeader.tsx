@@ -31,7 +31,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
   };
 
   return (
-    <div className={clsx('flex items-center justify-between mb-6', className)}>
+    <div className={clsx('flex items-center justify-between mb-4 sm:mb-6', className)}>
       <div className="flex items-center space-x-3">
         {showBack && (
           <button
@@ -48,7 +48,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             {title}
           </h1>
           {subtitle && (
-            <p className="text-xs sm:text-sm text-text-muted mt-0.5">{subtitle}</p>
+            <p className="hidden sm:block text-xs sm:text-sm text-text-muted mt-0.5">{subtitle}</p>
           )}
         </div>
       </div>

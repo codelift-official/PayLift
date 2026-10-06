@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Upload, Download, AlertCircle, ClipboardList } from 'lucide-react';
+import { Upload, Download, AlertCircle, ClipboardList, Copy } from 'lucide-react';
 import { Button } from '../../../components/ui/Button';
 import { Modal } from '../../../components/ui/Modal';
 import { phase11Api } from '../../../api/phase11';
@@ -13,7 +13,7 @@ interface ImportItem {
   unit: string;
   costPrice: number;
   sellingPrice: number;
-  gstRate: number;
+  gstRate?: number;
   isActive: boolean;
   selected: boolean;
   errors: Record<string, string>;
@@ -34,7 +34,6 @@ const SAMPLE_TEMPLATE = [
     unit: 'Pack',
     costPrice: 380,
     sellingPrice: 480,
-    gstRate: 5,
     isActive: true,
   },
   {
@@ -44,10 +43,18 @@ const SAMPLE_TEMPLATE = [
     unit: 'Ltr',
     costPrice: 110,
     sellingPrice: 140,
-    gstRate: 5,
     isActive: true,
   },
 ];
+
+export const copyTemplateJson = async () => {
+  try {
+    await navigator.clipboard.writeText(JSON.stringify(SAMPLE_TEMPLATE, null, 2));
+    toast.success('Template JSON copied to clipboard!');
+  } catch {
+    toast.error('Failed to copy template JSON to clipboard');
+  }
+};
 
 export const downloadProductsTemplate = () => {
   const blob = new Blob([JSON.stringify(SAMPLE_TEMPLATE, null, 2)], { type: 'application/json' });
@@ -82,9 +89,6 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({ open, isOpen, 
     if (row.sellingPrice === undefined || row.sellingPrice === null || isNaN(row.sellingPrice) || row.sellingPrice <= 0) {
       errors.sellingPrice = 'Selling price must be > 0';
     }
-    if (row.gstRate !== undefined && ![0, 5, 12, 18].includes(Number(row.gstRate))) {
-      errors.gstRate = 'GST must be 0, 5, 12, or 18';
-    }
     return errors;
   };
 
@@ -98,7 +102,7 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({ open, isOpen, 
         unit: p.unit || 'Pcs',
         costPrice: Number(p.costPrice) || 0,
         sellingPrice: Number(p.sellingPrice) || 0,
-        gstRate: [0, 5, 12, 18].includes(Number(p.gstRate)) ? Number(p.gstRate) : 0,
+        gstRate: p.gstRate !== undefined ? Number(p.gstRate) : undefined,
         isActive: p.isActive !== false,
         selected: true,
         errors: {},
@@ -215,7 +219,7 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({ open, isOpen, 
         unit: i.unit.trim() || 'Pcs',
         costPrice: i.costPrice,
         sellingPrice: i.sellingPrice,
-        gstRate: i.gstRate,
+        ...(i.gstRate !== undefined ? { gstRate: i.gstRate } : {}),
         isActive: i.isActive,
       }));
 
@@ -235,15 +239,15 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({ open, isOpen, 
       open={isModalOpen}
       onClose={onClose}
       title={step === 1 ? 'Import Products from JSON' : 'Review & Edit Products'}
-      
+      maxWidth="sm:max-w-2xl lg:max-w-4xl"
     >
-      <div className="p-6">
+      <div className="space-y-4">
         {step === 1 && (
-          <div className="space-y-6">
-            {/* Step 1 Modes: Upload File, Paste JSON, Download Template */}
-            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border pb-4">
+          <div className="space-y-4 sm:space-y-6">
+            {/* Step 1 Modes: Upload File, Paste JSON, Copy / Download Template */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border pb-3">
               <div className="flex items-center gap-4 text-sm font-semibold">
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
                   <input
                     type="radio"
                     name="importMode"
@@ -255,7 +259,7 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({ open, isOpen, 
                   <span>Upload File</span>
                 </label>
 
-                <label className="flex items-center gap-2 cursor-pointer">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
                   <input
                     type="radio"
                     name="importMode"
@@ -269,21 +273,33 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({ open, isOpen, 
                 </label>
               </div>
 
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={downloadProductsTemplate}
-                className="text-xs"
-              >
-                <Download className="w-3.5 h-3.5 mr-1" />
-                Download Template
-              </Button>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={copyTemplateJson}
+                  className="text-xs"
+                >
+                  <Copy className="w-3.5 h-3.5 mr-1 text-primary" />
+                  Copy Template JSON
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={downloadProductsTemplate}
+                  className="text-xs"
+                >
+                  <Download className="w-3.5 h-3.5 mr-1" />
+                  Download
+                </Button>
+              </div>
             </div>
 
             {importMode === 'upload' && (
-              <div className="border-2 border-dashed border-border rounded-xl p-8 text-center hover:border-primary/50 transition-colors">
-                <Upload className="w-10 h-10 text-text-muted mx-auto mb-3" />
+              <div className="border-2 border-dashed border-border rounded-xl p-6 sm:p-8 text-center hover:border-primary/50 transition-colors">
+                <Upload className="w-9 h-9 text-text-muted mx-auto mb-2.5" />
                 <h4 className="font-bold text-sm text-text-primary mb-1">Choose a JSON file to upload</h4>
                 <p className="text-xs text-text-muted mb-4 max-w-sm mx-auto">
                   Upload a formatted JSON file with an array of products matching our schema.
@@ -296,7 +312,7 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({ open, isOpen, 
                     id="json-file-input"
                     onChange={handleFileUpload}
                   />
-                  <span className="cursor-pointer inline-flex items-center justify-center rounded-button font-bold text-sm px-4 py-2 bg-primary text-white hover:bg-primary-hover shadow-sm transition-all">
+                  <span className="cursor-pointer inline-flex items-center justify-center rounded-button font-bold text-xs sm:text-sm px-4 py-2 bg-primary text-white hover:bg-primary-hover shadow-sm transition-all">
                     Choose File
                   </span>
                 </label>
@@ -322,7 +338,7 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({ open, isOpen, 
                   value={pasteText}
                   onChange={(e) => setPasteText(e.target.value)}
                   placeholder={JSON.stringify(SAMPLE_TEMPLATE, null, 2)}
-                  className={`font-mono text-xs w-full h-64 p-3 border rounded-lg focus:outline-none transition-colors ${
+                  className={`font-mono text-xs w-full h-48 sm:h-64 p-3 border rounded-lg focus:outline-none transition-colors ${
                     pasteError
                       ? 'border-red-500 bg-red-50/30 dark:bg-red-950/20'
                       : 'border-border focus:border-primary'
@@ -337,7 +353,7 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({ open, isOpen, 
                   </div>
                 )}
 
-                <div className="flex justify-end gap-3 pt-2">
+                <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 sm:gap-3 pt-2">
                   <Button
                     type="button"
                     variant="outline"
@@ -361,11 +377,11 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({ open, isOpen, 
 
         {step === 2 && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h4 className="font-bold text-sm text-text-primary">Preview & Validate Products</h4>
                 <p className="text-xs text-text-muted">
-                  Showing {items.length} items. Check rows to include/skip or click cells to edit.
+                  Showing {items.length} items. Select rows to include/skip or click cells to edit.
                 </p>
               </div>
               <Button
@@ -373,6 +389,7 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({ open, isOpen, 
                 variant="ghost"
                 size="sm"
                 onClick={() => setStep(1)}
+                className="self-start sm:self-auto text-xs"
               >
                 Choose Different Input
               </Button>
@@ -383,22 +400,22 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({ open, isOpen, 
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 <span>
                   {unskippedErrors.length} selected {unskippedErrors.length === 1 ? 'row has' : 'rows have'} errors.
-                  Fix errors inline or uncheck the row to skip it.
+                  Fix errors inline or uncheck row to skip.
                 </span>
               </div>
             )}
 
-            <div className="max-h-[380px] overflow-auto border border-border rounded-lg">
-              <table className="w-full text-xs text-left" id="import-preview-table">
-                <thead className="sticky top-0 bg-slate-100 dark:bg-slate-800 text-text-muted font-bold border-b border-border">
+            {/* Mobile-friendly scrollable table */}
+            <div className="overflow-x-auto border border-border rounded-lg max-h-[360px]">
+              <table className="w-full min-w-[500px] text-xs text-left" id="import-preview-table">
+                <thead className="sticky top-0 bg-slate-100 dark:bg-slate-800 text-text-muted font-bold border-b border-border z-10">
                   <tr>
                     <th className="p-2.5 w-10 text-center">Include</th>
                     <th className="p-2.5">Name</th>
                     <th className="p-2.5">SKU</th>
                     <th className="p-2.5">Category</th>
                     <th className="p-2.5">Price</th>
-                    <th className="p-2.5">GST %</th>
-                    <th className="p-2.5">Status</th>
+                    <th className="p-2.5 text-center">Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -424,9 +441,10 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({ open, isOpen, 
                             type="text"
                             value={row.name}
                             onChange={(e) => handleUpdateRow(row.id, 'name', e.target.value)}
-                            className={`w-full px-2 py-1 rounded border text-xs ${
+                            className={`w-full min-w-[140px] px-2 py-1 rounded border text-xs ${
                               row.errors.name ? 'border-danger bg-red-50 dark:bg-red-950/40' : 'border-border'
                             }`}
+                            style={{ backgroundColor: 'var(--bg-input)', color: 'var(--text-primary)' }}
                           />
                           {row.errors.name && (
                             <span className="text-[10px] text-danger block mt-0.5 error-msg">{row.errors.name}</span>
@@ -438,6 +456,7 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({ open, isOpen, 
                             value={row.sku}
                             onChange={(e) => handleUpdateRow(row.id, 'sku', e.target.value)}
                             className="w-24 px-2 py-1 rounded border border-border text-xs"
+                            style={{ backgroundColor: 'var(--bg-input)', color: 'var(--text-primary)' }}
                           />
                         </td>
                         <td className="p-2.5">
@@ -446,6 +465,7 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({ open, isOpen, 
                             value={row.category}
                             onChange={(e) => handleUpdateRow(row.id, 'category', e.target.value)}
                             className="w-28 px-2 py-1 rounded border border-border text-xs"
+                            style={{ backgroundColor: 'var(--bg-input)', color: 'var(--text-primary)' }}
                           />
                         </td>
                         <td className="p-2.5">
@@ -456,22 +476,11 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({ open, isOpen, 
                             className={`w-20 px-2 py-1 rounded border text-xs text-right ${
                               row.errors.sellingPrice ? 'border-danger bg-red-50 dark:bg-red-950/40' : 'border-border'
                             }`}
+                            style={{ backgroundColor: 'var(--bg-input)', color: 'var(--text-primary)' }}
                           />
                           {row.errors.sellingPrice && (
                             <span className="text-[10px] text-danger block mt-0.5 error-msg">{row.errors.sellingPrice}</span>
                           )}
-                        </td>
-                        <td className="p-2.5">
-                          <select
-                            value={row.gstRate}
-                            onChange={(e) => handleUpdateRow(row.id, 'gstRate', parseInt(e.target.value))}
-                            className="px-2 py-1 rounded border border-border text-xs"
-                          >
-                            <option value={0}>0%</option>
-                            <option value={5}>5%</option>
-                            <option value={12}>12%</option>
-                            <option value={18}>18%</option>
-                          </select>
                         </td>
                         <td className="p-2.5 text-center">
                           {rowHasError ? (
@@ -491,12 +500,12 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({ open, isOpen, 
               </table>
             </div>
 
-            <div className="flex items-center justify-between pt-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
               <span className="text-xs text-text-muted">
                 {activeItemsToImport.length} of {items.length} items ready to import
               </span>
-              <div className="flex gap-2">
-                <Button type="button" variant="outline" onClick={onClose}>
+              <div className="flex items-center gap-2 w-full sm:w-auto">
+                <Button type="button" variant="outline" onClick={onClose} className="flex-1 sm:flex-initial">
                   Cancel
                 </Button>
                 <Button
@@ -505,6 +514,7 @@ export const ImportJsonModal: React.FC<ImportJsonModalProps> = ({ open, isOpen, 
                   onClick={handleImport}
                   isLoading={isSubmitting}
                   disabled={hasErrors || activeItemsToImport.length === 0}
+                  className="flex-1 sm:flex-initial"
                 >
                   Import {activeItemsToImport.length} Products
                 </Button>

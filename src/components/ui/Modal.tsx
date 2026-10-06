@@ -7,6 +7,8 @@ export interface ModalProps {
   onClose: () => void;
   children: React.ReactNode;
   footer?: React.ReactNode;
+  maxWidth?: string;
+  className?: string;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -15,6 +17,8 @@ export const Modal: React.FC<ModalProps> = ({
   onClose,
   children,
   footer,
+  maxWidth = 'sm:max-w-md',
+  className,
 }) => {
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -43,11 +47,11 @@ export const Modal: React.FC<ModalProps> = ({
         aria-hidden="true"
       />
 
-      {/* Modal Dialog: Mobile full-screen/bottom-sheet, Desktop centered max-w-md */}
+      {/* Modal Dialog: Mobile full-screen/bottom-sheet, Desktop centered */}
       <div
         role="dialog"
         aria-modal="true"
-        className="relative z-10 w-full sm:max-w-md max-h-[90vh] sm:max-h-[85vh] flex flex-col rounded-t-2xl sm:rounded-2xl border shadow-modal overflow-hidden transition-all duration-200"
+        className={`relative z-10 w-full max-h-[92vh] sm:max-h-[88vh] flex flex-col rounded-t-2xl sm:rounded-2xl border shadow-modal overflow-hidden transition-all duration-200 ${maxWidth} ${className || ''}`}
         style={{
           backgroundColor: 'var(--bg-card)',
           borderColor: 'var(--bg-border)',
@@ -56,7 +60,7 @@ export const Modal: React.FC<ModalProps> = ({
       >
         {/* Header */}
         <div
-          className="px-5 py-4 border-b flex items-center justify-between shrink-0"
+          className="px-4 py-3.5 sm:px-5 sm:py-4 border-b flex items-center justify-between shrink-0"
           style={{ borderColor: 'var(--bg-border)' }}
         >
           <div className="text-base font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
@@ -74,7 +78,7 @@ export const Modal: React.FC<ModalProps> = ({
         </div>
 
         {/* Content body */}
-        <div className="p-5 overflow-y-auto flex-1 text-sm space-y-4">
+        <div className="p-3.5 sm:p-5 overflow-y-auto flex-1 text-sm space-y-4">
           {children}
         </div>
 

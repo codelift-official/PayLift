@@ -75,14 +75,14 @@ export const PlatformLoginPage: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen min-h-[100dvh] flex flex-col justify-between items-center p-4 sm:p-6"
+      className="min-h-screen min-h-[100dvh] flex flex-col justify-between items-center px-4 py-2 sm:p-6"
       style={{ backgroundColor: 'var(--bg-app)', color: 'var(--text-primary)' }}
     >
       {/* Main Login Card with Centered Brand Inside */}
-      <main className="w-full max-w-md my-auto py-4">
-        <Card className="p-6 sm:p-8 border border-border shadow-card backdrop-blur-md" style={{ backgroundColor: 'var(--bg-card)' }}>
+      <main className="w-full max-w-md my-auto py-1 sm:py-4">
+        <Card className="p-5 sm:p-8 border border-border shadow-card backdrop-blur-md" style={{ backgroundColor: 'var(--bg-card)' }}>
           {/* Brand Header inside Login Box - S icon and Sahayak in same line */}
-          <div className="flex items-center justify-center gap-3 mb-6">
+          <div className="flex items-center justify-center gap-3 mb-4 sm:mb-6">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 via-rose-600 to-red-700 text-white font-extrabold text-xl flex items-center justify-center shadow-md shadow-red-500/25 shrink-0">
               S
             </div>
@@ -96,7 +96,7 @@ export const PlatformLoginPage: React.FC = () => {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4">
             <Input
               label="Admin Email"
               type="email"
@@ -140,7 +140,7 @@ export const PlatformLoginPage: React.FC = () => {
             <Button
               type="submit"
               variant="primary"
-              className="w-full h-11 text-sm font-semibold shadow-md flex items-center justify-center gap-2 mt-4"
+              className="w-full h-10 sm:h-11 text-sm font-semibold shadow-md flex items-center justify-center gap-2 mt-3 sm:mt-4"
               isLoading={loading}
             >
               <span>Sign In</span>
@@ -151,7 +151,7 @@ export const PlatformLoginPage: React.FC = () => {
       </main>
 
       {/* Footer Legal, Store POS Redirect & Version */}
-      <footer className="w-full max-w-md py-4 flex flex-col items-center space-y-3 text-xs safe-bottom" style={{ color: 'var(--text-muted)' }}>
+      <footer className="w-full max-w-md py-2 sm:py-4 flex flex-col items-center space-y-2 sm:space-y-3 text-xs safe-bottom" style={{ color: 'var(--text-muted)' }}>
         <Link
           to="/login"
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card/70 hover:bg-card text-text-muted hover:text-text-primary font-medium text-xs transition-colors shadow-xs"

@@ -207,7 +207,39 @@ export const DashboardPage: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      {/* Item 7: Dashboard Time Range Selector */}
+      {/* Quick Actions (Mobile only) */}
+      <div className="grid grid-cols-3 gap-2 md:hidden">
+        <button
+          type="button"
+          onClick={() => navigate('/bills/new')}
+          className="flex flex-col items-center justify-center p-3 rounded-card bg-primary text-white shadow-sm font-semibold text-xs active:scale-95 transition-transform"
+        >
+          <Plus className="w-5 h-5 mb-1" />
+          <span>New Bill</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => navigate('/bills')}
+          className="flex flex-col items-center justify-center p-3 rounded-card border border-border shadow-sm font-semibold text-xs active:scale-95 transition-transform"
+          style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}
+        >
+          <Receipt className="w-5 h-5 mb-1 text-primary" />
+          <span>Bills</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => navigate('/reports')}
+          className="flex flex-col items-center justify-center p-3 rounded-card border border-border shadow-sm font-semibold text-xs active:scale-95 transition-transform"
+          style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}
+        >
+          <BarChart3 className="w-5 h-5 mb-1 text-primary" />
+          <span>Reports</span>
+        </button>
+      </div>
+
+      {/* Dashboard Time Range Selector - placed directly above graph */}
       <div className="flex items-center justify-between gap-3 overflow-x-auto no-scrollbar pb-1">
         <div className="flex items-center space-x-1.5 p-1 rounded-card border border-border shrink-0" style={{ backgroundColor: 'var(--bg-card)' }}>
           {(['today', 'week', 'month', 'year'] as const).map((r) => {
@@ -244,38 +276,6 @@ export const DashboardPage: React.FC = () => {
             Range saved in cookie
           </span>
         </div>
-      </div>
-
-      {/* Quick Actions (Mobile only) */}
-      <div className="grid grid-cols-3 gap-2 md:hidden">
-        <button
-          type="button"
-          onClick={() => navigate('/bills/new')}
-          className="flex flex-col items-center justify-center p-3 rounded-card bg-primary text-white shadow-sm font-semibold text-xs active:scale-95 transition-transform"
-        >
-          <Plus className="w-5 h-5 mb-1" />
-          <span>New Bill</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => navigate('/bills')}
-          className="flex flex-col items-center justify-center p-3 rounded-card border border-border shadow-sm font-semibold text-xs active:scale-95 transition-transform"
-          style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}
-        >
-          <Receipt className="w-5 h-5 mb-1 text-primary" />
-          <span>Bills</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => navigate('/reports')}
-          className="flex flex-col items-center justify-center p-3 rounded-card border border-border shadow-sm font-semibold text-xs active:scale-95 transition-transform"
-          style={{ backgroundColor: 'var(--bg-card)', color: 'var(--text-primary)' }}
-        >
-          <BarChart3 className="w-5 h-5 mb-1 text-primary" />
-          <span>Reports</span>
-        </button>
       </div>
 
       {/* Top 2-Column Section (Hero Left, Stats Right on Desktop) */}

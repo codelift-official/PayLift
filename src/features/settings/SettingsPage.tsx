@@ -57,7 +57,7 @@ const SettingsRow: React.FC<{
           {badge}
         </div>
         {subtitle && (
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{subtitle}</p>
+          <p className="hidden sm:block text-xs" style={{ color: 'var(--text-muted)' }}>{subtitle}</p>
         )}
       </div>
     </div>

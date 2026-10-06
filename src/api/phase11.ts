@@ -14,7 +14,7 @@ export interface Product {
   unit: string;
   costPrice: number;
   sellingPrice: number;
-  gstRate: number; // 0 | 5 | 12 | 18
+  gstRate?: number; // 0 | 5 | 12 | 18 (optional)
   isActive: boolean;
   createdAt?: string;
 }
@@ -181,8 +181,29 @@ export const phase11Api = {
     return res.data;
   },
   importProducts: async (products: Array<Omit<Product, 'id'>>): Promise<{ importedCount: number }> => {
-    const res = await apiClient.post<{ importedCount: number }>('/api/v1/products/bulk', { products });
-    return res.data;
+    try {
+      const res = await apiClient.post<{ importedCount: number }>('/api/v1/products/bulk', { products });
+      return res.data;
+    } catch (err: any) {
+      // If bulk endpoint is not supported by API worker (404/405), fallback to batch individual creation
+      if (err?.response?.status === 404 || err?.response?.status === 405) {
+        let importedCount = 0;
+        const chunkSize = 5;
+        for (let i = 0; i < products.length; i += chunkSize) {
+          const chunk = products.slice(i, i + chunkSize);
+          const results = await Promise.allSettled(
+            chunk.map((p) => phase11Api.createProduct(p))
+          );
+          for (const r of results) {
+            if (r.status === 'fulfilled') {
+              importedCount++;
+            }
+          }
+        }
+        return { importedCount };
+      }
+      throw err;
+    }
   },
 
   // Product Categories

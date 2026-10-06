@@ -13,6 +13,7 @@ import {
   Tag,
   CheckCircle2,
   XCircle,
+  Copy,
 } from 'lucide-react';
 import { PageHeader } from '../../../components/PageHeader';
 import { Card } from '../../../components/ui/Card';
@@ -20,7 +21,7 @@ import { Button } from '../../../components/ui/Button';
 import { Input } from '../../../components/ui/Input';
 import { Money } from '../../../components/Money';
 import { phase11Api, Product, ProductCategory } from '../../../api/phase11';
-import { ImportJsonModal, downloadProductsTemplate } from './ImportJsonModal';
+import { ImportJsonModal, downloadProductsTemplate, copyTemplateJson } from './ImportJsonModal';
 
 export const ProductsListPage: React.FC = () => {
   const navigate = useNavigate();
@@ -107,6 +108,19 @@ export const ProductsListPage: React.FC = () => {
                   >
                     <Upload className="w-4 h-4 text-emerald-600" />
                     <span>Import JSON</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    id="add-product-copy-template-opt"
+                    onClick={() => {
+                      setAddDropdownOpen(false);
+                      copyTemplateJson();
+                    }}
+                    className="w-full text-left px-4 py-2.5 text-xs font-semibold text-text-primary hover:bg-primary-soft hover:text-primary flex items-center gap-2.5 transition-colors border-t border-border"
+                  >
+                    <Copy className="w-4 h-4 text-violet-600" />
+                    <span>Copy Template JSON</span>
                   </button>
 
                   <button
