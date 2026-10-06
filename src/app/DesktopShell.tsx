@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Plus, LogOut } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { Sidebar } from '../components/nav/Sidebar';
 import { ThemeToggle } from '../components/ui/ThemeToggle';
 import { SubscriptionBanner } from '../components/SubscriptionBanner';
@@ -72,14 +72,6 @@ export const DesktopShell: React.FC = () => {
             >
               <LogOut className="w-4 h-4" />
               <span className="hidden sm:inline">Logout</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => navigate('/bills/new')}
-              className="inline-flex items-center px-4 py-2 bg-primary hover:bg-primary-hover active:scale-95 text-white text-sm font-semibold rounded-button shadow-sm transition-all duration-150"
-            >
-              <Plus className="w-4 h-4 mr-1.5 stroke-[2.5]" />
-              New Bill
             </button>
           </div>
         </header>

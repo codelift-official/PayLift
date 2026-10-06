@@ -940,8 +940,8 @@ export const NewBillPage: React.FC = () => {
               />
             </div>
 
-            {/* Submit Bill Button */}
-            <div className="pt-3">
+            {/* Submit Bill Button (Desktop Only — Mobile uses Sticky Bottom Bar) */}
+            <div className="hidden lg:block pt-3">
               <Button
                 id="submit-bill-card"
                 variant="primary"
