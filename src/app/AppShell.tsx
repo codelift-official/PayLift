@@ -3,6 +3,9 @@ import { useLocation } from 'react-router-dom';
 import { useResponsive } from '../hooks/useResponsive';
 import { MobileShell } from './MobileShell';
 import { DesktopShell } from './DesktopShell';
+import { toast } from 'sonner';
+import { useAuthStore } from '../stores/auth.store';
+import { getTimeGreeting } from '../lib/greeting';
 
 const routeTitles: [string, string][] = [
   ['/dashboard', 'Dashboard'],
@@ -29,8 +32,21 @@ export const AppShell: React.FC = () => {
         break;
       }
     }
-    document.title = `${title} | Billify`;
+    document.title = `${title} | Sahayak`;
   }, [location.pathname]);
+
+  // Greet user once per tab session if authenticated
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const hasGreeted = sessionStorage.getItem('sahayak_session_greeted');
+    const user = useAuthStore.getState().user;
+    if (!hasGreeted && user) {
+      sessionStorage.setItem('sahayak_session_greeted', 'true');
+      toast.success(getTimeGreeting(user.name || user.email), {
+        description: 'Welcome to Sahayak Business Platform',
+      });
+    }
+  }, []);
 
   if (isMobile) {
     return <MobileShell />;

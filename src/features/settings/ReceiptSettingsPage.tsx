@@ -163,7 +163,7 @@ export const ReceiptSettingsPage: React.FC = () => {
 
             <div className="flex items-center justify-center space-x-1 text-[9px] text-emerald-600 font-sans font-bold">
               <Check className="w-3 h-3" />
-              <span>Billify POS Engine</span>
+              <span>Sahayak Business Platform Engine</span>
             </div>
           </div>
         </Card>

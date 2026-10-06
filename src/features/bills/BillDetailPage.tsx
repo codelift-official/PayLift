@@ -108,7 +108,6 @@ export const BillDetailPage: React.FC = () => {
     });
   }, [bill, itemReturnStats]);
 
-  // Net amounts calculation
   const totalReturns = useMemo(() => {
     return billReturns
       .filter((r) => r.type === 'Return')
@@ -116,6 +115,18 @@ export const BillDetailPage: React.FC = () => {
   }, [billReturns]);
 
   const netAmount = bill ? bill.total - totalReturns : 0;
+
+  const totalGstAmount = useMemo(() => {
+    if (!bill) return 0;
+    return bill.items.reduce((sum, item) => {
+      if (typeof item.gstAmount === 'number' && item.gstAmount > 0) return sum + item.gstAmount;
+      const rate = item.gstRate || 0;
+      if (rate <= 0) return sum;
+      const lineTotal = item.lineTotal ?? item.price * item.qty;
+      const taxable = lineTotal / (1 + rate / 100);
+      return sum + (lineTotal - taxable);
+    }, 0);
+  }, [bill]);
 
   // Sorted returns (newest first)
   const sortedReturns = useMemo(() => {
@@ -436,6 +447,15 @@ export const BillDetailPage: React.FC = () => {
               <span>Total Discount</span>
               <span>
                 -<Money value={bill.discount} size="sm" />
+              </span>
+            </div>
+          )}
+
+          {totalGstAmount > 0 && (
+            <div className="flex justify-between text-text-muted">
+              <span>GST Included</span>
+              <span className="font-semibold text-text-primary">
+                <Money value={totalGstAmount} size="sm" />
               </span>
             </div>
           )}

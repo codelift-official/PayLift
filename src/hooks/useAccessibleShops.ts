@@ -22,15 +22,19 @@ export function useAccessibleShops() {
 
   const shops = isAdmin
     ? allShops
-    : allShops.filter((shop) => {
-        if (user?.assignedShopIDs && user.assignedShopIDs.length > 0) {
-          return user.assignedShopIDs.includes(shop.id);
-        }
-        if (user?.defaultShopID) {
-          return shop.id === user.defaultShopID;
-        }
-        return false;
-      });
+    : (() => {
+        const filtered = allShops.filter((shop) => {
+          if (user?.assignedShopIDs && user.assignedShopIDs.length > 0) {
+            return user.assignedShopIDs.includes(shop.id);
+          }
+          if (user?.defaultShopID) {
+            return shop.id === user.defaultShopID;
+          }
+          return false;
+        });
+        // If staff/manager has no explicit restriction, fallback to allShops so billing works
+        return filtered.length > 0 ? filtered : allShops;
+      })();
 
   /** The default / first accessible shop */
   const defaultShop =

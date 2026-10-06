@@ -124,11 +124,11 @@ export const SetupPage: React.FC = () => {
   return (
     <div className="min-h-screen bg-app-bg flex flex-col justify-center items-center p-4 py-8">
       <div className="mb-6 text-center">
-        <div className="w-12 h-12 rounded-2xl bg-primary text-white font-bold text-2xl flex items-center justify-center mx-auto mb-3 shadow-raised">
-          B
+        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-red-500 via-rose-600 to-red-700 text-white font-extrabold text-2xl flex items-center justify-center mx-auto mb-3 shadow-lg shadow-red-500/25">
+          S
         </div>
         <h1 className="text-2xl font-bold tracking-tight text-text-primary">Create Your Business</h1>
-        <p className="text-xs text-text-muted mt-1">Setup your Billify store in under 1 minute</p>
+        <p className="text-xs text-text-muted mt-1">Setup your Sahayak store in under 1 minute</p>
       </div>
 
       <Card className="w-full max-w-[520px] shadow-raised bg-card border-border">

@@ -397,22 +397,6 @@ export const ItemRow: React.FC<ItemRowProps> = ({
               <Money value={lineTotal} size="sm" />
             </span>
           </div>
-
-          {/* GST selection */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-[11px] text-text-muted">GST:</span>
-            <select
-              value={item.gstRate}
-              onChange={(e) => onUpdate(item.id, { gstRate: parseFloat(e.target.value) })}
-              className="px-2 py-1 border border-border rounded text-[11px] font-semibold"
-              style={{ backgroundColor: 'var(--bg-input)', color: 'var(--text-primary)' }}
-            >
-              <option value={0}>0%</option>
-              <option value={5}>5%</option>
-              <option value={12}>12%</option>
-              <option value={18}>18%</option>
-            </select>
-          </div>
         </div>
 
         {/* Footer info: Available Stock & Overridden Hint */}
@@ -485,7 +469,7 @@ export const ItemRow: React.FC<ItemRowProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 items-center pt-1 border-t border-border text-xs">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 items-center pt-1 border-t border-border text-xs">
         {/* Qty Stepper */}
         <div>
           <label className="block text-[11px] font-medium text-text-muted mb-1">Quantity</label>
@@ -572,22 +556,6 @@ export const ItemRow: React.FC<ItemRowProps> = ({
             className="w-full px-2.5 py-1.5 border border-border rounded-button text-sm font-semibold text-text-primary focus:border-primary focus:outline-none"
             style={{ backgroundColor: 'var(--bg-input)' }}
           />
-        </div>
-
-        {/* GST Rate */}
-        <div>
-          <label className="block text-[11px] font-medium text-text-muted mb-1">GST %</label>
-          <select
-            value={item.gstRate}
-            onChange={(e) => onUpdate(item.id, { gstRate: parseFloat(e.target.value) })}
-            className="w-full px-2 py-1.5 border border-border rounded-button text-xs font-medium text-text-primary focus:border-primary focus:outline-none cursor-pointer"
-            style={{ backgroundColor: 'var(--bg-input)', color: 'var(--text-primary)' }}
-          >
-            <option value={0}>0%</option>
-            <option value={5}>5%</option>
-            <option value={12}>12%</option>
-            <option value={18}>18%</option>
-          </select>
         </div>
 
         {/* Discount % (hidden if strict mode) */}

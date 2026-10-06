@@ -87,8 +87,11 @@ export interface AuthResponse {
   userID: string;
   tenantID: number;
   role: string;
+  name?: string | null;
   /** ID of the default shop created during business setup */
   defaultShopID?: string | null;
+  /** IDs of assigned shops for Manager / Staff */
+  assignedShopIDs?: string[] | null;
 }
 
 export interface SendOtpRequest {
@@ -150,6 +153,9 @@ export interface CreateShopRequest {
   address: string;
   mobile: string;
   gst?: string | null;
+  gstEnabled?: boolean | null;
+  gstRate?: number | null;
+  gstInclusive?: boolean | null;
   logoUrl?: string | null;
   exchangePolicyDays?: number | null;
   receiptFooter?: string | null;
@@ -165,6 +171,9 @@ export interface UpdateShopRequest {
   address: string;
   mobile: string;
   gst?: string | null;
+  gstEnabled?: boolean | null;
+  gstRate?: number | null;
+  gstInclusive?: boolean | null;
   logoUrl?: string | null;
   exchangePolicyDays?: number | null;
   receiptFooter?: string | null;
@@ -182,6 +191,9 @@ export interface ShopResponse {
   address: string;
   mobile: string;
   gst?: string | null;
+  gstEnabled?: boolean | null;
+  gstRate?: number | null;
+  gstInclusive?: boolean | null;
   logoUrl?: string | null;
   exchangePolicyDays: number;
   receiptFooter?: string | null;

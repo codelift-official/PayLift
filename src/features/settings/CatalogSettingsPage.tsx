@@ -235,9 +235,8 @@ export const CatalogSettingsPage: React.FC = () => {
                       </span>
                       {/* Green dot for enabled, grey for disabled */}
                       <span
-                        className={`inline-block w-2.5 h-2.5 rounded-full transition-colors ${
-                          isEnabled ? 'bg-success ring-4 ring-emerald-100 dark:ring-emerald-950/60' : 'bg-slate-400'
-                        }`}
+                        className={`inline-block w-2.5 h-2.5 rounded-full transition-colors ${isEnabled ? 'bg-success ring-4 ring-emerald-100 dark:ring-emerald-950/60' : 'bg-slate-400'
+                          }`}
                         title={isEnabled ? 'Enabled' : 'Disabled'}
                       />
                     </div>
@@ -277,15 +276,13 @@ export const CatalogSettingsPage: React.FC = () => {
                     role="switch"
                     aria-checked={isEnabled}
                     onClick={() => toggleCatalog(catalog.id)}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
-                      isEnabled ? 'bg-success' : 'bg-slate-300 dark:bg-slate-600'
-                    }`}
+                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${isEnabled ? 'bg-success' : 'bg-slate-300 dark:bg-slate-600'
+                      }`}
                   >
                     <span
                       aria-hidden="true"
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                        isEnabled ? 'translate-x-5' : 'translate-x-0'
-                      }`}
+                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${isEnabled ? 'translate-x-5' : 'translate-x-0'
+                        }`}
                     />
                   </button>
                 </div>

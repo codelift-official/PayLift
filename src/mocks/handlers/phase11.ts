@@ -778,7 +778,15 @@ export const phase11Handlers = [
   http.get('/coupons', () => {
     return HttpResponse.json(mockCoupons);
   }),
+  http.get('/api/v1/coupons', () => {
+    return HttpResponse.json(mockCoupons);
+  }),
   http.get('/coupons/:id', ({ params }) => {
+    const c = mockCoupons.find((item) => item.id === params.id || item.code.toUpperCase() === String(params.id).toUpperCase());
+    if (!c) return HttpResponse.json({ error: 'Coupon not found' }, { status: 404 });
+    return HttpResponse.json(c);
+  }),
+  http.get('/api/v1/coupons/:id', ({ params }) => {
     const c = mockCoupons.find((item) => item.id === params.id || item.code.toUpperCase() === String(params.id).toUpperCase());
     if (!c) return HttpResponse.json({ error: 'Coupon not found' }, { status: 404 });
     return HttpResponse.json(c);
@@ -794,7 +802,26 @@ export const phase11Handlers = [
     mockCoupons.unshift(newCoupon);
     return HttpResponse.json(newCoupon, { status: 201 });
   }),
+  http.post('/api/v1/coupons', async ({ request }) => {
+    const body = (await request.json()) as Omit<Coupon, 'id' | 'usedCount'>;
+    const newCoupon: Coupon = {
+      ...body,
+      id: `coup-${Date.now()}`,
+      code: body.code.toUpperCase(),
+      usedCount: 0,
+    };
+    mockCoupons.unshift(newCoupon);
+    return HttpResponse.json(newCoupon, { status: 201 });
+  }),
   http.put('/coupons/:id', async ({ params, request }) => {
+    const idx = mockCoupons.findIndex((c) => c.id === params.id);
+    if (idx === -1) return HttpResponse.json({ error: 'Coupon not found' }, { status: 404 });
+    const body = (await request.json()) as Partial<Coupon>;
+    if (body.code) body.code = body.code.toUpperCase();
+    mockCoupons[idx] = { ...mockCoupons[idx], ...body };
+    return HttpResponse.json(mockCoupons[idx]);
+  }),
+  http.put('/api/v1/coupons/:id', async ({ params, request }) => {
     const idx = mockCoupons.findIndex((c) => c.id === params.id);
     if (idx === -1) return HttpResponse.json({ error: 'Coupon not found' }, { status: 404 });
     const body = (await request.json()) as Partial<Coupon>;
@@ -839,8 +866,75 @@ export const phase11Handlers = [
     if (!coupon.isActive) {
       return HttpResponse.json({ valid: false, discount: 0, reason: 'This coupon is no longer active' }, { status: 200 });
     }
-    if (coupon.validTo && new Date(coupon.validTo) < new Date()) {
-      return HttpResponse.json({ valid: false, discount: 0, reason: 'Coupon has expired' }, { status: 200 });
+    const now = new Date();
+    if (coupon.validFrom) {
+      const from = new Date(coupon.validFrom);
+      if (from > now) {
+        return HttpResponse.json({ valid: false, discount: 0, reason: 'Coupon is not yet active' }, { status: 200 });
+      }
+    }
+    const expiryStr = coupon.validTo || (coupon as any).validUntil;
+    if (expiryStr) {
+      const expiry = new Date(expiryStr);
+      // Treat date-only string as end of day
+      if (expiryStr.length <= 10) {
+        expiry.setHours(23, 59, 59, 999);
+      }
+      if (expiry < now) {
+        return HttpResponse.json({ valid: false, discount: 0, reason: 'Coupon has expired' }, { status: 200 });
+      }
+    }
+    if (coupon.minOrderAmount && orderAmount < coupon.minOrderAmount) {
+      return HttpResponse.json({
+        valid: false,
+        discount: 0,
+        reason: `Minimum order amount of ₹${coupon.minOrderAmount} required`,
+      }, { status: 200 });
+    }
+
+    let discount = 0;
+    if (coupon.discountType === 'Amount') {
+      discount = Math.min(orderAmount, coupon.discountValue);
+    } else {
+      discount = (orderAmount * coupon.discountValue) / 100;
+      if (coupon.maxDiscountAmount) {
+        discount = Math.min(discount, coupon.maxDiscountAmount);
+      }
+    }
+
+    return HttpResponse.json({
+      valid: true,
+      discount: Math.round(discount * 100) / 100,
+      coupon,
+    });
+  }),
+  http.post('/api/v1/coupons/validate', async ({ request }) => {
+    const { code, orderAmount } = (await request.json()) as { code: string; orderAmount: number };
+    const upperCode = (code || '').trim().toUpperCase();
+    const coupon = mockCoupons.find((c) => c.code.toUpperCase() === upperCode);
+
+    if (!coupon) {
+      return HttpResponse.json({ valid: false, discount: 0, reason: 'Invalid coupon code' }, { status: 200 });
+    }
+    if (!coupon.isActive) {
+      return HttpResponse.json({ valid: false, discount: 0, reason: 'This coupon is no longer active' }, { status: 200 });
+    }
+    const now = new Date();
+    if (coupon.validFrom) {
+      const from = new Date(coupon.validFrom);
+      if (from > now) {
+        return HttpResponse.json({ valid: false, discount: 0, reason: 'Coupon is not yet active' }, { status: 200 });
+      }
+    }
+    const expiryStr = coupon.validTo || (coupon as any).validUntil;
+    if (expiryStr) {
+      const expiry = new Date(expiryStr);
+      if (expiryStr.length <= 10) {
+        expiry.setHours(23, 59, 59, 999);
+      }
+      if (expiry < now) {
+        return HttpResponse.json({ valid: false, discount: 0, reason: 'Coupon has expired' }, { status: 200 });
+      }
     }
     if (coupon.minOrderAmount && orderAmount < coupon.minOrderAmount) {
       return HttpResponse.json({

@@ -200,7 +200,7 @@ export const ReceiptPreview: React.FC = () => {
           )}
           <div className="flex items-center justify-center space-x-1 text-[10px] text-emerald-600 font-sans font-semibold pt-1">
             <Check className="w-3 h-3" />
-            <span>Authorized Digital Receipt • Billify</span>
+            <span>Authorized Digital Receipt • Sahayak</span>
           </div>
         </div>
       </div>

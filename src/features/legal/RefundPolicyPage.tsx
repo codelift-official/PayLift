@@ -30,10 +30,10 @@ export const RefundPolicyPage: React.FC = () => {
           <section className="space-y-2">
             <h2 className="text-base sm:text-lg font-bold">1. Overview and Free Trial Evaluation Guarantee</h2>
             <p style={{ color: 'var(--text-muted)' }}>
-              Billify Technologies Private Limited (&quot;Billify&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) provides a cloud-native point-of-sale,
+              Sahayak Technologies Private Limited (&quot;Sahayak&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) provides a cloud-native point-of-sale,
               inventory management, and retail billing platform delivered as Software-as-a-Service (SaaS). We want every retail
               merchant to be completely confident in our solution before spending a single rupee. To ensure complete satisfaction,
-              Billify offers an unhindered 14-day free trial on all standard subscription plans. During this 14-day trial period,
+              Sahayak offers an unhindered 14-day free trial on all standard subscription plans. During this 14-day trial period,
               merchants have full access to create bills, configure bluetooth thermal printers, test barcode scanning, and explore
               sales analytics without any upfront credit card commitment or setup charge.
             </p>
@@ -42,9 +42,9 @@ export const RefundPolicyPage: React.FC = () => {
           <section className="space-y-2">
             <h2 className="text-base sm:text-lg font-bold">2. Subscription Cancellation Rules</h2>
             <p style={{ color: 'var(--text-muted)' }}>
-              You may cancel your recurring Billify subscription at any time without penalty or cancellation fees. Cancellation can
+              You may cancel your recurring Sahayak subscription at any time without penalty or cancellation fees. Cancellation can
               be initiated directly through the Account settings section of your tenant dashboard or by emailing a cancellation
-              request to billing@billify.app from your registered owner email address.
+              request to billing@sahayak.app from your registered owner email address.
             </p>
             <ul className="list-disc pl-5 space-y-1" style={{ color: 'var(--text-muted)' }}>
               <li>
@@ -82,7 +82,7 @@ export const RefundPolicyPage: React.FC = () => {
                 standard payment gateway transaction processing fees (typically 2% + GST).
               </li>
               <li>
-                <strong>Prolonged Service Outage:</strong> In the extraordinary event that Billify core billing servers experience an
+                <strong>Prolonged Service Outage:</strong> In the extraordinary event that Sahayak core billing servers experience an
                 unscheduled continuous outage exceeding seventy-two (72) consecutive hours attributable solely to our core infrastructure,
                 affected merchants are entitled to a prorated credit or refund for that billing month.
               </li>
@@ -97,7 +97,7 @@ export const RefundPolicyPage: React.FC = () => {
             </p>
             <ol className="list-decimal pl-5 space-y-1.5" style={{ color: 'var(--text-muted)' }}>
               <li>
-                Send an email from your registered account owner address to <strong>billing@billify.app</strong> with the subject line
+                Send an email from your registered account owner address to <strong>billing@sahayak.app</strong> with the subject line
                 &quot;Refund Request – [Your Business Name / Tenant Slug]&quot;.
               </li>
               <li>
@@ -146,10 +146,10 @@ export const RefundPolicyPage: React.FC = () => {
               For any billing inquiries, invoice clarifications, or refund requests, please contact our billing helpdesk:
             </p>
             <div className="p-4 rounded-lg border text-xs sm:text-sm font-mono space-y-1" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--bg-border)' }}>
-              <p><strong>Billify Technologies Private Limited</strong></p>
+              <p><strong>Sahayak Technologies Private Limited</strong></p>
               <p>Attn: Billing &amp; Finance Operations</p>
               <p>Baner Business Park, Pune, Maharashtra 411045, India</p>
-              <p>Email: billing@billify.app | codelift.official@gmail.com</p>
+              <p>Email: billing@sahayak.app | codelift.official@gmail.com</p>
               <p>Telephone: +91 20 6789 0124 (Mon–Fri, 9:30 AM – 6:00 PM IST)</p>
             </div>
           </section>

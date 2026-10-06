@@ -23,13 +23,22 @@ export const authHandlers = [
     let userRole = seedStore.users[0].role;
     let userId = seedStore.users[0].userID;
 
+    let userName = 'Rishabh';
     if (body.email && body.email.toLowerCase().includes('staff')) {
       userRole = 'Staff';
       userId = 'cccccccc-cccc-cccc-cccc-cccccccccccc';
+      userName = 'Staff';
     } else if (body.email && body.email.toLowerCase().includes('manager')) {
       userRole = 'Manager';
       userId = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+      userName = 'Manager';
+    } else if (body.email && !body.email.toLowerCase().includes('admin')) {
+      const emailPrefix = body.email.split('@')[0];
+      userName = emailPrefix ? emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1) : 'Rishabh';
     }
+
+    const defaultShop = seedStore.shops[0]?.id || '11111111-1111-1111-1111-111111111111';
+    const assignedShops = userRole === 'Staff' ? [defaultShop] : seedStore.shops.map((s) => s.id);
 
     const authRes: AuthResponse = {
       accessToken: 'mock-access-token-xyz-12345',
@@ -39,6 +48,9 @@ export const authHandlers = [
       userID: userId,
       tenantID: seedStore.business.id,
       role: userRole,
+      name: userName,
+      defaultShopID: defaultShop,
+      assignedShopIDs: assignedShops,
     };
     return HttpResponse.json(authRes, { status: 200 });
   }),
@@ -56,13 +68,22 @@ export const authHandlers = [
     let userRole = seedStore.users[0].role;
     let userId = seedStore.users[0].userID;
 
+    let userName = 'Rishabh';
     if (body.email && body.email.toLowerCase().includes('staff')) {
       userRole = 'Staff';
       userId = 'cccccccc-cccc-cccc-cccc-cccccccccccc';
+      userName = 'Staff';
     } else if (body.email && body.email.toLowerCase().includes('manager')) {
       userRole = 'Manager';
       userId = 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb';
+      userName = 'Manager';
+    } else if (body.email && !body.email.toLowerCase().includes('admin')) {
+      const emailPrefix = body.email.split('@')[0];
+      userName = emailPrefix ? emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1) : 'Rishabh';
     }
+
+    const defaultShop = seedStore.shops[0]?.id || '11111111-1111-1111-1111-111111111111';
+    const assignedShops = userRole === 'Staff' ? [defaultShop] : seedStore.shops.map((s) => s.id);
 
     const authRes: AuthResponse = {
       accessToken: 'mock-access-token-xyz-12345',
@@ -72,6 +93,9 @@ export const authHandlers = [
       userID: userId,
       tenantID: seedStore.business.id,
       role: userRole,
+      name: userName,
+      defaultShopID: defaultShop,
+      assignedShopIDs: assignedShops,
     };
     return HttpResponse.json(authRes, { status: 200 });
   }),

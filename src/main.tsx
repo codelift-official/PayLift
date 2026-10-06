@@ -47,7 +47,7 @@ enableMocking().then(() => {
         <QueryClientProvider client={queryClient}>
           <BrowserRouter>
             <App />
-            <Toaster richColors position="top-right" />
+            <Toaster richColors position="top-center" closeButton />
           </BrowserRouter>
         </QueryClientProvider>
       </ThemeProvider>

@@ -34,7 +34,7 @@ export const DesktopShell: React.FC = () => {
     if (pathname.startsWith('/reports')) return 'Reports & Analytics';
     if (pathname.startsWith('/settings/account/change-password')) return 'Change Password';
     if (pathname.startsWith('/settings')) return 'Settings';
-    return 'Billify POS';
+    return 'Sahayak Business Platform';
   };
 
   return (

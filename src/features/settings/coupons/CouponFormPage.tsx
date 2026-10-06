@@ -42,7 +42,8 @@ export const CouponFormPage: React.FC = () => {
       setMinOrderAmount(existingCoupon.minOrderAmount || '');
       setMaxDiscountAmount(existingCoupon.maxDiscountAmount || '');
       setValidFrom(existingCoupon.validFrom ? existingCoupon.validFrom.split('T')[0] : '');
-      setValidTo(existingCoupon.validTo ? existingCoupon.validTo.split('T')[0] : '');
+      const toStr = existingCoupon.validTo || (existingCoupon as any).validUntil;
+      setValidTo(toStr ? toStr.split('T')[0] : '');
       setMaxUses(existingCoupon.maxUses || '');
       setPerCustomerLimit(existingCoupon.perCustomerLimit || '');
       setIsActive(existingCoupon.isActive);
@@ -84,6 +85,20 @@ export const CouponFormPage: React.FC = () => {
       return;
     }
 
+    let formattedValidFrom: string | null = null;
+    if (validFrom) {
+      const d = new Date(validFrom);
+      d.setHours(0, 0, 0, 0);
+      formattedValidFrom = d.toISOString();
+    }
+
+    let formattedValidTo: string | null = null;
+    if (validTo) {
+      const d = new Date(validTo);
+      d.setHours(23, 59, 59, 999);
+      formattedValidTo = d.toISOString();
+    }
+
     const payload = {
       code: code.trim().toUpperCase(),
       description: description.trim() || null,
@@ -91,9 +106,9 @@ export const CouponFormPage: React.FC = () => {
       discountValue: Number(discountValue),
       minOrderAmount: minOrderAmount === '' ? null : Number(minOrderAmount),
       maxDiscountAmount: discountType === 'Percentage' && maxDiscountAmount !== '' ? Number(maxDiscountAmount) : null,
-      validFrom: validFrom ? new Date(validFrom).toISOString() : null,
-      validUntil: validTo ? new Date(validTo).toISOString() : null,
-      validTo: validTo ? new Date(validTo).toISOString() : null,
+      validFrom: formattedValidFrom,
+      validUntil: formattedValidTo,
+      validTo: formattedValidTo,
       maxUses: maxUses === '' ? null : Number(maxUses),
       maxUsesPerCustomer: perCustomerLimit === '' ? null : Number(perCustomerLimit),
       perCustomerLimit: perCustomerLimit === '' ? null : Number(perCustomerLimit),

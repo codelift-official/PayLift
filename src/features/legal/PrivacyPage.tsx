@@ -30,7 +30,7 @@ export const PrivacyPage: React.FC = () => {
           <section className="space-y-2">
             <h2 className="text-base sm:text-lg font-bold">1. Data We Collect</h2>
             <p style={{ color: 'var(--text-muted)' }}>
-              Billify Technologies Private Limited (&quot;Billify&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) is committed to protecting the privacy
+              Sahayak Technologies Private Limited (&quot;Sahayak&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;) is committed to protecting the privacy
               of business owners, retail operators, staff, and end consumers. In the course of providing our point-of-sale and
               cloud retail management platform, we collect information in three categories:
             </p>
@@ -98,7 +98,7 @@ export const PrivacyPage: React.FC = () => {
             <p style={{ color: 'var(--text-muted)' }}>
               We retain merchant transaction logs, invoice histories, and customer directories for as long as your tenant subscription
               remains active. Because retail merchants in India are legally mandated to retain books of accounts and GST tax invoices
-              for a statutory period of six (6) years under the Central Goods and Services Tax Act, 2017, Billify maintains your
+              for a statutory period of six (6) years under the Central Goods and Services Tax Act, 2017, Sahayak maintains your
               billing records during your active subscription to support statutory compliance. If an account is cancelled or terminated,
               we retain the data in an encrypted backup state for sixty (60) days, after which it is permanently purged, unless longer
               retention is required by law.
@@ -122,7 +122,7 @@ export const PrivacyPage: React.FC = () => {
           <section className="space-y-2">
             <h2 className="text-base sm:text-lg font-bold">7. Cookies and Tracking Technologies</h2>
             <p style={{ color: 'var(--text-muted)' }}>
-              Billify uses essential cookies and local browser storage (such as Web Storage API and IndexedDB) solely to preserve
+              Sahayak uses essential cookies and local browser storage (such as Web Storage API and IndexedDB) solely to preserve
               your authenticated session, remember active shop selection, and cache offline POS catalog data for rapid barcode
               scanning. We do not place third-party cross-site advertising cookies or behavioral tracking pixels within our authenticated
               application environment. You may clear your browser cookies and local storage at any time through your browser settings,
@@ -158,9 +158,9 @@ export const PrivacyPage: React.FC = () => {
             </p>
             <div className="p-4 rounded-lg border text-xs sm:text-sm font-mono space-y-1" style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--bg-border)' }}>
               <p><strong>Grievance Officer:</strong> Mr. Alok Deshmukh</p>
-              <p><strong>Entity:</strong> Billify Technologies Private Limited</p>
+              <p><strong>Entity:</strong> Sahayak Technologies Private Limited</p>
               <p><strong>Address:</strong> Baner Business Park, Pune, Maharashtra 411045, India</p>
-              <p><strong>Email:</strong> privacy@billify.app | grievance@billify.app</p>
+              <p><strong>Email:</strong> privacy@sahayak.app | grievance@sahayak.app</p>
               <p><strong>Response Turnaround:</strong> Within 48 hours for acknowledgment; resolution within 30 days.</p>
             </div>
           </section>

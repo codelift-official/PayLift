@@ -87,7 +87,7 @@ export const PlatformShell: React.FC = () => {
             </div>
             <div>
               <span className="font-bold text-base tracking-tight" style={{ color: 'var(--text-primary)' }}>
-                Billify Admin
+                Sahayak Admin
               </span>
               <span className="block text-[10px] uppercase font-bold tracking-wider text-indigo-500">
                 Super Admin
@@ -151,7 +151,7 @@ export const PlatformShell: React.FC = () => {
                 {user?.name || 'Administrator'}
               </p>
               <p className="text-[11px] truncate" style={{ color: 'var(--text-muted)' }}>
-                {user?.email || 'admin@billify.internal'}
+                {user?.email || 'admin@sahayak.internal'}
               </p>
             </div>
           </div>
@@ -201,7 +201,7 @@ export const PlatformShell: React.FC = () => {
                 color: 'var(--text-muted)',
               }}
             >
-              {user?.email || 'admin@billify.internal'}
+              {user?.email || 'admin@sahayak.internal'}
             </span>
             <ThemeToggle />
           </div>

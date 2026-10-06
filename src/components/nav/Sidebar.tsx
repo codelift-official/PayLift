@@ -68,11 +68,11 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {!isCollapsed ? (
           <>
             <div className="flex items-center space-x-2.5 overflow-hidden">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-bold text-base shadow-sm shrink-0">
-                B
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 via-rose-600 to-red-700 flex items-center justify-center text-white font-extrabold text-base shadow-md shadow-red-500/20 shrink-0">
+                S
               </div>
               <span className="font-bold text-lg tracking-tight text-text-primary truncate">
-                Billify
+                Sahayak
               </span>
             </div>
             <button
@@ -85,8 +85,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </button>
           </>
         ) : (
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-white font-bold text-base shadow-sm shrink-0">
-            B
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 via-rose-600 to-red-700 flex items-center justify-center text-white font-extrabold text-base shadow-md shadow-red-500/20 shrink-0">
+            S
           </div>
         )}
       </div>

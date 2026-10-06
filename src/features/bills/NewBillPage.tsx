@@ -56,12 +56,12 @@ function clearDraft(tenantID?: string | number) {
   localStorage.removeItem(getDraftKey(tenantID));
 }
 
-const EMPTY_ITEM = (): BillItemFormState => ({
-  id: `item-${Date.now()}`,
+const EMPTY_ITEM = (defaultGst = 0): BillItemFormState => ({
+  id: `item-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
   itemName: '',
   qty: 1,
   price: 0,
-  gstRate: 0,
+  gstRate: defaultGst,
   discountPct: 0,
 });
 
@@ -107,6 +107,8 @@ export const NewBillPage: React.FC = () => {
   };
 
   const currentShop = shops?.find((s) => s.id === selectedShopId) || shops?.[0];
+  const isShopGstActive = currentShop?.gstEnabled !== false && !!(currentShop?.gst || (currentShop?.gstRate != null && currentShop.gstRate > 0));
+  const effectiveShopGstRate = isShopGstActive ? (currentShop?.gstRate ?? (currentShop?.gst ? 18 : 0)) : 0;
 
   // Dynamic strict mode from backend endpoint
   const { data: business } = useQuery<BusinessesResponse>({
@@ -220,8 +222,8 @@ export const NewBillPage: React.FC = () => {
       const discPct = isStrictMode ? 0 : (item.discountPct || 0);
       const discAmount = (price * discPct) / 100;
       const lineEffective = (price - discAmount) * qty;
-      const gstRate = item.gstRate || 0;
-      const taxable = lineEffective / (1 + gstRate / 100);
+      const itemGstRate = item.gstRate !== undefined && item.gstRate > 0 ? item.gstRate : effectiveShopGstRate;
+      const taxable = itemGstRate > 0 ? (lineEffective / (1 + itemGstRate / 100)) : lineEffective;
       const gst = lineEffective - taxable;
 
       subtotal += lineSub;
@@ -243,7 +245,7 @@ export const NewBillPage: React.FC = () => {
       computedTotal = serverQuote.total;
     }
 
-    const finalGst = serverQuote ? Math.round(serverQuote.gst * 100) / 100 : Math.round(totalGst * 100) / 100;
+    const finalGst = serverQuote && serverQuote.gst ? Math.round(serverQuote.gst * 100) / 100 : Math.round(totalGst * 100) / 100;
     const finalTotal = Math.round(computedTotal * 100) / 100;
     const taxableSubtotal = Math.max(0, Math.round((finalTotal - finalGst) * 100) / 100);
 
@@ -256,7 +258,7 @@ export const NewBillPage: React.FC = () => {
       gst: finalGst,
       total: finalTotal,
     };
-  }, [items, billDiscount, totalCouponDiscount, isStrictMode, negotiatedTotal, serverQuote]);
+  }, [items, billDiscount, totalCouponDiscount, isStrictMode, negotiatedTotal, serverQuote, effectiveShopGstRate]);
 
   // Debounced 300ms call to POST /bills/quote on any item/GST/coupon change
   useEffect(() => {
@@ -279,7 +281,7 @@ export const NewBillPage: React.FC = () => {
             itemName: item.itemName.trim(),
             qty: item.qty,
             price: item.price,
-            gstRate: item.gstRate,
+            gstRate: item.gstRate !== undefined && item.gstRate > 0 ? item.gstRate : effectiveShopGstRate,
             discountPct: isStrictMode ? 0 : item.discountPct || 0,
           })),
           negotiatedTotal:
@@ -380,7 +382,7 @@ export const NewBillPage: React.FC = () => {
   };
 
   const handleAddManualItem = () => {
-    setItems((prev) => [...prev, EMPTY_ITEM()]);
+    setItems((prev) => [...prev, EMPTY_ITEM(effectiveShopGstRate)]);
   };
 
   // B2: Open catalog drawer — pin which item row to fill
@@ -395,12 +397,12 @@ export const NewBillPage: React.FC = () => {
       handleUpdateItem(catalogTargetItemId, {
         itemName: product.name,
         price: product.defaultPrice,
-        gstRate: product.gstRate,
+        gstRate: product.gstRate !== undefined && product.gstRate > 0 ? product.gstRate : effectiveShopGstRate,
       });
     }
     setCatalogTargetItemId(null);
     setCatalogDrawerOpen(false);
-  }, [catalogTargetItemId]);
+  }, [catalogTargetItemId, effectiveShopGstRate]);
 
   // Validation
   const validItems = items.filter((item) => item.itemName.trim() !== '' && item.price >= 0);
@@ -431,7 +433,7 @@ export const NewBillPage: React.FC = () => {
           itemName: item.itemName.trim(),
           qty: item.qty,
           price: item.price,
-          gstRate: item.gstRate,
+          gstRate: item.gstRate !== undefined && item.gstRate > 0 ? item.gstRate : effectiveShopGstRate,
           discountPct: isStrictMode ? 0 : item.discountPct || 0,
         })),
         payments: payments.map((p) => ({
@@ -491,20 +493,40 @@ export const NewBillPage: React.FC = () => {
           style={{ backgroundColor: 'var(--bg-card)' }}
         >
           <Store className="w-12 h-12 text-text-muted mb-3" />
-          <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
-            You don't have a shop yet
-          </h3>
-          <p className="text-sm mt-1 mb-5" style={{ color: 'var(--text-muted)' }}>
-            Create your first shop to start generating bills.
-          </p>
-          <Button
-            variant="primary"
-            size="md"
-            onClick={() => navigate('/settings/shops/new')}
-          >
-            <Plus className="w-4 h-4 mr-1.5" />
-            Create Your First Shop
-          </Button>
+          {userIsAdmin ? (
+            <>
+              <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+                You don't have a shop yet
+              </h3>
+              <p className="text-sm mt-1 mb-5" style={{ color: 'var(--text-muted)' }}>
+                Create your first shop to start generating bills.
+              </p>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => navigate('/settings/shops/new')}
+              >
+                <Plus className="w-4 h-4 mr-1.5" />
+                Create Your First Shop
+              </Button>
+            </>
+          ) : (
+            <>
+              <h3 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+                No Store Terminal Assigned
+              </h3>
+              <p className="text-sm mt-1 mb-5" style={{ color: 'var(--text-muted)' }}>
+                Your account is not assigned to an active shop. Please contact your store manager or administrator.
+              </p>
+              <Button
+                variant="outline"
+                size="md"
+                onClick={() => navigate('/settings')}
+              >
+                Go to Settings
+              </Button>
+            </>
+          )}
         </div>
       </div>
     );

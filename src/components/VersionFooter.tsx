@@ -22,19 +22,12 @@ export const VersionFooter: React.FC = () => {
     };
   }, []);
 
-  if (!versionData || !versionData.version) {
-    return null;
-  }
-
-  const ver = versionData.version;
-  const env = versionData.environment || 'Production';
-  const text = versionData.gitSha
-    ? `Billify v${ver} (${versionData.gitSha}) · ${env}`
-    : `Billify v${ver} · ${env}`;
+  const ver = versionData?.version || '1.0.3';
+  const text = `Sahayak Billing v${ver}`;
 
   return (
     <div
-      className="text-xs text-center mt-4"
+      className="text-xs text-center mt-2 font-mono opacity-85"
       style={{ color: 'var(--text-muted)' }}
     >
       {text}

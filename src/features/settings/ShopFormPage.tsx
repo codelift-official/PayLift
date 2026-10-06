@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { shopsApi } from '../../api/shops';
-import { CreateShopRequest } from '../../api/types';
+import { CreateShopRequest, UpdateShopRequest } from '../../api/types';
 import { PageHeader } from '../../components/PageHeader';
 import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -20,6 +20,7 @@ import {
   Printer,
   Globe,
   Loader2,
+  Percent,
 } from 'lucide-react';
 
 // ─── Validation schema ────────────────────────────────────────────
@@ -28,6 +29,9 @@ const shopSchema = z.object({
   address: z.string().min(5, 'Please enter a full address'),
   mobile: z.string().regex(/^\+?[\d\s\-()]{7,15}$/, 'Enter a valid phone number'),
   gst: z.string().optional().or(z.literal('')),
+  gstEnabled: z.boolean().default(true),
+  gstRate: z.coerce.number().min(0).max(100).default(18),
+  gstInclusive: z.boolean().default(true),
   logoUrl: z.string().url('Must be a valid URL').optional().or(z.literal('')),
   exchangePolicyDays: z.coerce.number().int().min(0).max(365).optional(),
   receiptFooter: z.string().max(200, 'Max 200 characters').optional().or(z.literal('')),
@@ -122,6 +126,9 @@ export const ShopFormPage: React.FC = () => {
       address: '',
       mobile: '',
       gst: '',
+      gstEnabled: true,
+      gstRate: 18,
+      gstInclusive: true,
       logoUrl: '',
       exchangePolicyDays: 7,
       receiptFooter: '',
@@ -141,6 +148,9 @@ export const ShopFormPage: React.FC = () => {
         address: existingShop.address,
         mobile: existingShop.mobile,
         gst: existingShop.gst ?? '',
+        gstEnabled: existingShop.gstEnabled ?? (Boolean(existingShop.gst)),
+        gstRate: existingShop.gstRate ?? 18,
+        gstInclusive: existingShop.gstInclusive ?? true,
         logoUrl: existingShop.logoUrl ?? '',
         exchangePolicyDays: existingShop.exchangePolicyDays ?? 7,
         receiptFooter: existingShop.receiptFooter ?? '',
@@ -153,6 +163,8 @@ export const ShopFormPage: React.FC = () => {
     }
   }, [existingShop, reset]);
 
+  const gstEnabled = watch('gstEnabled');
+  const gstInclusive = watch('gstInclusive');
   const whatsAppEnabled = watch('whatsAppEnabled');
   const notificationSms = watch('notificationSms');
 
@@ -163,7 +175,10 @@ export const ShopFormPage: React.FC = () => {
         name: data.name,
         address: data.address,
         mobile: data.mobile,
-        gst: data.gst || null,
+        gst: data.gstEnabled ? (data.gst || null) : null,
+        gstEnabled: data.gstEnabled,
+        gstRate: data.gstEnabled ? Number(data.gstRate || 0) : 0,
+        gstInclusive: data.gstInclusive,
         logoUrl: data.logoUrl || null,
         exchangePolicyDays: data.exchangePolicyDays ?? null,
         receiptFooter: data.receiptFooter || null,
@@ -186,11 +201,14 @@ export const ShopFormPage: React.FC = () => {
   // Update mutation
   const updateMutation = useMutation({
     mutationFn: (data: ShopFormValues) => {
-      const payload = {
+      const payload: UpdateShopRequest = {
         name: data.name,
         address: data.address,
         mobile: data.mobile,
-        gst: data.gst || null,
+        gst: data.gstEnabled ? (data.gst || null) : null,
+        gstEnabled: data.gstEnabled,
+        gstRate: data.gstEnabled ? Number(data.gstRate || 0) : 0,
+        gstInclusive: data.gstInclusive,
         logoUrl: data.logoUrl || null,
         exchangePolicyDays: data.exchangePolicyDays ?? null,
         receiptFooter: data.receiptFooter || null,
@@ -275,21 +293,65 @@ export const ShopFormPage: React.FC = () => {
                 <p className="text-xs text-danger mt-1">{errors.address.message}</p>
               )}
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Input
-                label="Contact Phone"
-                placeholder="9876543210"
-                type="tel"
-                {...register('mobile')}
-                error={errors.mobile?.message}
-              />
-              <Input
-                label="GSTIN (optional)"
-                placeholder="27AABCU9603R1ZM"
-                {...register('gst')}
-                error={errors.gst?.message}
-              />
-            </div>
+            <Input
+              label="Contact Phone"
+              placeholder="9876543210"
+              type="tel"
+              {...register('mobile')}
+              error={errors.mobile?.message}
+            />
+          </FieldGroup>
+        </Card>
+
+        {/* ── GST & Tax Settings ── */}
+        <Card className="border-border shadow-card overflow-hidden" style={{ backgroundColor: 'var(--bg-card)' }}>
+          <SectionHeader icon={<Percent className="w-3.5 h-3.5" />} label="GST & Tax Settings" />
+          <FieldGroup>
+            <Toggle
+              id="gst-enabled-toggle"
+              label="Enable GST for this Shop"
+              description="Calculate tax on sales and include GST breakup on invoices"
+              checked={!!gstEnabled}
+              onChange={(v) => setValue('gstEnabled', v, { shouldDirty: true })}
+            />
+
+            {gstEnabled && (
+              <div className="space-y-4 pt-2 border-t border-border">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Input
+                    label="Shop GSTIN"
+                    placeholder="27AABCU9603R1ZM"
+                    {...register('gst')}
+                    error={errors.gst?.message}
+                  />
+
+                  <div>
+                    <label className="text-xs font-bold uppercase tracking-wider block mb-1.5" style={{ color: 'var(--text-muted)' }}>
+                      Default GST Rate
+                    </label>
+                    <select
+                      {...register('gstRate', { valueAsNumber: true })}
+                      className="w-full text-sm border border-border rounded-input px-3 py-2.5 focus:outline-none focus:ring-1 focus:ring-primary font-semibold"
+                      style={{ backgroundColor: 'var(--bg-input)', color: 'var(--text-primary)' }}
+                    >
+                      <option value={0}>0% - Tax Exempt / Nil Rated</option>
+                      <option value={5}>5% - Food & Essentials</option>
+                      <option value={12}>12% - Standard Lower (Apparel/Packaged)</option>
+                      <option value={18}>18% - Standard Retail & FMCG (Recommended)</option>
+                      <option value={28}>28% - Higher Rate</option>
+                    </select>
+                  </div>
+                </div>
+
+                <Toggle
+                  id="gst-inclusive-toggle"
+                  label="Prices are inclusive of GST"
+                  description="Item prices entered during checkout already include GST (Retail standard)"
+                  checked={!!gstInclusive}
+                  onChange={(v) => setValue('gstInclusive', v, { shouldDirty: true })}
+                />
+              </div>
+            )}
           </FieldGroup>
         </Card>
 

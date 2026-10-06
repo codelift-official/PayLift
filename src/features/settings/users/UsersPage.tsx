@@ -249,7 +249,7 @@ export const UsersPage: React.FC = () => {
           <strong style={{ color: 'var(--text-primary)' }}>
             {deactivateTarget?.name || deactivateTarget?.email}
           </strong>{' '}
-          will lose access to Billify immediately. This can be undone by editing
+          will lose access to Sahayak immediately. This can be undone by editing
           the user.
         </p>
       </Modal>
