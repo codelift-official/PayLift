@@ -22,7 +22,7 @@ export const VersionFooter: React.FC = () => {
     };
   }, []);
 
-  const ver = versionData?.version || '1.0.3';
+  const ver = versionData?.version || '1.0.5';
   const text = `Sahayak Billing v${ver}`;
 
   return (

@@ -44,6 +44,10 @@ export const shopHandlers = [
       whatsAppEnabled: body.whatsAppEnabled ?? true,
       notificationEmail: body.notificationEmail || null,
       notificationSms: body.notificationSms ?? false,
+      customerRecommendEnabled: true,
+      customerMandatory: false,
+      discountMode: 'Percentage',
+      productSource: 'Store',
       createdAt: new Date().toISOString(),
       updatedAt: null,
     };
@@ -61,5 +65,24 @@ export const shopHandlers = [
     } catch {
       return HttpResponse.json({ error: 'Shop not found' }, { status: 404 });
     }
+  }),
+
+  // PUT /api/v1/shops/:id/tax-settings
+  http.put('/api/v1/shops/:id/tax-settings', async ({ params, request }) => {
+    const { id } = params;
+    const body = (await request.json()) as any;
+    const shop = seedStore.shops.find((s) => s.id === id);
+    if (!shop) {
+      return HttpResponse.json({ error: 'Shop not found' }, { status: 404 });
+    }
+    if (body.gst !== undefined) shop.gst = body.gst;
+    if (body.gstEnabled !== undefined) shop.gstEnabled = body.gstEnabled;
+    if (body.gstRate !== undefined) shop.gstRate = body.gstRate;
+    if (body.gstInclusive !== undefined) shop.gstInclusive = body.gstInclusive;
+    if (body.customerRecommendEnabled !== undefined) shop.customerRecommendEnabled = body.customerRecommendEnabled;
+    if (body.customerMandatory !== undefined) shop.customerMandatory = body.customerMandatory;
+    if (body.discountMode !== undefined) shop.discountMode = body.discountMode;
+    if (body.productSource !== undefined) shop.productSource = body.productSource;
+    return HttpResponse.json(shop, { status: 200 });
   }),
 ];

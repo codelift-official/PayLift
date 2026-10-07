@@ -30,6 +30,17 @@ export const returnsApi = {
     return res.data;
   },
 
+  createExchangeWithDifference: async (
+    billId: string,
+    payload: import('./types').ExchangeBillRequest
+  ): Promise<import('./types').ExchangeResponse> => {
+    const res = await apiClient.post<import('./types').ExchangeResponse>(
+      `/api/v1/bills/${billId}/exchanges`,
+      payload
+    );
+    return res.data;
+  },
+
   getBillReturns: async (billId: string): Promise<ReturnExchangeResponse[]> => {
     const res = await apiClient.get<ReturnExchangeResponse[]>(
       `/api/v1/bills/${billId}/returns`

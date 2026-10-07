@@ -21,6 +21,7 @@ import {
   Globe,
   Loader2,
   Percent,
+  ShoppingCart,
 } from 'lucide-react';
 
 // ─── Validation schema ────────────────────────────────────────────
@@ -40,6 +41,10 @@ const shopSchema = z.object({
   whatsAppEnabled: z.boolean().optional(),
   notificationEmail: z.string().email('Must be a valid email').optional().or(z.literal('')),
   notificationSms: z.boolean().optional(),
+  customerRecommendEnabled: z.boolean().default(true),
+  customerMandatory: z.boolean().default(false),
+  discountMode: z.enum(['Percentage', 'Amount']).default('Percentage'),
+  productSource: z.enum(['Store', 'Generic', 'Mix']).default('Store'),
 });
 
 type ShopFormValues = z.infer<typeof shopSchema>;
@@ -63,12 +68,12 @@ const FieldGroup: React.FC<{ children: React.ReactNode; className?: string }> = 
 );
 
 // ─── Toggle switch ────────────────────────────────────────────────
-const Toggle: React.FC<{ checked: boolean; onChange: (v: boolean) => void; id: string; label: string; description?: string }> = ({
-  checked, onChange, id, label, description,
+const Toggle: React.FC<{ checked: boolean; onChange: (v: boolean) => void; id: string; label: string; description?: string; disabled?: boolean }> = ({
+  checked, onChange, id, label, description, disabled,
 }) => (
-  <div className="flex items-center justify-between py-1">
+  <div className={`flex items-center justify-between py-1 ${disabled ? 'opacity-50' : ''}`}>
     <div>
-      <label htmlFor={id} className="text-sm font-semibold cursor-pointer" style={{ color: 'var(--text-primary)' }}>
+      <label htmlFor={id} className={`text-sm font-semibold ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'}`} style={{ color: 'var(--text-primary)' }}>
         {label}
       </label>
       {description && (
@@ -80,8 +85,9 @@ const Toggle: React.FC<{ checked: boolean; onChange: (v: boolean) => void; id: s
       id={id}
       role="switch"
       aria-checked={checked}
-      onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${
+      disabled={disabled}
+      onClick={() => !disabled && onChange(!checked)}
+      className={`relative inline-flex h-6 w-11 shrink-0 ${disabled ? 'cursor-not-allowed' : 'cursor-pointer'} rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none ${
         checked ? 'bg-success' : 'bg-slate-300 dark:bg-slate-600'
       }`}
     >
@@ -137,6 +143,10 @@ export const ShopFormPage: React.FC = () => {
       whatsAppEnabled: false,
       notificationEmail: '',
       notificationSms: false,
+      customerRecommendEnabled: true,
+      customerMandatory: false,
+      discountMode: 'Percentage',
+      productSource: 'Store',
     },
   });
 
@@ -159,6 +169,10 @@ export const ShopFormPage: React.FC = () => {
         whatsAppEnabled: existingShop.whatsAppEnabled ?? false,
         notificationEmail: existingShop.notificationEmail ?? '',
         notificationSms: existingShop.notificationSms ?? false,
+        customerRecommendEnabled: existingShop.customerRecommendEnabled ?? true,
+        customerMandatory: existingShop.customerMandatory ?? false,
+        discountMode: (existingShop.discountMode as 'Percentage' | 'Amount') ?? 'Percentage',
+        productSource: (existingShop.productSource as 'Store' | 'Generic' | 'Mix') ?? 'Store',
       });
     }
   }, [existingShop, reset]);
@@ -167,6 +181,10 @@ export const ShopFormPage: React.FC = () => {
   const gstInclusive = watch('gstInclusive');
   const whatsAppEnabled = watch('whatsAppEnabled');
   const notificationSms = watch('notificationSms');
+  const customerRecommendEnabled = watch('customerRecommendEnabled');
+  const customerMandatory = watch('customerMandatory');
+  const discountMode = watch('discountMode');
+  const productSource = watch('productSource');
 
   // Create mutation
   const createMutation = useMutation({
@@ -200,7 +218,7 @@ export const ShopFormPage: React.FC = () => {
 
   // Update mutation
   const updateMutation = useMutation({
-    mutationFn: (data: ShopFormValues) => {
+    mutationFn: async (data: ShopFormValues) => {
       const payload: UpdateShopRequest = {
         name: data.name,
         address: data.address,
@@ -218,7 +236,19 @@ export const ShopFormPage: React.FC = () => {
         notificationEmail: data.notificationEmail || null,
         notificationSms: data.notificationSms ?? false,
       };
-      return shopsApi.updateShop(id!, payload);
+      const res = await shopsApi.updateShop(id!, payload);
+      // Also sync tax and bill journey settings
+      await shopsApi.updateShopTaxSettings(id!, {
+        gst: payload.gst,
+        gstEnabled: payload.gstEnabled,
+        gstRate: payload.gstRate,
+        gstInclusive: payload.gstInclusive,
+        customerRecommendEnabled: data.customerRecommendEnabled,
+        customerMandatory: data.customerMandatory,
+        discountMode: data.discountMode,
+        productSource: data.productSource,
+      });
+      return res;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shops'] });
@@ -352,6 +382,94 @@ export const ShopFormPage: React.FC = () => {
                 />
               </div>
             )}
+          </FieldGroup>
+        </Card>
+
+        {/* ── Bill Creation Settings ── */}
+        <Card className="border-border shadow-card overflow-hidden" style={{ backgroundColor: 'var(--bg-card)' }}>
+          <SectionHeader icon={<ShoppingCart className="w-3.5 h-3.5" />} label="Bill Creation Settings" />
+          <FieldGroup>
+            <Toggle
+              id="customer-recommend-toggle"
+              label="Recommend matching customers while typing"
+              description="Suggest existing customers based on name or mobile number (min 2 chars)"
+              checked={!!customerRecommendEnabled}
+              onChange={(v) => {
+                setValue('customerRecommendEnabled', v, { shouldDirty: true });
+                if (!v) {
+                  setValue('customerMandatory', false, { shouldDirty: true });
+                }
+              }}
+            />
+
+            <Toggle
+              id="customer-mandatory-toggle"
+              label="Require customer on every bill"
+              description={
+                customerRecommendEnabled
+                  ? "Cashier cannot generate bill without selecting or creating a customer"
+                  : "Requires customer recommendation to be enabled"
+              }
+              checked={!!customerMandatory}
+              disabled={!customerRecommendEnabled}
+              onChange={(v) => setValue('customerMandatory', v, { shouldDirty: true })}
+            />
+
+            <div className="pt-2 border-t border-border/50">
+              <label className="text-xs font-bold uppercase tracking-wider block mb-2" style={{ color: 'var(--text-muted)' }}>
+                Discount Input Default
+              </label>
+              <div className="grid grid-cols-2 gap-3 max-w-sm">
+                <button
+                  type="button"
+                  onClick={() => setValue('discountMode', 'Percentage', { shouldDirty: true })}
+                  className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border text-sm font-semibold transition-all ${
+                    discountMode === 'Percentage'
+                      ? 'border-primary bg-primary/10 text-primary ring-1 ring-primary'
+                      : 'border-border text-muted-foreground hover:bg-muted/50'
+                  }`}
+                >
+                  <span>Percentage (%)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setValue('discountMode', 'Amount', { shouldDirty: true })}
+                  className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg border text-sm font-semibold transition-all ${
+                    discountMode === 'Amount'
+                      ? 'border-primary bg-primary/10 text-primary ring-1 ring-primary'
+                      : 'border-border text-muted-foreground hover:bg-muted/50'
+                  }`}
+                >
+                  <span>Fixed Amount (₹)</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-border/50">
+              <label className="text-xs font-bold uppercase tracking-wider block mb-2" style={{ color: 'var(--text-muted)' }}>
+                Product Search Source
+              </label>
+              <div className="grid grid-cols-3 gap-2 sm:gap-3 max-w-md">
+                {[
+                  { value: 'Store', label: 'Store Only' },
+                  { value: 'Generic', label: 'Generic Catalog' },
+                  { value: 'Mix', label: 'Both (Store First)' },
+                ].map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setValue('productSource', opt.value as 'Store' | 'Generic' | 'Mix', { shouldDirty: true })}
+                    className={`flex items-center justify-center py-2 px-2 text-xs sm:text-sm rounded-lg border font-semibold transition-all text-center ${
+                      productSource === opt.value
+                        ? 'border-primary bg-primary/10 text-primary ring-1 ring-primary'
+                        : 'border-border text-muted-foreground hover:bg-muted/50'
+                    }`}
+                  >
+                    <span>{opt.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </FieldGroup>
         </Card>
 

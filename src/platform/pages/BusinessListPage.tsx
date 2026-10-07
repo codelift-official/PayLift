@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { Search, Eye, Filter, Loader2 } from 'lucide-react';
+import { Search, Eye, Filter, Loader2, Plus } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { platformApiClient } from '../api/client';
 
@@ -48,6 +48,13 @@ export const BusinessListPage: React.FC = () => {
         </span>
       );
     }
+    if (s === 'blocked') {
+      return (
+        <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-900/20 text-rose-600 dark:text-rose-400 border border-rose-500/30">
+          Blocked
+        </span>
+      );
+    }
     return (
       <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-gray-500/10 text-gray-500 border border-gray-500/20">
         {status}
@@ -76,6 +83,17 @@ export const BusinessListPage: React.FC = () => {
           <p className="text-xs sm:text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
             Manage tenants, subscriptions, and shop configurations
           </p>
+        </div>
+        <div>
+          <button
+            onClick={() => navigate('/platform/businesses/new')}
+            id="btn-create-business"
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-btn text-white transition-opacity hover:opacity-95 shadow-sm"
+            style={{ backgroundColor: 'var(--accent)' }}
+          >
+            <Plus className="w-4 h-4" />
+            Create Business
+          </button>
         </div>
       </div>
 
@@ -117,6 +135,7 @@ export const BusinessListPage: React.FC = () => {
             <option value="Trial">Trial</option>
             <option value="Grace">Grace</option>
             <option value="Suspended">Suspended</option>
+            <option value="Blocked">Blocked</option>
           </select>
         </div>
       </Card>

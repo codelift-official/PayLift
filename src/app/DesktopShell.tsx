@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
+import { LogOut, Plus } from 'lucide-react';
 import { Sidebar } from '../components/nav/Sidebar';
 import { ThemeToggle } from '../components/ui/ThemeToggle';
 import { SubscriptionBanner } from '../components/SubscriptionBanner';
@@ -60,7 +60,20 @@ export const DesktopShell: React.FC = () => {
           <h1 className="text-xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
             {getPageTitle(location.pathname)}
           </h1>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            {location.pathname !== '/bills/new' && (
+              <button
+                type="button"
+                id="header-create-bill-btn"
+                data-testid="header-create-bill-btn"
+                onClick={() => navigate('/bills/new')}
+                className="inline-flex items-center gap-1.5 px-4 h-10 text-sm font-bold text-white rounded-[8px] shadow-sm transition-all hover:opacity-90 active:scale-95"
+                style={{ backgroundColor: 'var(--primary, #e07b5a)' }}
+              >
+                <Plus className="w-4 h-4" />
+                <span>Create Bill</span>
+              </button>
+            )}
             {/* A6: Theme toggle in desktop header */}
             <ThemeToggle />
             <button

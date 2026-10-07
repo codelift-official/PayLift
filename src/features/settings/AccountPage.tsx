@@ -19,18 +19,18 @@ export const AccountPage: React.FC = () => {
     environment: string;
     buildDate: string;
   }>({
-    version: '1.0.0',
+    version: '1.0.5',
     environment: 'Production',
-    buildDate: '2026-10-05',
+    buildDate: '2026-10-07',
   });
 
   useEffect(() => {
     fetchAppVersion().then((data) => {
       if (data) {
         setVersionInfo({
-          version: data.version || '1.0.0',
+          version: data.version || '1.0.5',
           environment: data.environment || 'Production',
-          buildDate: data.buildDate ? data.buildDate.split('T')[0] : '2026-10-05',
+          buildDate: data.buildDate ? data.buildDate.split('T')[0] : '2026-10-07',
         });
       }
     });

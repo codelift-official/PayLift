@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Trash2, Plus, Minus, BookOpen, Lock, Unlock, Search } from 'lucide-react';
 import { Money } from '../../components/Money';
-import { phase11Api, Product } from '../../api/phase11';
+import { phase11Api } from '../../api/phase11';
 
 export interface BillItemFormState {
   id: string;
@@ -10,6 +10,8 @@ export interface BillItemFormState {
   price: number;
   gstRate: number;
   discountPct: number;
+  discountType?: 'Percentage' | 'Amount';
+  discountValue?: number;
   // Phase 11 fields:
   productId?: string | null;
   sku?: string | null;
@@ -28,6 +30,8 @@ export interface ItemRowProps {
   inventoryModeEnabled?: boolean;
   strictStockMode?: boolean;
   shopId?: string;
+  defaultDiscountMode?: 'Percentage' | 'Amount';
+  productSource?: 'Store' | 'Generic' | 'Mix';
   onUpdate: (id: string, updates: Partial<BillItemFormState>) => void;
   onRemove: (id: string) => void;
   onBrowseCatalog?: () => void;
@@ -42,21 +46,36 @@ export const ItemRow: React.FC<ItemRowProps> = ({
   inventoryModeEnabled = false,
   strictStockMode = false,
   shopId,
+  defaultDiscountMode = 'Percentage',
+  productSource = 'Store',
   onUpdate,
   onRemove,
   onBrowseCatalog,
   autoFocus = false,
 }) => {
+  const discountType = item.discountType || defaultDiscountMode || 'Percentage';
+  const discountValue = item.discountValue !== undefined ? item.discountValue : (item.discountPct || 0);
+
   const lineSubtotal = (item.qty || 0) * (item.price || 0);
-  const lineDiscount = lineSubtotal * ((item.discountPct || 0) / 100);
+  let lineDiscount = 0;
+  if (discountType === 'Amount') {
+    lineDiscount = Math.min(lineSubtotal, discountValue);
+  } else {
+    lineDiscount = lineSubtotal * (Math.min(100, discountValue) / 100);
+  }
   const lineTotal = Math.max(0, lineSubtotal - lineDiscount);
 
   // Search state for inventory hydrated search
   const [searchQuery, setSearchQuery] = useState(item.itemName || '');
-  const [searchResults, setSearchResults] = useState<Product[]>([]);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
   const [, setIsSearching] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState(-1);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setSearchQuery(item.itemName || '');
+  }, [item.itemName]);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -69,7 +88,7 @@ export const ItemRow: React.FC<ItemRowProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Hydrated search: type 2+ chars -> fetch top 10 matching products
+  // Hydrated semantic search: type 2+ chars -> fetch top 10 matching products
   const handleSearchChange = async (val: string) => {
     setSearchQuery(val);
     if (!item.addManually) {
@@ -79,21 +98,52 @@ export const ItemRow: React.FC<ItemRowProps> = ({
     if (val.trim().length >= 2) {
       setIsSearching(true);
       try {
-        const products = await phase11Api.getProducts({ search: val.trim() });
-        setSearchResults(products.slice(0, 10));
+        const results = await phase11Api.searchProducts({
+          query: val.trim(),
+          source: (productSource?.toLowerCase() as any) || 'mix',
+          limit: 10,
+        });
+        setSearchResults(results);
         setDropdownOpen(true);
+        setFocusedIndex(-1);
       } catch {
-        setSearchResults([]);
+        try {
+          const prods = await phase11Api.getProducts({ search: val.trim() });
+          setSearchResults(prods.slice(0, 10));
+          setDropdownOpen(true);
+          setFocusedIndex(-1);
+        } catch {
+          setSearchResults([]);
+        }
       } finally {
         setIsSearching(false);
       }
     } else {
       setSearchResults([]);
       setDropdownOpen(false);
+      setFocusedIndex(-1);
     }
   };
 
-  const handleSelectProduct = async (product: Product) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (!dropdownOpen || searchResults.length === 0) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setFocusedIndex((prev) => (prev < searchResults.length - 1 ? prev + 1 : 0));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setFocusedIndex((prev) => (prev > 0 ? prev - 1 : searchResults.length - 1));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (focusedIndex >= 0 && searchResults[focusedIndex]) {
+        handleSelectProduct(searchResults[focusedIndex]);
+      }
+    } else if (e.key === 'Escape') {
+      setDropdownOpen(false);
+    }
+  };
+
+  const handleSelectProduct = async (product: any) => {
     let available: number | null = null;
     try {
       const stock = await phase11Api.getStock({ shopId });
@@ -208,10 +258,11 @@ export const ItemRow: React.FC<ItemRowProps> = ({
                 data-testid={`item-search-${index}`}
                 value={searchQuery}
                 onChange={(e) => handleSearchChange(e.target.value)}
+                onKeyDown={handleKeyDown}
                 onFocus={() => {
                   if (searchResults.length > 0) setDropdownOpen(true);
                 }}
-                placeholder="Search product..."
+                placeholder="Search product (by name, SKU, or Hindi/English synonym)..."
                 className="w-full pl-9 pr-3 py-2 text-sm border border-border rounded-button text-text-primary focus:border-primary focus:outline-none"
                 style={{ backgroundColor: 'var(--bg-input)' }}
                 autoFocus={autoFocus}
@@ -226,22 +277,38 @@ export const ItemRow: React.FC<ItemRowProps> = ({
                   className="absolute left-0 right-0 mt-1 max-h-56 overflow-auto rounded-lg shadow-xl border border-border z-30 divide-y divide-border animate-in fade-in zoom-in-95 duration-100"
                   style={{ backgroundColor: 'var(--bg-card)' }}
                 >
-                  {searchResults.map((prod) => (
+                  {searchResults.map((prod, pIdx) => (
                     <button
                       key={prod.id}
                       type="button"
                       onClick={() => handleSelectProduct(prod)}
-                      className="w-full text-left px-3 py-2 text-xs hover:bg-primary-soft hover:text-primary transition-colors flex items-center justify-between product-suggestion-item"
+                      className={`w-full text-left px-3 py-2 text-xs transition-colors flex items-center justify-between product-suggestion-item ${
+                        pIdx === focusedIndex ? 'bg-primary/10 text-primary ring-1 ring-inset ring-primary' : 'hover:bg-primary-soft hover:text-primary'
+                      }`}
                     >
-                      <div>
-                        <span className="font-bold block text-text-primary">
-                          {prod.name}
-                        </span>
-                        <span className="text-[10px] text-text-muted">
-                          SKU: {prod.sku || '—'} • {prod.category}
+                      <div className="flex-1 min-w-0 pr-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-bold text-text-primary truncate">
+                            {prod.name}
+                          </span>
+                          {prod.source && (
+                            <span className={`text-[9px] uppercase px-1 py-0.2 rounded font-bold ${
+                              prod.source === 'store' ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-400' : 'bg-blue-100 text-blue-800 dark:bg-blue-950/40 dark:text-blue-400'
+                            }`}>
+                              {prod.source}
+                            </span>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-text-muted flex items-center gap-1.5 mt-0.5">
+                          <span>SKU: {prod.sku || '—'}</span>
+                          <span>•</span>
+                          <span>{prod.category}</span>
+                          {searchQuery && !prod.name.toLowerCase().includes(searchQuery.toLowerCase()) && (
+                            <span className="text-primary italic font-medium">(matches "{searchQuery}")</span>
+                          )}
                         </span>
                       </div>
-                      <span className="font-mono font-bold text-text-primary">
+                      <span className="font-mono font-bold text-text-primary shrink-0">
                         ₹{prod.sellingPrice}
                       </span>
                     </button>
@@ -279,9 +346,9 @@ export const ItemRow: React.FC<ItemRowProps> = ({
           </label>
         </div>
 
-        {/* Qty [1] × Price [₹500 🔒] = ₹500 */}
+        {/* Qty [1] × Price [₹500 🔒] - Disc = ₹500 */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-border text-xs">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {/* Qty Controls */}
             <div className="flex items-center gap-1">
               {isDecimalUnit && (
@@ -390,12 +457,59 @@ export const ItemRow: React.FC<ItemRowProps> = ({
               </span>
             </div>
 
+            {/* Item Discount in Mode A */}
+            {!isStrictMode && (
+              <div className="flex items-center gap-1 pl-2 border-l border-border">
+                <span className="text-text-muted font-bold text-[10px]">Disc:</span>
+                <input
+                  type="number"
+                  step="any"
+                  id={`item-discount-${index}`}
+                  data-testid={`item-discount-${index}`}
+                  value={discountValue === 0 ? '' : discountValue}
+                  placeholder="0"
+                  onChange={(e) => {
+                    const parsed = parseFloat(e.target.value);
+                    const val = isNaN(parsed) ? 0 : Math.max(0, parsed);
+                    if (discountType === 'Percentage') {
+                      const capped = Math.min(100, val);
+                      onUpdate(item.id, { discountType: 'Percentage', discountValue: capped, discountPct: capped });
+                    } else {
+                      const capped = Math.min(lineSubtotal, val);
+                      const pct = lineSubtotal > 0 ? (capped / lineSubtotal) * 100 : 0;
+                      onUpdate(item.id, { discountType: 'Amount', discountValue: capped, discountPct: Math.round(pct * 100) / 100 });
+                    }
+                  }}
+                  className="w-14 px-1.5 py-1 text-xs font-bold rounded-button border border-border focus:border-primary focus:outline-none"
+                  style={{ backgroundColor: 'var(--bg-input)' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => {
+                    const nextType = discountType === 'Percentage' ? 'Amount' : 'Percentage';
+                    onUpdate(item.id, { discountType: nextType });
+                  }}
+                  className="px-1.5 py-0.5 text-[10px] font-bold rounded border border-border bg-muted hover:bg-muted/80 text-text-primary"
+                  title={`Toggle between % and ₹`}
+                >
+                  {discountType === 'Percentage' ? '%' : '₹'}
+                </button>
+              </div>
+            )}
+
             <span className="text-text-muted font-bold">=</span>
 
-            {/* Subtotal */}
-            <span className="font-bold text-text-primary text-sm">
-              <Money value={lineTotal} size="sm" />
-            </span>
+            {/* Subtotal / Line Total */}
+            <div className="flex items-center gap-1.5">
+              {lineDiscount > 0 && (
+                <span className="line-through text-text-muted text-[11px]">
+                  <Money value={lineSubtotal} size="sm" />
+                </span>
+              )}
+              <span className="font-bold text-text-primary text-sm">
+                <Money value={lineTotal} size="sm" />
+              </span>
+            </div>
           </div>
         </div>
 
@@ -558,21 +672,41 @@ export const ItemRow: React.FC<ItemRowProps> = ({
           />
         </div>
 
-        {/* Discount % (hidden if strict mode) */}
+        {/* Discount with % / ₹ toggle */}
         {!isStrictMode ? (
           <div>
-            <label className="block text-[11px] font-medium text-text-muted mb-1">Disc %</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="text-[11px] font-medium text-text-muted">Discount</label>
+              <button
+                type="button"
+                onClick={() => {
+                  const nextType = discountType === 'Percentage' ? 'Amount' : 'Percentage';
+                  onUpdate(item.id, { discountType: nextType });
+                }}
+                className="text-[10px] font-bold px-1.5 py-0.5 rounded border border-border bg-muted hover:bg-muted/80 text-text-primary"
+                title={`Toggle between % and ₹`}
+              >
+                {discountType === 'Percentage' ? '%' : '₹'}
+              </button>
+            </div>
             <input
               type="number"
-              inputMode="numeric"
-              value={item.discountPct === 0 ? '' : item.discountPct}
-              onChange={(e) =>
-                onUpdate(item.id, {
-                  discountPct: Math.min(100, Math.max(0, parseFloat(e.target.value) || 0)),
-                })
-              }
-              placeholder="0"
-              className="w-full px-2.5 py-1.5 border border-border rounded-button text-sm text-text-primary focus:border-primary focus:outline-none"
+              inputMode="decimal"
+              value={discountValue === 0 ? '' : discountValue}
+              onChange={(e) => {
+                const parsed = parseFloat(e.target.value);
+                const val = isNaN(parsed) ? 0 : Math.max(0, parsed);
+                if (discountType === 'Percentage') {
+                  const capped = Math.min(100, val);
+                  onUpdate(item.id, { discountType: 'Percentage', discountValue: capped, discountPct: capped });
+                } else {
+                  const capped = Math.min(lineSubtotal, val);
+                  const pct = lineSubtotal > 0 ? (capped / lineSubtotal) * 100 : 0;
+                  onUpdate(item.id, { discountType: 'Amount', discountValue: capped, discountPct: Math.round(pct * 100) / 100 });
+                }
+              }}
+              placeholder={discountType === 'Percentage' ? '0%' : '₹0'}
+              className="w-full px-2.5 py-1.5 border border-border rounded-button text-sm font-semibold text-text-primary focus:border-primary focus:outline-none"
               style={{ backgroundColor: 'var(--bg-input)' }}
             />
           </div>
@@ -589,7 +723,14 @@ export const ItemRow: React.FC<ItemRowProps> = ({
       {!isStrictMode && (
         <div className="flex justify-between items-center text-xs pt-1 border-t border-border text-text-muted">
           <span>Item Total</span>
-          <Money value={lineTotal} size="sm" className="font-bold text-text-primary" />
+          <div className="flex items-center gap-1.5">
+            {lineDiscount > 0 && (
+              <span className="line-through text-text-muted text-xs">
+                <Money value={lineSubtotal} size="sm" />
+              </span>
+            )}
+            <Money value={lineTotal} size="sm" className="font-bold text-text-primary" />
+          </div>
         </div>
       )}
     </div>

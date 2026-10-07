@@ -12,6 +12,7 @@ import type {
   PlatformTenantUsage,
   PlatformErrorLogItem,
 } from '../../api/phase11';
+import synonymsData from '../../data/synonyms.json';
 
 // ─── Stateful in-memory stores ───────────────────────────────────
 
@@ -140,6 +141,30 @@ export const mockProducts: Product[] = [
     gstRate: 0,
     isActive: true,
     createdAt: '2026-09-08T10:00:00Z',
+  },
+  {
+    id: 'prod-9',
+    name: 'Tata Tea Gold 500g',
+    sku: 'TEA-101',
+    category: 'Packaged Food',
+    unit: 'Pack',
+    costPrice: 210,
+    sellingPrice: 260,
+    gstRate: 5,
+    isActive: true,
+    createdAt: '2026-09-09T10:00:00Z',
+  },
+  {
+    id: 'prod-10',
+    name: 'Amul Taaza Fresh Toned Milk 1L',
+    sku: 'MLK-201',
+    category: 'Packaged Food',
+    unit: 'Pcs',
+    costPrice: 52,
+    sellingPrice: 56,
+    gstRate: 0,
+    isActive: true,
+    createdAt: '2026-09-10T10:00:00Z',
   },
 ];
 
@@ -549,35 +574,53 @@ export const mockPlatformErrorLogs: PlatformErrorLogItem[] = [
 
 export const phase11Handlers = [
   // ── INVENTORY SETTINGS ──
-  http.get('/business/inventory-settings', () => {
-    return HttpResponse.json(mockInventorySettings);
+  http.get('*/business/inventory-settings', () => {
+    return HttpResponse.json({
+      ...mockInventorySettings,
+      allowCouponStacking: mockCouponSettings.allowCouponStacking,
+    });
   }),
-  http.get('/api/v1/business/inventory-settings', () => {
-    return HttpResponse.json(mockInventorySettings);
+  http.get('*/api/v1/business/inventory-settings', () => {
+    return HttpResponse.json({
+      ...mockInventorySettings,
+      allowCouponStacking: mockCouponSettings.allowCouponStacking,
+    });
   }),
-  http.put('/business/inventory-settings', async ({ request }) => {
-    const body = (await request.json()) as Partial<InventorySettings>;
+  http.put('*/business/inventory-settings', async ({ request }) => {
+    const body = (await request.json()) as any;
     if (typeof body.inventoryModeEnabled === 'boolean') {
       mockInventorySettings.inventoryModeEnabled = body.inventoryModeEnabled;
     }
     if (typeof body.strictStockMode === 'boolean') {
       mockInventorySettings.strictStockMode = body.strictStockMode;
     }
-    return HttpResponse.json(mockInventorySettings);
+    if (typeof body.allowCouponStacking === 'boolean') {
+      mockCouponSettings.allowCouponStacking = body.allowCouponStacking;
+    }
+    return HttpResponse.json({
+      ...mockInventorySettings,
+      allowCouponStacking: mockCouponSettings.allowCouponStacking,
+    });
   }),
-  http.put('/api/v1/business/inventory-settings', async ({ request }) => {
-    const body = (await request.json()) as Partial<InventorySettings>;
+  http.put('*/api/v1/business/inventory-settings', async ({ request }) => {
+    const body = (await request.json()) as any;
     if (typeof body.inventoryModeEnabled === 'boolean') {
       mockInventorySettings.inventoryModeEnabled = body.inventoryModeEnabled;
     }
     if (typeof body.strictStockMode === 'boolean') {
       mockInventorySettings.strictStockMode = body.strictStockMode;
     }
-    return HttpResponse.json(mockInventorySettings);
+    if (typeof body.allowCouponStacking === 'boolean') {
+      mockCouponSettings.allowCouponStacking = body.allowCouponStacking;
+    }
+    return HttpResponse.json({
+      ...mockInventorySettings,
+      allowCouponStacking: mockCouponSettings.allowCouponStacking,
+    });
   }),
 
   // ── PRODUCTS ──
-  http.get('/products', ({ request }) => {
+  http.get('*/products', ({ request }) => {
     const url = new URL(request.url);
     const search = url.searchParams.get('search')?.toLowerCase();
     const category = url.searchParams.get('category');
@@ -609,12 +652,12 @@ export const phase11Handlers = [
     }
     return HttpResponse.json(list);
   }),
-  http.get('/products/:id', ({ params }) => {
+  http.get('*/products/:id', ({ params }) => {
     const p = mockProducts.find((item) => item.id === params.id);
     if (!p) return HttpResponse.json({ error: 'Product not found' }, { status: 404 });
     return HttpResponse.json(p);
   }),
-  http.post('/products', async ({ request }) => {
+  http.post('*/products', async ({ request }) => {
     const body = (await request.json()) as Omit<Product, 'id'>;
     const newProduct: Product = {
       ...body,
@@ -659,7 +702,7 @@ export const phase11Handlers = [
     });
     return HttpResponse.json(newProduct, { status: 201 });
   }),
-  http.put('/products/:id', async ({ params, request }) => {
+  http.put('*/products/:id', async ({ params, request }) => {
     const idx = mockProducts.findIndex((item) => item.id === params.id);
     if (idx === -1) return HttpResponse.json({ error: 'Product not found' }, { status: 404 });
     const body = (await request.json()) as Partial<Product>;
@@ -673,7 +716,86 @@ export const phase11Handlers = [
     mockProducts[idx] = { ...mockProducts[idx], ...body };
     return HttpResponse.json(mockProducts[idx]);
   }),
-  http.post('/products/bulk', async ({ request }) => {
+  http.post('/api/v1/products/search', async ({ request }) => {
+    const body = (await request.json()) as { query?: string; source?: 'store' | 'generic' | 'mix'; limit?: number };
+    const query = (body.query || '').trim().toLowerCase();
+    const limit = body.limit || 10;
+
+    if (!query) {
+      return HttpResponse.json([]);
+    }
+
+    const synMap = synonymsData as Record<string, string[]>;
+    const directSyns = synMap[query] || [];
+    const allSynonyms = new Set<string>(directSyns.map((s: string) => s.toLowerCase()));
+
+    for (const [key, list] of Object.entries(synMap)) {
+      if (list.some((s: string) => s.toLowerCase() === query || s.toLowerCase().includes(query))) {
+        allSynonyms.add(key.toLowerCase());
+        list.forEach((item: string) => allSynonyms.add(item.toLowerCase()));
+      }
+    }
+
+    const results: Array<{
+      id: string;
+      name: string;
+      sku: string;
+      category: string;
+      unit: string;
+      sellingPrice: number;
+      costPrice: number;
+      gstRate: number;
+      source: 'store' | 'generic';
+      matchScore: number;
+      catalogId?: string | null;
+    }> = [];
+
+    for (const p of mockProducts) {
+      const pName = p.name.toLowerCase();
+      const pSku = p.sku.toLowerCase();
+      const pCat = p.category.toLowerCase();
+
+      let score = 0;
+      if (pName === query) score = 100;
+      else if (pName.startsWith(query)) score = 80;
+      else if (pSku === query || pSku.startsWith(query)) score = 75;
+      else {
+        let matchedSyn = false;
+        for (const syn of allSynonyms) {
+          if (pName.includes(syn) || syn.includes(pName)) {
+            score = 70;
+            matchedSyn = true;
+            break;
+          }
+        }
+        if (!matchedSyn) {
+          if (pName.includes(query)) score = 60;
+          else if (pName.split(/\s+/).some((w) => w.startsWith(query))) score = 50;
+          else if (pCat.includes(query)) score = 30;
+        }
+      }
+
+      if (score > 0) {
+        results.push({
+          id: p.id,
+          name: p.name,
+          sku: p.sku,
+          category: p.category,
+          unit: p.unit,
+          sellingPrice: p.sellingPrice,
+          costPrice: p.costPrice,
+          gstRate: p.gstRate ?? 0,
+          source: 'store',
+          matchScore: score,
+          catalogId: (p as any).catalogId || null,
+        });
+      }
+    }
+
+    results.sort((a, b) => b.matchScore - a.matchScore);
+    return HttpResponse.json(results.slice(0, limit));
+  }),
+  http.post('*/products/bulk', async ({ request }) => {
     const rawBody = (await request.json()) as any;
     const items = Array.isArray(rawBody) ? rawBody : (rawBody?.products || []);
     const imported: Product[] = [];
@@ -705,10 +827,10 @@ export const phase11Handlers = [
   }),
 
   // ── PRODUCT CATEGORIES ──
-  http.get('/product-categories', () => {
+  http.get('*/product-categories', () => {
     return HttpResponse.json(mockProductCategories);
   }),
-  http.post('/product-categories', async ({ request }) => {
+  http.post('*/product-categories', async ({ request }) => {
     const body = (await request.json()) as Omit<ProductCategory, 'id'>;
     const newCat: ProductCategory = {
       ...body,
@@ -717,21 +839,21 @@ export const phase11Handlers = [
     mockProductCategories.push(newCat);
     return HttpResponse.json(newCat, { status: 201 });
   }),
-  http.put('/product-categories/:id', async ({ params, request }) => {
+  http.put('*/product-categories/:id', async ({ params, request }) => {
     const idx = mockProductCategories.findIndex((c) => c.id === params.id);
     if (idx === -1) return HttpResponse.json({ error: 'Category not found' }, { status: 404 });
     const body = (await request.json()) as Partial<ProductCategory>;
     mockProductCategories[idx] = { ...mockProductCategories[idx], ...body };
     return HttpResponse.json(mockProductCategories[idx]);
   }),
-  http.delete('/product-categories/:id', ({ params }) => {
+  http.delete('*/product-categories/:id', ({ params }) => {
     const idx = mockProductCategories.findIndex((c) => c.id === params.id);
     if (idx !== -1) mockProductCategories.splice(idx, 1);
     return HttpResponse.json({ success: true });
   }),
 
   // ── STOCK ──
-  http.get('/stock', ({ request }) => {
+  http.get('*/stock', ({ request }) => {
     const url = new URL(request.url);
     const lowStockOnly = url.searchParams.get('lowStockOnly') === 'true';
     let list = [...mockStockItems];
@@ -740,7 +862,7 @@ export const phase11Handlers = [
     }
     return HttpResponse.json(list);
   }),
-  http.post('/stock/adjust', async ({ request }) => {
+  http.post('*/stock/adjust', async ({ request }) => {
     const body = (await request.json()) as { shopId: string; productId: string; newQuantity: number; notes?: string };
     const stock = mockStockItems.find((s) => s.productId === body.productId);
     if (!stock) return HttpResponse.json({ error: 'Stock record not found' }, { status: 404 });
@@ -762,7 +884,7 @@ export const phase11Handlers = [
 
     return HttpResponse.json(stock);
   }),
-  http.post('/stock/purchase', async ({ request }) => {
+  http.post('*/stock/purchase', async ({ request }) => {
     const body = (await request.json()) as { shopId: string; productId: string; addQuantity: number; costPrice?: number; notes?: string };
     const stock = mockStockItems.find((s) => s.productId === body.productId);
     if (!stock) return HttpResponse.json({ error: 'Stock record not found' }, { status: 404 });
@@ -784,7 +906,7 @@ export const phase11Handlers = [
 
     return HttpResponse.json(stock);
   }),
-  http.post('/stock/bulk-purchase', async ({ request }) => {
+  http.post('*/stock/bulk-purchase', async ({ request }) => {
     const body = (await request.json()) as { shopId: string; items: Array<{ productId: string; qty: number; costPrice?: number }> };
     let count = 0;
     for (const item of body.items || []) {
@@ -809,7 +931,7 @@ export const phase11Handlers = [
     }
     return HttpResponse.json({ success: true, updatedCount: count });
   }),
-  http.get('/stock/movements', ({ request }) => {
+  http.get('*/stock/movements', ({ request }) => {
     const url = new URL(request.url);
     const productId = url.searchParams.get('productId');
     const type = url.searchParams.get('type');
@@ -1007,21 +1129,38 @@ export const phase11Handlers = [
   }),
 
   // ── CUSTOMERS ──
-  http.get('/customers', ({ request }) => {
+  http.get('*/customers', ({ request }) => {
     const url = new URL(request.url);
     const search = url.searchParams.get('search')?.toLowerCase();
+    const limit = parseInt(url.searchParams.get('limit') || '0', 10);
     let list = [...mockCustomers];
     if (search) {
       list = list.filter((c) => c.name.toLowerCase().includes(search) || c.phone.includes(search));
     }
+    if (limit > 0) {
+      list = list.slice(0, limit);
+    }
     return HttpResponse.json(list);
   }),
-  http.get('/customers/:id', ({ params }) => {
+  http.get('/api/v1/customers', ({ request }) => {
+    const url = new URL(request.url);
+    const search = url.searchParams.get('search')?.toLowerCase();
+    const limit = parseInt(url.searchParams.get('limit') || '0', 10);
+    let list = [...mockCustomers];
+    if (search) {
+      list = list.filter((c) => c.name.toLowerCase().includes(search) || c.phone.includes(search));
+    }
+    if (limit > 0) {
+      list = list.slice(0, limit);
+    }
+    return HttpResponse.json(list);
+  }),
+  http.get('*/customers/:id', ({ params }) => {
     const c = mockCustomers.find((item) => item.id === params.id);
     if (!c) return HttpResponse.json({ error: 'Customer not found' }, { status: 404 });
     return HttpResponse.json(c);
   }),
-  http.post('/customers', async ({ request }) => {
+  http.post('*/customers', async ({ request }) => {
     const body = (await request.json()) as Partial<Customer>;
     const newCustomer: Customer = {
       id: `cust-${Date.now()}`,
@@ -1038,29 +1177,29 @@ export const phase11Handlers = [
     mockCustomers.unshift(newCustomer);
     return HttpResponse.json(newCustomer, { status: 201 });
   }),
-  http.put('/customers/:id', async ({ params, request }) => {
+  http.put('*/customers/:id', async ({ params, request }) => {
     const idx = mockCustomers.findIndex((item) => item.id === params.id);
     if (idx === -1) return HttpResponse.json({ error: 'Customer not found' }, { status: 404 });
     const body = (await request.json()) as Partial<Customer>;
     mockCustomers[idx] = { ...mockCustomers[idx], ...body };
     return HttpResponse.json(mockCustomers[idx]);
   }),
-  http.delete('/customers/:id', ({ params }) => {
+  http.delete('*/customers/:id', ({ params }) => {
     const idx = mockCustomers.findIndex((c) => c.id === params.id);
     if (idx !== -1) mockCustomers.splice(idx, 1);
     return HttpResponse.json({ success: true });
   }),
 
   // ── OFFERS ──
-  http.get('/offers', () => {
+  http.get('*/offers', () => {
     return HttpResponse.json(mockOffers);
   }),
-  http.get('/offers/:id', ({ params }) => {
+  http.get('*/offers/:id', ({ params }) => {
     const off = mockOffers.find((item) => item.id === params.id);
     if (!off) return HttpResponse.json({ error: 'Offer not found' }, { status: 404 });
     return HttpResponse.json(off);
   }),
-  http.post('/offers', async ({ request }) => {
+  http.post('*/offers', async ({ request }) => {
     const body = (await request.json()) as { title: string; body: string; validFrom?: string; validTo?: string; sendNow?: boolean };
     const recipients = mockCustomers.map((c, i) => ({
       id: `rec-${Date.now()}-${i}`,
@@ -1085,7 +1224,7 @@ export const phase11Handlers = [
     mockOffers.unshift(newOffer);
     return HttpResponse.json(newOffer, { status: 201 });
   }),
-  http.post('/offers/:id/send', ({ params }) => {
+  http.post('*/offers/:id/send', ({ params }) => {
     const off = mockOffers.find((item) => item.id === params.id);
     if (!off) return HttpResponse.json({ error: 'Offer not found' }, { status: 404 });
     off.status = 'Sent';

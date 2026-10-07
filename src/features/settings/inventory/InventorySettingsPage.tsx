@@ -127,7 +127,7 @@ export const InventorySettingsPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex justify-end pt-2">
+          <div className="hidden sm:flex justify-end pt-2">
             <Button
               id="save-inventory-settings-btn"
               data-testid="save-inventory-settings-btn"
@@ -141,6 +141,24 @@ export const InventorySettingsPage: React.FC = () => {
           </div>
         </Card>
       )}
+
+      {/* Sticky Mobile Save Button */}
+      <div
+        className="sm:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-border p-3 px-4 shadow-raised safe-bottom"
+        style={{ backgroundColor: 'var(--bg-card)' }}
+        id="inventory-mobile-sticky-save"
+      >
+        <Button
+          type="button"
+          onClick={handleSave}
+          disabled={saveMutation.isPending}
+          isLoading={saveMutation.isPending}
+          className="w-full py-2.5 font-semibold"
+          id="btn-save-inventory-mobile"
+        >
+          Save Inventory Settings
+        </Button>
+      </div>
     </div>
   );
 };

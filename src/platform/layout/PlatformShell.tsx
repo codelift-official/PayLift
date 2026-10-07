@@ -1,3 +1,4 @@
+import { BrandMark } from '../../components/BrandMark';
 import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -9,7 +10,6 @@ import {
   LogOut,
   Menu,
   X,
-  ShieldCheck,
   MessageSquare,
   BarChart3,
 } from 'lucide-react';
@@ -81,19 +81,7 @@ export const PlatformShell: React.FC = () => {
           className="h-16 px-5 flex items-center justify-between border-b shrink-0"
           style={{ borderColor: 'var(--bg-border)' }}
         >
-          <div className="flex items-center space-x-2.5">
-            <div className="w-8 h-8 rounded-lg bg-zinc-800 dark:bg-zinc-700 text-white flex items-center justify-center shadow-xs">
-              <ShieldCheck className="w-5 h-5 text-indigo-400" />
-            </div>
-            <div>
-              <span className="font-bold text-base tracking-tight" style={{ color: 'var(--text-primary)' }}>
-                Sahayak Admin
-              </span>
-              <span className="block text-[10px] uppercase font-bold tracking-wider text-indigo-500">
-                Super Admin
-              </span>
-            </div>
-          </div>
+          <BrandMark size="md" isPlatform={true} />
           <button
             type="button"
             className="p-1 rounded-md lg:hidden hover:opacity-80"

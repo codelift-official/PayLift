@@ -52,6 +52,8 @@ import { PlatformResetPasswordPage } from './platform/pages/PlatformResetPasswor
 import { PlatformDashboard } from './platform/pages/PlatformDashboard';
 import { BusinessListPage } from './platform/pages/BusinessListPage';
 import { BusinessDetailPage } from './platform/pages/BusinessDetailPage';
+import { CreateBusinessPage } from './platform/pages/CreateBusinessPage';
+import { TaxSettingsPage } from './features/settings/TaxSettingsPage';
 import { DeploymentsPage } from './platform/pages/DeploymentsPage';
 import { SupportTicketsPage } from './platform/pages/SupportTicketsPage';
 import { AuditLogPage } from './platform/pages/AuditLogPage';
@@ -92,7 +94,8 @@ const SubscriptionRedirectWatcher: React.FC = () => {
   const navigate = useNavigate();
 
   React.useEffect(() => {
-    if (isAuthenticated && status && status.trim().toLowerCase() === 'suspended') {
+    const s = (status || '').trim().toLowerCase();
+    if (isAuthenticated && (s === 'suspended' || s === 'blocked')) {
       const allowedPaths = ['/contact', '/login', '/logout', '/suspended'];
       const isAllowed =
         allowedPaths.includes(location.pathname) ||
@@ -141,6 +144,7 @@ export const App: React.FC = () => {
         >
           <Route index element={<PlatformDashboard />} />
           <Route path="businesses" element={<BusinessListPage />} />
+          <Route path="businesses/new" element={<CreateBusinessPage />} />
           <Route path="businesses/:id" element={<BusinessDetailPage />} />
           <Route path="deployments" element={<DeploymentsPage />} />
           <Route path="usage" element={<PlatformUsagePage />} />
@@ -312,6 +316,15 @@ export const App: React.FC = () => {
             element={
               <ProtectedRoute requiredRole={['BusinessAdmin']}>
                 <InventorySettingsPage />
+              </ProtectedRoute>
+            }
+          />
+          {/* Tax & GST Settings */}
+          <Route
+            path="/settings/tax"
+            element={
+              <ProtectedRoute requiredRole={['BusinessAdmin']}>
+                <TaxSettingsPage />
               </ProtectedRoute>
             }
           />

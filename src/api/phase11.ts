@@ -23,6 +23,7 @@ export interface ProductCategory {
   id: string;
   name: string;
   displayOrder: number;
+  catalogId?: string | null;
 }
 
 export interface StockItem {
@@ -164,6 +165,10 @@ export const phase11Api = {
   },
 
   // Products
+  searchProducts: async (payload: { query: string; limit?: number; source?: 'store' | 'generic' | 'mix' }): Promise<import('./types').ProductSearchResult[]> => {
+    const res = await apiClient.post<import('./types').ProductSearchResult[]>('/api/v1/products/search', payload);
+    return res.data;
+  },
   getProducts: async (params?: { search?: string; category?: string; active?: boolean }): Promise<Product[]> => {
     const res = await apiClient.get<Product[]>('/api/v1/products', { params });
     return res.data;
@@ -283,7 +288,7 @@ export const phase11Api = {
   },
 
   // Customers
-  getCustomers: async (params?: { search?: string }): Promise<Customer[]> => {
+  getCustomers: async (params?: { search?: string; limit?: number }): Promise<Customer[]> => {
     const res = await apiClient.get<Customer[]>('/api/v1/customers', { params });
     return res.data;
   },

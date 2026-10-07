@@ -21,4 +21,21 @@ export const shopsApi = {
     const res = await apiClient.put<ShopResponse>(`/api/v1/shops/${shopId}`, payload);
     return res.data;
   },
+
+  updateShopTaxSettings: async (
+    shopId: string,
+    payload: {
+      gst?: string | null;
+      gstEnabled?: boolean | null;
+      gstRate?: number | null;
+      gstInclusive?: boolean | null;
+      customerRecommendEnabled?: boolean;
+      customerMandatory?: boolean;
+      discountMode?: 'Percentage' | 'Amount';
+      productSource?: 'Store' | 'Generic' | 'Mix';
+    }
+  ): Promise<ShopResponse> => {
+    const res = await apiClient.put<ShopResponse>(`/api/v1/shops/${shopId}/tax-settings`, payload);
+    return res.data;
+  },
 };

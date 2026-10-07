@@ -638,6 +638,10 @@ export const BillDetailPage: React.FC = () => {
         bill={bill}
         isOpen={isReturnOpen}
         onClose={() => setIsReturnOpen(false)}
+        onSwitchToExchange={() => {
+          setIsReturnOpen(false);
+          setIsExchangeOpen(true);
+        }}
       />
 
       {/* Exchange Sheet Modal */}
@@ -645,6 +649,10 @@ export const BillDetailPage: React.FC = () => {
         bill={bill}
         isOpen={isExchangeOpen}
         onClose={() => setIsExchangeOpen(false)}
+        onSwitchToReturn={() => {
+          setIsExchangeOpen(false);
+          setIsReturnOpen(true);
+        }}
       />
 
       {/* WhatsApp Send Modal */}

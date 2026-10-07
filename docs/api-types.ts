@@ -202,8 +202,23 @@ export interface ShopResponse {
   whatsAppEnabled: boolean;
   notificationEmail?: string | null;
   notificationSms: boolean;
+  customerRecommendEnabled?: boolean;
+  customerMandatory?: boolean;
+  discountMode?: 'Percentage' | 'Amount';
+  productSource?: 'Store' | 'Generic' | 'Mix';
   createdAt: string;
   updatedAt?: string | null;
+}
+
+export interface UpdateShopTaxSettingsRequest {
+  gst?: string | null;
+  gstEnabled?: boolean | null;
+  gstRate?: number | null;
+  gstInclusive?: boolean | null;
+  customerRecommendEnabled?: boolean;
+  customerMandatory?: boolean;
+  discountMode?: 'Percentage' | 'Amount';
+  productSource?: 'Store' | 'Generic' | 'Mix';
 }
 
 // ---------- User ----------
@@ -230,6 +245,9 @@ export interface BillItemRequest {
   price: number;
   gstRate: number;
   discountPct?: number | null;
+  productID?: string | null;
+  discountType?: 'Percentage' | 'Amount' | null;
+  discountValue?: number | null;
 }
 
 export interface PaymentRequest {
@@ -245,6 +263,8 @@ export interface CreateBillRequest {
   payments?: PaymentRequest[] | null;
   negotiatedTotal?: number | null;
   couponCodes?: string[] | null;
+  orderDiscountType?: 'Percentage' | 'Amount' | null;
+  orderDiscountValue?: number | null;
 }
 
 export interface BillItemResponse {
@@ -260,6 +280,10 @@ export interface BillItemResponse {
   gstAmount?: number | null;
   lineTotal?: number | null;
   returnedQty?: number;
+  productID?: string | null;
+  catalogPrice?: number | null;
+  discountType?: 'Percentage' | 'Amount' | null;
+  discountValue?: number | null;
 }
 
 export interface PaymentResponse {
@@ -275,9 +299,14 @@ export interface BillResponse {
   billNumber: string;
   customerName?: string | null;
   customerPhone?: string | null;
+  originalSubtotal?: number | null;
   subtotal: number;
   discount: number;
   total: number;
+  couponDiscount?: number;
+  orderDiscountType?: 'Percentage' | 'Amount' | null;
+  orderDiscountValue?: number;
+  orderDiscountAmount?: number;
   negotiatedTotal?: number | null;
   isStrictModeBill: boolean;
   createdAt: string;
@@ -398,6 +427,76 @@ export interface ReturnItemRequest {
 
 export interface CreateReturnRequest {
   items: ReturnItemRequest[];
+}
+
+export interface ExchangeReturnItemRequest {
+  itemName: string;
+  qty: number;
+  returnQty?: number;
+  billItemId?: string | null;
+  reason?: string | null;
+}
+
+export interface ExchangeNewItemRequest {
+  itemName: string;
+  productName?: string;
+  productID?: string | null;
+  qty: number;
+  price: number;
+  unitPrice?: number;
+  gstRate: number;
+  discountType?: 'Percentage' | 'Amount' | null;
+  discountValue?: number | null;
+}
+
+export interface ExchangeBillRequest {
+  returnItems: ExchangeReturnItemRequest[];
+  newItems: ExchangeNewItemRequest[];
+  couponCodes?: string[] | null;
+  paymentMode?: string | null;
+}
+
+export interface ExchangeItemResult {
+  itemName: string;
+  qty: number;
+  price: number;
+  lineTotal: number;
+}
+
+export interface ExchangeResponse {
+  id?: string;
+  exchangeBillId?: string;
+  originalBillID?: string;
+  originalBillId?: string;
+  returnValue: number;
+  newValue?: number;
+  newSubtotal?: number;
+  newBillTotal?: number;
+  difference: number;
+  refundDue: number;
+  extraPayable?: number;
+  couponDiscount?: number;
+  appliedCoupons?: string[];
+  exchangeItems?: ExchangeItemResult[];
+  returnedItems?: ReturnExchangeResponse[];
+  newBill?: BillResponse;
+}
+
+export interface ProductSearchRequest {
+  query: string;
+  limit?: number;
+  source?: 'store' | 'generic' | 'mix';
+}
+
+export interface ProductSearchResult {
+  id: string;
+  name: string;
+  sku: string;
+  categoryName: string;
+  sellingPrice: number;
+  gstRate: number;
+  source: 'store' | 'generic';
+  score: number;
 }
 
 export interface ReturnExchangeResponse {

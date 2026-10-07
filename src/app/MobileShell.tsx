@@ -1,3 +1,4 @@
+import { BrandMark } from '../components/BrandMark';
 import React from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { Bell, Settings, LogOut } from 'lucide-react';
@@ -27,12 +28,7 @@ export const MobileShell: React.FC = () => {
         className="sticky top-0 z-30 h-14 border-b border-border px-4 flex items-center justify-between safe-top"
         style={{ backgroundColor: 'var(--bg-card)' }}
       >
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 via-rose-600 to-red-700 flex items-center justify-center text-white font-extrabold text-base shadow-md shadow-red-500/20">
-            S
-          </div>
-          <span className="font-bold text-lg tracking-tight" style={{ color: 'var(--text-primary)' }}>Sahayak</span>
-        </div>
+        <BrandMark size="sm" showWordmark={true} />
         <div className="flex items-center space-x-0.5">
           {/* A6: Theme toggle in mobile header */}
           <ThemeToggle />

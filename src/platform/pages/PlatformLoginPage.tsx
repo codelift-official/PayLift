@@ -1,3 +1,4 @@
+import { BrandMark } from '../../components/BrandMark';
 import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -81,19 +82,12 @@ export const PlatformLoginPage: React.FC = () => {
       {/* Main Login Card with Centered Brand Inside */}
       <main className="w-full max-w-md my-auto py-1 sm:py-4">
         <Card className="p-5 sm:p-8 border border-border shadow-card backdrop-blur-md" style={{ backgroundColor: 'var(--bg-card)' }}>
-          {/* Brand Header inside Login Box - S icon and Sahayak in same line */}
-          <div className="flex items-center justify-center gap-3 mb-4 sm:mb-6">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 via-rose-600 to-red-700 text-white font-extrabold text-xl flex items-center justify-center shadow-md shadow-red-500/25 shrink-0">
-              S
-            </div>
-            <div className="flex flex-col text-left">
-              <h1 className="text-2xl font-extrabold tracking-tight text-text-primary leading-tight">
-                Sahayak
-              </h1>
-              <span className="text-[10px] font-bold tracking-widest uppercase text-text-muted">
-                Platform Admin
-              </span>
-            </div>
+                    {/* Brand Header inside Login Box */}
+          <div className="flex flex-col items-center justify-center mb-4 sm:mb-6">
+            <BrandMark size="lg" isPlatform />
+            <span className="text-[10px] font-bold tracking-widest uppercase text-indigo-500 font-mono mt-1">
+              Super Admin Platform
+            </span>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4">

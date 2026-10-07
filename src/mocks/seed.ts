@@ -55,9 +55,19 @@ class MockSeedStore {
     const createdAt = new Date().toISOString();
 
     const items: BillItemResponse[] = payload.items.map((item, index) => {
-      const discountPct = item.discountPct ?? 0;
+      let discountAmount = 0;
+      let discountPct = 0;
       const originalPrice = item.price;
-      const discountAmount = Number(((originalPrice * discountPct) / 100).toFixed(2));
+      if (item.discountType === 'Amount' && item.discountValue) {
+        discountAmount = Math.min(item.discountValue, originalPrice);
+        discountPct = originalPrice > 0 ? (discountAmount / originalPrice) * 100 : 0;
+      } else if (item.discountType === 'Percentage' && item.discountValue) {
+        discountPct = Math.min(100, item.discountValue);
+        discountAmount = Number(((originalPrice * discountPct) / 100).toFixed(2));
+      } else if (item.discountPct) {
+        discountPct = item.discountPct;
+        discountAmount = Number(((originalPrice * discountPct) / 100).toFixed(2));
+      }
       const effectiveUnitPrice = originalPrice - discountAmount;
       const lineTotal = Number((effectiveUnitPrice * item.qty).toFixed(2));
       const gstRate = item.gstRate;
@@ -76,6 +86,9 @@ class MockSeedStore {
         gstRate,
         gstAmount,
         lineTotal,
+        productID: item.productID || null,
+        discountType: item.discountType ?? null,
+        discountValue: item.discountValue ?? null,
       };
     });
 
@@ -108,6 +121,13 @@ class MockSeedStore {
           },
         ];
 
+    let orderDiscountAmt = 0;
+    if (payload.orderDiscountType === 'Percentage' && payload.orderDiscountValue) {
+      orderDiscountAmt = Math.round(((subtotal * payload.orderDiscountValue) / 100) * 100) / 100;
+    } else if (payload.orderDiscountType === 'Amount' && payload.orderDiscountValue) {
+      orderDiscountAmt = Math.min(payload.orderDiscountValue, subtotal);
+    }
+
     const newBill: BillResponse = {
       id,
       businessID: this.business.id,
@@ -115,9 +135,13 @@ class MockSeedStore {
       billNumber,
       customerName: payload.customerName || null,
       customerPhone: payload.customerPhone || null,
+      originalSubtotal: subtotal,
       subtotal,
       discount,
-      total,
+      total: Math.max(0, total - orderDiscountAmt),
+      orderDiscountType: payload.orderDiscountType ?? null,
+      orderDiscountValue: payload.orderDiscountValue ?? 0,
+      orderDiscountAmount: orderDiscountAmt,
       negotiatedTotal: payload.negotiatedTotal ?? null,
       isStrictModeBill,
       createdAt,

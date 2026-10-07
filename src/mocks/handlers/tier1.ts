@@ -152,7 +152,7 @@ export const mockBusinesses = [
 export const mockDeployments = [
   {
     id: 'dep-1',
-    version: '1.0.0',
+    version: '1.0.5',
     gitSha: '9f2de70f1a2b',
     environment: 'Production',
     deployedAt: '2026-10-03T10:35:12Z',
@@ -339,6 +339,253 @@ export const tier1Handlers = [
   // Platform Businesses
   http.get('*/platform/businesses', () => {
     return HttpResponse.json(mockBusinesses);
+  }),
+
+  // POST */platform/businesses/create
+  http.post('*/platform/businesses/create', async ({ request }) => {
+    const body: any = await request.json();
+    const newId = String(mockBusinesses.length + 1);
+    const newBiz: any = {
+      id: newId,
+      name: body.name,
+      slug: body.slug,
+      tier: 'Starter',
+      status: 'Trial',
+      daysLeft: body.trialDays || 14,
+      trialEndsAt: new Date(Date.now() + (body.trialDays || 14) * 86400000).toISOString(),
+      graceEndsAt: null,
+      ownerEmail: body.ownerEmail,
+      gst: body.gst || null,
+      createdAt: new Date().toISOString(),
+      shops: [
+        {
+          id: `shop-${newId}`,
+          name: `${body.name} Main Branch`,
+          address: 'Main Market Road',
+          mobile: body.ownerMobile,
+          createdAt: new Date().toISOString(),
+        },
+      ],
+      users: [
+        {
+          id: `usr-${newId}`,
+          name: body.ownerName,
+          email: body.ownerEmail,
+          role: 'BusinessAdmin',
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    };
+    mockBusinesses.push(newBiz);
+    return HttpResponse.json(
+      {
+        tenantID: Number(newId) || newId,
+        slug: body.slug,
+        ownerUserID: `usr-${newId}`,
+        defaultShopID: `shop-${newId}`,
+        credentials: {
+          loginURL: 'https://billify-d0q.pages.dev/login',
+          tenantSlug: body.slug,
+          email: body.ownerEmail,
+          mobile: body.ownerMobile,
+          password: body.ownerPassword,
+        },
+      },
+      { status: 201 }
+    );
+  }),
+
+  // GET */platform/businesses/check-slug
+  http.get('*/platform/businesses/check-slug', ({ request }) => {
+    const url = new URL(request.url, 'http://localhost');
+    const slug = (url.searchParams.get('slug') || '').toLowerCase().trim();
+    const exists = mockBusinesses.some((b) => (b.slug || '').toLowerCase() === slug);
+    return HttpResponse.json({ available: !exists });
+  }),
+
+  // POST */platform/businesses/generate-password
+  http.post('*/platform/businesses/generate-password', () => {
+    return HttpResponse.json({ password: 'P@ssw0rd' + Math.floor(1000 + Math.random() * 9000) + '!' });
+  }),
+
+  // POST */platform/businesses/:id/block
+  http.post('*/platform/businesses/:id/block', async ({ params, request }) => {
+    const body: any = await request.json();
+    const b = mockBusinesses.find((item) => item.id === params.id);
+    if (b) {
+      b.status = 'Blocked';
+      (b as any).subscriptionStatus = 'Blocked';
+      (b as any).blockedReason = body.reason;
+    }
+    return HttpResponse.json({ success: true });
+  }),
+
+  // POST */platform/businesses/:id/unblock
+  http.post('*/platform/businesses/:id/unblock', async ({ params }) => {
+    const b = mockBusinesses.find((item) => item.id === params.id);
+    if (b) {
+      b.status = 'Active';
+      (b as any).subscriptionStatus = 'Active';
+    }
+    return HttpResponse.json({ success: true });
+  }),
+
+  // GET */platform/businesses/:id/subscription-events
+  http.get('*/platform/businesses/:id/subscription-events', () => {
+    return HttpResponse.json([
+      {
+        id: 'evt-1',
+        eventType: 'TrialStarted',
+        triggeredBy: 'SuperAdmin',
+        reason: 'Initial onboarding',
+        createdAt: new Date().toISOString(),
+      },
+    ]);
+  }),
+  // GET */platform/businesses/:id/subscription
+  http.get('*/platform/businesses/:id/subscription', ({ params }) => {
+    const b = mockBusinesses.find((item) => item.id === params.id) || mockBusinesses[0];
+    return HttpResponse.json({
+      businessId: b.id,
+      name: b.name,
+      slug: b.slug,
+      currentPlan: {
+        id: 'sub-001',
+        plan: b.tier || 'Pro',
+        billingCycle: 'Monthly',
+        amount: 999,
+        currency: 'INR',
+        startedAt: new Date(Date.now() - 30 * 86400000).toISOString(),
+        nextDueAt: new Date(Date.now() + 15 * 86400000).toISOString(),
+        status: 'Active',
+        notes: 'Standard tier plan',
+        isOverdue: false,
+      },
+      history: [],
+    });
+  }),
+
+  // POST */platform/businesses/:id/subscription
+  http.post('*/platform/businesses/:id/subscription', async ({ params, request }) => {
+    const body: any = await request.json();
+    const b = mockBusinesses.find((item) => item.id === params.id);
+    if (b) {
+      b.tier = body.plan;
+    }
+    return HttpResponse.json({
+      id: 'sub-new',
+      businessID: params.id,
+      plan: body.plan,
+      billingCycle: body.billingCycle,
+      amount: body.amount,
+      currency: 'INR',
+      startedAt: new Date().toISOString(),
+      nextDueAt: body.nextDueAt || new Date(Date.now() + 30 * 86400000).toISOString(),
+      status: 'Active',
+      notes: body.notes,
+    });
+  }),
+
+  // GET */platform/businesses/:id/fees
+  http.get('*/platform/businesses/:id/fees', () => {
+    return HttpResponse.json({
+      payments: [
+        {
+          id: 'fee-1',
+          businessID: 1,
+          subscriptionID: 'sub-1',
+          amount: 999,
+          paidAt: new Date(Date.now() - 15 * 86400000).toISOString(),
+          method: 'UPI',
+          reference: 'UPI/20261001/887612',
+          notes: 'September subscription license fee',
+        },
+      ],
+      totalPaidLifetime: 999,
+    });
+  }),
+
+  // POST */platform/businesses/:id/fees
+  http.post('*/platform/businesses/:id/fees', async ({ params, request }) => {
+    const body: any = await request.json();
+    return HttpResponse.json({
+      id: 'fee-' + Date.now(),
+      businessID: params.id,
+      amount: body.amount,
+      paidAt: new Date().toISOString(),
+      method: body.method,
+      reference: body.reference,
+      notes: body.notes,
+    });
+  }),
+
+  // GET */platform/fees/report
+  http.get('*/platform/fees/report', () => {
+    return HttpResponse.json({
+      mrr: 2999,
+      overdueAccountsCount: 0,
+      totalRevenuePeriod: 5997,
+      periodPaymentsCount: 3,
+    });
+  }),
+
+  // GET */platform/usage/statistics
+  http.get('*/platform/usage/statistics', ({ request }) => {
+    const authHeader = request.headers.get('Authorization');
+    if (authHeader && authHeader.includes('trigger-401')) {
+      return new HttpResponse(JSON.stringify({ message: 'Unauthorized' }), {
+        status: 401,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    const businesses = [
+      { id: '1', name: 'Kirana Supermart', slug: 'kirana-supermart', shops: 2, users: 4, products: 48, customers: 35, bills: 428, estimatedSizeMB: 1.25 },
+      { id: '2', name: 'Apex Electronics', slug: 'apex-electronics', shops: 3, users: 6, products: 84, customers: 52, bills: 890, estimatedSizeMB: 2.45 },
+      ...mockBusinesses.map((b, idx) => ({
+        id: b.id,
+        name: b.name,
+        slug: b.slug,
+        shops: (b.shops && b.shops.length) || 1,
+        users: (b.users && b.users.length) || 1,
+        products: 12 + idx * 4,
+        customers: 8 + idx * 3,
+        bills: 20 + idx * 15,
+        estimatedSizeMB: 0.45 + idx * 0.25,
+      })),
+    ];
+
+    return HttpResponse.json({
+      totals: {
+        businesses: businesses.length,
+        activeBusinesses: mockBusinesses.filter((b) => (b.status || '').toLowerCase() === 'active').length || 2,
+        suspendedBusinesses: mockBusinesses.filter((b) => (b.status || '').toLowerCase() === 'suspended').length || 1,
+        shops: businesses.reduce((acc, b) => acc + b.shops, 0),
+        users: businesses.reduce((acc, b) => acc + b.users, 0),
+        products: 132,
+        customers: 87,
+        bills: 1318,
+        billItems: 3450,
+        payments: 1318,
+        coupons: 8,
+        offers: 5,
+        stockMovements: 64,
+      },
+      perBusiness: businesses.map((b) => ({
+        tenantID: b.id,
+        name: b.name,
+        slug: b.slug,
+        shops: b.shops,
+        users: b.users,
+        products: b.products,
+        customers: b.customers,
+        bills: b.bills,
+        estimatedSizeMB: b.estimatedSizeMB,
+        lastActivityAt: new Date().toISOString(),
+      })),
+      estimatedTotalSizeMB: 3.70,
+      generatedAt: new Date().toISOString(),
+    });
   }),
 
   http.get('*/platform/businesses/:id', ({ params }) => {

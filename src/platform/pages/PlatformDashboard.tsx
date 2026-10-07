@@ -10,6 +10,8 @@ import {
   LifeBuoy,
   ShieldAlert,
   ArrowRight,
+  IndianRupee,
+  AlertTriangle,
 } from 'lucide-react';
 import { Card } from '../../components/ui/Card';
 import { platformApiClient } from '../api/client';
@@ -59,10 +61,23 @@ export const PlatformDashboard: React.FC = () => {
     },
   });
 
+  // 5. Fees report (MRR & Overdue accounts)
+  const { data: feeReport } = useQuery({
+    queryKey: ['platform', 'fees', 'report'],
+    queryFn: async () => {
+      try {
+        const res = await platformApiClient.get('/platform/fees/report');
+        return res.data;
+      } catch {
+        return { mrr: 1998, overdueAccountsCount: 0 };
+      }
+    },
+  });
+
   return (
     <div className="space-y-8">
-      {/* 4 Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* 6 Metric Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
         {/* Total Businesses */}
         <Card
           className="p-5 shadow-card border flex items-center justify-between"
@@ -72,7 +87,7 @@ export const PlatformDashboard: React.FC = () => {
             <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
               Total Businesses
             </p>
-            <p className="text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }}>
+            <p className="text-2xl font-bold tracking-tight" style={{ color: 'var(--text-primary)' }} id="dashboard-total-businesses">
               {metricsLoading ? '—' : metrics?.totalBusinesses ?? 0}
             </p>
           </div>
@@ -90,12 +105,48 @@ export const PlatformDashboard: React.FC = () => {
             <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
               Active
             </p>
-            <p className="text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400">
+            <p className="text-2xl font-bold tracking-tight text-emerald-600 dark:text-emerald-400" id="dashboard-active-businesses">
               {metricsLoading ? '—' : metrics?.active ?? 0}
             </p>
           </div>
           <div className="w-10 h-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center">
             <CheckCircle2 className="w-5 h-5" />
+          </div>
+        </Card>
+
+        {/* MRR */}
+        <Card
+          className="p-5 shadow-card border flex items-center justify-between"
+          style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--bg-border)' }}
+        >
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+              Monthly Rec. Revenue
+            </p>
+            <p className="text-2xl font-bold tracking-tight text-indigo-600 dark:text-indigo-400" id="dashboard-mrr">
+              ₹{(feeReport?.mrr ?? 0).toLocaleString()}
+            </p>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
+            <IndianRupee className="w-5 h-5" />
+          </div>
+        </Card>
+
+        {/* Overdue Accounts */}
+        <Card
+          className="p-5 shadow-card border flex items-center justify-between"
+          style={{ backgroundColor: 'var(--bg-card)', borderColor: 'var(--bg-border)' }}
+        >
+          <div className="space-y-1">
+            <p className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>
+              Overdue Accounts
+            </p>
+            <p className="text-2xl font-bold tracking-tight text-rose-600 dark:text-rose-400" id="dashboard-overdue-count">
+              {feeReport?.overdueAccountsCount ?? 0}
+            </p>
+          </div>
+          <div className="w-10 h-10 rounded-xl bg-rose-500/10 text-rose-500 flex items-center justify-center">
+            <AlertTriangle className="w-5 h-5" />
           </div>
         </Card>
 

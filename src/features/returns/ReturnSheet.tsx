@@ -10,9 +10,15 @@ interface ReturnSheetProps {
   bill: BillResponse;
   isOpen: boolean;
   onClose: () => void;
+  onSwitchToExchange?: () => void;
 }
 
-export const ReturnSheet: React.FC<ReturnSheetProps> = ({ bill, isOpen, onClose }) => {
+export const ReturnSheet: React.FC<ReturnSheetProps> = ({
+  bill,
+  isOpen,
+  onClose,
+  onSwitchToExchange,
+}) => {
   const queryClient = useQueryClient();
 
   // Load existing returns for this bill
@@ -150,24 +156,49 @@ export const ReturnSheet: React.FC<ReturnSheetProps> = ({ bill, isOpen, onClose 
       >
         {/* Header */}
         <div
-          className="px-5 py-4 border-b border-border flex items-center justify-between"
+          className="px-5 py-3 border-b border-border flex items-center justify-between"
           style={{ backgroundColor: 'var(--bg-app)' }}
         >
           <div>
-            <h2 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+            <h2 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
               Return Items
             </h2>
-            <p className="text-xs text-text-muted">
+            <p className="text-[11px] text-text-muted">
               Bill #{bill.billNumber} · Select quantities to return
             </p>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-1.5 text-text-muted hover:text-text-primary rounded-lg transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+
+          <div className="flex items-center gap-2">
+            {/* Tabs */}
+            <div className="flex items-center bg-muted/60 p-0.5 rounded-lg border border-border">
+              <button
+                type="button"
+                className="px-2.5 py-1 text-xs font-bold rounded-md bg-primary text-white shadow-xs"
+              >
+                Return
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (onSwitchToExchange) {
+                    onClose();
+                    onSwitchToExchange();
+                  }
+                }}
+                className="px-2.5 py-1 text-xs font-semibold rounded-md text-text-muted hover:text-text-primary transition-all"
+              >
+                Exchange
+              </button>
+            </div>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 text-text-muted hover:text-text-primary rounded-lg transition-colors ml-1"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
         </div>
 
         {/* Item List: Item 3 requires items fully returned to be HIDDEN */}

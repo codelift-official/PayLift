@@ -7,9 +7,9 @@ export async function fetchAppVersion() {
 
     // Standard simple GET request with no custom headers to avoid CORS preflight rejection
     const res = await fetch(`${baseUrl}/api/v1/version`);
-    if (!res.ok) return { version: '1.0.3' };
+    if (!res.ok) return { version: '1.0.5' };
     return await res.json();
   } catch {
-    return { version: '1.0.3' };
+    return { version: '1.0.5' };
   }
 }

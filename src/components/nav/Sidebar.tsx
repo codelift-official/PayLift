@@ -1,3 +1,4 @@
+import { BrandMark } from '../BrandMark';
 import React, { useState, useEffect, useCallback } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { navItemsForRole } from './navItems';
@@ -67,14 +68,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
       )}>
         {!isCollapsed ? (
           <>
-            <div className="flex items-center space-x-2.5 overflow-hidden">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 via-rose-600 to-red-700 flex items-center justify-center text-white font-extrabold text-base shadow-md shadow-red-500/20 shrink-0">
-                S
-              </div>
-              <span className="font-bold text-lg tracking-tight text-text-primary truncate">
-                Sahayak
-              </span>
-            </div>
+            <BrandMark size="md" showWordmark={true} />
             <button
               type="button"
               onClick={toggle}
@@ -85,9 +79,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </button>
           </>
         ) : (
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 via-rose-600 to-red-700 flex items-center justify-center text-white font-extrabold text-base shadow-md shadow-red-500/20 shrink-0">
-            S
-          </div>
+          <BrandMark size="md" showWordmark={false} />
         )}
       </div>
 
