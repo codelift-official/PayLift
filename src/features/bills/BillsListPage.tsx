@@ -199,9 +199,10 @@ export const BillsListPage: React.FC = () => {
             size="sm"
             onClick={() => navigate('/bills/new')}
             className="hidden sm:inline-flex"
+            id="bills-list-create-bill-btn"
           >
             <Plus className="w-4 h-4 mr-1.5" />
-            New Bill
+            Create Bill
           </Button>
         }
       />

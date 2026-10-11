@@ -12,6 +12,9 @@
   --text-primary: #0F172A;
   --text-muted: #64748B;
   --bg-input: #FFFFFF;
+  --primary: #E53935;
+  --primary-hover: #C62828;
+  --accent: #E53935;
 }
 
 [data-theme="dark"] {
@@ -21,6 +24,9 @@
   --text-primary: #F1F5F9;
   --text-muted: #94A3B8;
   --bg-input: #1E293B;
+  --primary: #E53935;
+  --primary-hover: #C62828;
+  --accent: #E53935;
 }
 
 @layer base {

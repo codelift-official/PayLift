@@ -213,9 +213,10 @@ export const DashboardPage: React.FC = () => {
           type="button"
           onClick={() => navigate('/bills/new')}
           className="flex flex-col items-center justify-center p-3 rounded-card bg-primary text-white shadow-sm font-semibold text-xs active:scale-95 transition-transform"
+          style={{ backgroundColor: '#E53935' }}
         >
           <Plus className="w-5 h-5 mb-1" />
-          <span>New Bill</span>
+          <span>Create Bill</span>
         </button>
 
         <button

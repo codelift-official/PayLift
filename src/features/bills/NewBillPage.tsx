@@ -611,7 +611,7 @@ export const NewBillPage: React.FC = () => {
                 <span className="hidden sm:inline">Back</span>
               </button>
               <h1 className="text-lg sm:text-2xl font-bold tracking-tight text-text-primary">
-                New Bill
+                Create Bill
               </h1>
             </div>
 

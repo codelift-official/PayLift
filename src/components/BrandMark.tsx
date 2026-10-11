@@ -83,9 +83,9 @@ export const BrandMark: React.FC<BrandMarkProps> = ({
         data-testid="brand-mark-s"
         className={`${iconSizes[size]} shrink-0 flex items-center justify-center text-white relative transition-all duration-300 brand-s-icon`}
         style={{
-          backgroundColor: 'var(--accent, #e07b5a)',
-          border: '1px solid rgba(224, 123, 90, 0.40)',
-          boxShadow: '0 0 12px rgba(224, 123, 90, 0.25)',
+          backgroundColor: '#E53935',
+          border: '1px solid rgba(229, 57, 53, 0.40)',
+          boxShadow: '0 0 12px rgba(229, 57, 53, 0.30)',
         }}
       >
         <span className="relative z-10 font-bold tracking-tight">S</span>
@@ -120,7 +120,7 @@ export const BrandMark: React.FC<BrandMarkProps> = ({
         }
 
         .brand-mark-container:hover .brand-s-icon {
-          box-shadow: 0 0 16px rgba(224, 123, 90, 0.35) !important;
+          box-shadow: 0 0 16px rgba(229, 57, 53, 0.45) !important;
           opacity: 1;
         }
 
