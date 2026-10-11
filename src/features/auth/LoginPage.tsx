@@ -112,11 +112,11 @@ export const LoginPage: React.FC = () => {
 
   return (
     <div
-      className="min-h-screen min-h-[100dvh] flex flex-col justify-between items-center px-4 py-2 sm:p-6"
-      style={{ backgroundColor: 'var(--bg-app)', color: 'var(--text-primary)' }}
+      className="min-h-[100dvh] flex flex-col items-center justify-center px-4 pt-3 pb-0 sm:px-6 sm:pt-6 sm:pb-0"
+      style={{ minHeight: '100dvh', backgroundColor: 'var(--bg-app)', color: 'var(--text-primary)' }}
     >
       {/* Main Login Card with Centered Brand Inside */}
-      <main className="w-full max-w-md my-auto py-1 sm:py-4">
+      <main className="w-full max-w-md">
         <Card className="p-5 sm:p-8 border border-border shadow-card backdrop-blur-md" style={{ backgroundColor: 'var(--bg-card)' }}>
                     {/* Brand Header inside Login Box */}
           <div className="flex flex-col items-center justify-center mb-4 sm:mb-6">
@@ -199,7 +199,7 @@ export const LoginPage: React.FC = () => {
       </main>
 
       {/* Footer Legal, Platform Redirect & Version */}
-      <footer className="w-full max-w-md py-2 sm:py-4 flex flex-col items-center space-y-2 sm:space-y-3 text-xs safe-bottom" style={{ color: 'var(--text-muted)' }}>
+      <footer className="w-full max-w-md pt-3 sm:pt-4 pb-1 sm:pb-2 flex flex-col items-center space-y-1.5 sm:space-y-2 text-xs" style={{ color: 'var(--text-muted)' }}>
         <Link
           to="/platform/login"
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card/70 hover:bg-card text-text-muted hover:text-text-primary font-medium text-xs transition-colors shadow-xs"

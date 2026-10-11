@@ -166,6 +166,78 @@ export const mockProducts: Product[] = [
     isActive: true,
     createdAt: '2026-09-10T10:00:00Z',
   },
+  {
+    id: 'prod-11',
+    name: 'Shirt',
+    sku: 'APP-101',
+    category: 'Clothing',
+    unit: 'Pcs',
+    costPrice: 800,
+    sellingPrice: 1200,
+    gstRate: 12,
+    isActive: true,
+    createdAt: '2026-09-11T10:00:00Z',
+  },
+  {
+    id: 'prod-12',
+    name: 'Jeans',
+    sku: 'APP-102',
+    category: 'Clothing',
+    unit: 'Pcs',
+    costPrice: 1200,
+    sellingPrice: 1800,
+    gstRate: 12,
+    isActive: true,
+    createdAt: '2026-09-12T10:00:00Z',
+  },
+  {
+    id: 'prod-13',
+    name: 'Shoes',
+    sku: 'APP-103',
+    category: 'Footwear',
+    unit: 'Pair',
+    costPrice: 1600,
+    sellingPrice: 2500,
+    gstRate: 18,
+    isActive: true,
+    createdAt: '2026-09-13T10:00:00Z',
+  },
+  {
+    id: 'prod-14',
+    name: 'Tea',
+    sku: 'BEV-101',
+    category: 'Packaged Food',
+    unit: 'Cup',
+    costPrice: 10,
+    sellingPrice: 20,
+    gstRate: 5,
+    isActive: true,
+    createdAt: '2026-09-14T10:00:00Z',
+  },
+  {
+    id: 'prod-15',
+    name: 'Chips',
+    sku: 'SNK-101',
+    category: 'Snacks & Sweets',
+    unit: 'Pack',
+    costPrice: 20,
+    sellingPrice: 30,
+    gstRate: 12,
+    isActive: true,
+    createdAt: '2026-09-15T10:00:00Z',
+  },
+  {
+    id: 'prod-16',
+    name: 'Chocolate',
+    sku: 'SNK-102',
+    category: 'Snacks & Sweets',
+    unit: 'Pcs',
+    costPrice: 35,
+    sellingPrice: 50,
+    gstRate: 18,
+    isActive: true,
+    createdAt: '2026-09-16T10:00:00Z',
+  },
 ];
 
 export const mockStockItems: StockItem[] = [
@@ -463,6 +535,18 @@ export const mockCustomers: Customer[] = [
       { id: 'b-83', billNumber: 'BILL-000083', date: '2026-09-15T14:10:00Z', amount: 630, status: 'Completed' },
     ],
   },
+  {
+    id: 'cust-5',
+    name: 'Priya Patel',
+    phone: '9876543220',
+    email: 'priya.patel@gmail.com',
+    totalBills: 6,
+    totalSpend: 4200,
+    avgBillValue: 700,
+    lastVisit: '2026-10-06T12:00:00Z',
+    notes: 'Regular customer',
+    recentBills: [],
+  },
 ];
 
 export const mockOffers: Offer[] = [
@@ -730,7 +814,11 @@ export const phase11Handlers = [
     const allSynonyms = new Set<string>(directSyns.map((s: string) => s.toLowerCase()));
 
     for (const [key, list] of Object.entries(synMap)) {
-      if (list.some((s: string) => s.toLowerCase() === query || s.toLowerCase().includes(query))) {
+      if (
+        key.toLowerCase() === query ||
+        key.toLowerCase().startsWith(query) ||
+        list.some((s: string) => s.toLowerCase() === query || s.toLowerCase().startsWith(query) || s.toLowerCase().includes(query))
+      ) {
         allSynonyms.add(key.toLowerCase());
         list.forEach((item: string) => allSynonyms.add(item.toLowerCase()));
       }
