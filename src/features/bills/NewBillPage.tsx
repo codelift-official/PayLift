@@ -596,7 +596,7 @@ export const NewBillPage: React.FC = () => {
       />
 
       {/* MAIN BILL SCREEN: Single centered column, max-w-[720px], NO sidebar */}
-      <div className="max-w-[720px] mx-auto px-3 py-2 sm:px-4 sm:py-6 pb-24 sm:pb-8">
+      <div className="max-w-[720px] mx-auto px-3 py-2 sm:px-4 sm:py-6 pb-32 sm:pb-8">
         {/* Top Header */}
         <header className="pb-2.5 mb-2.5 border-b border-border/60">
           <div className="flex items-center justify-between gap-2">
@@ -868,7 +868,10 @@ export const NewBillPage: React.FC = () => {
         </div>
 
         {/* Generate Bill Button (Sticky on mobile, static on desktop) */}
-        <div className="fixed sm:static bottom-0 left-0 right-0 p-2.5 sm:p-0 bg-background/95 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none border-t sm:border-t-0 border-border z-30">
+        <div
+          className="fixed sm:static bottom-0 left-0 right-0 p-2.5 sm:p-0 bg-background/95 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none border-t sm:border-t-0 border-border z-30"
+          style={{ paddingBottom: 'calc(0.625rem + env(safe-area-inset-bottom, 0px))' }}
+        >
           <div className="max-w-[720px] mx-auto">
             <button
               type="button"

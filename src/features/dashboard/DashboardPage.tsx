@@ -295,15 +295,15 @@ export const DashboardPage: React.FC = () => {
             </div>
           ) : (
             <>
-              <div className="flex items-start justify-between">
-                <div>
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                <div className="min-w-0">
                   <div className="flex items-center space-x-1.5">
                     <span className="text-xs font-bold uppercase tracking-wider text-text-muted">
                       {rangeLabel}
                     </span>
                     <ChevronRight className="w-3.5 h-3.5 text-text-muted group-hover:text-primary transition-colors" />
                   </div>
-                  <div className="mt-1 flex items-baseline space-x-3">
+                  <div className="mt-1 flex items-baseline flex-wrap gap-x-2 gap-y-1">
                     <Money value={summary?.totalSales ?? 0} size="display" />
                     {hasRecords && growthPct !== null && (
                       <GrowthBadge pct={growthPct} label={prevPeriodLabel} />
@@ -331,7 +331,7 @@ export const DashboardPage: React.FC = () => {
                   </p>
                 </div>
 
-                <div className="text-right">
+                <div className="sm:text-right shrink-0">
                   <span className="text-xs text-text-muted">Net Realized</span>
                   <div className="font-bold text-success text-base">
                     <Money value={summary?.netSales ?? 0} size="md" />

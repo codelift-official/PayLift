@@ -131,12 +131,14 @@ export const CustomerPopup: React.FC<CustomerPopupProps> = ({
   return (
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity p-0 sm:p-4"
+      style={{ height: '100dvh' }}
       onClick={handleBackdropClick}
       data-testid="customer-popup-backdrop"
       id="customer-popup-modal"
     >
       <div
-        className="w-full sm:max-w-md bg-card rounded-t-3xl sm:rounded-2xl border border-border shadow-2xl overflow-hidden transition-all flex flex-col max-h-[90vh]"
+        className="w-full sm:max-w-md bg-card rounded-t-3xl sm:rounded-2xl border border-border shadow-2xl overflow-hidden transition-all flex flex-col"
+        style={{ maxHeight: 'min(90dvh, 90vh)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
         onClick={(e) => e.stopPropagation()}
         id="customer-popup-sheet"
       >
