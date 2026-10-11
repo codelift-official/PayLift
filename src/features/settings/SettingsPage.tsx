@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { shopsApi } from '../../api/shops';
@@ -7,6 +7,7 @@ import { Card } from '../../components/ui/Card';
 import { useAuthStore } from '../../stores/auth.store';
 import {
   Store,
+  Building2,
   Printer,
   Bell,
   Receipt,
@@ -24,7 +25,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 
-// ─── Reusable themed row component ────────────────────────────────
+// â”€â”€â”€ Reusable themed row component â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 const SettingsRow: React.FC<{
   to: string;
   icon: React.ReactNode;
@@ -106,7 +107,7 @@ export const SettingsPage: React.FC = () => {
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {/* ── ADMIN SECTION 1: Catalog & Management ── */}
+            {/* â”€â”€ ADMIN SECTION 1: Catalog & Management â”€â”€ */}
             {isAdmin && (
               <>
                 <SettingsRow
@@ -117,6 +118,26 @@ export const SettingsPage: React.FC = () => {
                   title="Shops"
                   subtitle={`${shops?.length ?? 0} ${(shops?.length ?? 0) === 1 ? 'location' : 'locations'} configured`}
                   dataTestId="settings-row-shops"
+                />
+
+                <SettingsRow
+                  to="/settings/business"
+                  icon={<Building2 className="w-4 h-4" />}
+                  iconBg="bg-indigo-50 dark:bg-indigo-950/30"
+                  iconColor="text-indigo-600"
+                  title="Business Settings"
+                  subtitle="Enterprise parameters and inventory rules"
+                  dataTestId="settings-row-business"
+                />
+
+                <SettingsRow
+                  to="/settings/shop"
+                  icon={<Store className="w-4 h-4" />}
+                  iconBg="bg-emerald-50 dark:bg-emerald-950/30"
+                  iconColor="text-emerald-600"
+                  title="Shop Settings"
+                  subtitle="Branch POS policies & hardware preferences"
+                  dataTestId="settings-row-shop"
                 />
 
                 <SettingsRow
@@ -191,7 +212,7 @@ export const SettingsPage: React.FC = () => {
               </>
             )}
 
-            {/* ── MANAGER SECTION 1: Catalog & Customers ── */}
+            {/* â”€â”€ MANAGER SECTION 1: Catalog & Customers â”€â”€ */}
             {isManager && (
               <>
                 <SettingsRow
@@ -246,7 +267,7 @@ export const SettingsPage: React.FC = () => {
               </>
             )}
 
-            {/* ── HARDWARE & COMMUNICATIONS SECTION ── */}
+            {/* â”€â”€ HARDWARE & COMMUNICATIONS SECTION â”€â”€ */}
             {/* Printer is visible to ALL roles (Admin, Manager, Staff) */}
             <SettingsRow
               to={shopId ? `/settings/printer/${shopId}` : '/settings/printer'}
@@ -254,7 +275,7 @@ export const SettingsPage: React.FC = () => {
               iconBg="bg-emerald-50 dark:bg-emerald-950/30"
               iconColor="text-success"
               title="Printer"
-              subtitle={`${activeShop?.printerType || 'Thermal'} • ${activeShop?.printerName || 'Bluetooth ESC/POS'}`}
+              subtitle={`${activeShop?.printerType || 'Thermal'} â€¢ ${activeShop?.printerName || 'Bluetooth ESC/POS'}`}
               dataTestId="settings-row-printer"
             />
 
@@ -277,13 +298,13 @@ export const SettingsPage: React.FC = () => {
                   iconBg="bg-amber-50 dark:bg-amber-950/30"
                   iconColor="text-amber-600"
                   title="Receipt"
-                  subtitle={`${activeShop?.exchangePolicyDays || 7} days exchange • Custom footer note`}
+                  subtitle={`${activeShop?.exchangePolicyDays || 7} days exchange â€¢ Custom footer note`}
                   dataTestId="settings-row-receipt"
                 />
               </>
             )}
 
-            {/* ── ACCOUNT SECTION ── */}
+            {/* â”€â”€ ACCOUNT SECTION â”€â”€ */}
             {/* Account is visible to ALL roles */}
             <SettingsRow
               to="/settings/account"
@@ -308,7 +329,7 @@ export const SettingsPage: React.FC = () => {
               />
             )}
 
-            {/* ── LOGOUT (red, last row for ALL roles) ── */}
+            {/* â”€â”€ LOGOUT (red, last row for ALL roles) â”€â”€ */}
             <button
               type="button"
               id="settings-logout-btn"
@@ -351,11 +372,12 @@ export const SettingsPage: React.FC = () => {
       {/* Legal Footer Links */}
       <div className="text-center text-xs space-x-3 pt-2" style={{ color: 'var(--text-muted)' }}>
         <Link to="/terms" className="hover:underline">Terms</Link>
-        <span>·</span>
+        <span>Â·</span>
         <Link to="/privacy" className="hover:underline">Privacy</Link>
-        <span>·</span>
+        <span>Â·</span>
         <Link to="/refund-policy" className="hover:underline">Refund Policy</Link>
       </div>
     </div>
   );
 };
+

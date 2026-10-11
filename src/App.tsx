@@ -80,12 +80,15 @@ import { OfferDetailPage } from './features/settings/offers/OfferDetailPage';
 import { PlatformUsagePage } from './platform/pages/PlatformUsagePage';
 import { PlatformTenantUsagePage } from './platform/pages/PlatformTenantUsagePage';
 import { PlatformErrorLogPage } from './platform/pages/PlatformErrorLogPage';
+import { PlatformSettingsPage } from './platform/pages/PlatformSettingsPage';
+import { BusinessSettingsPage } from './features/settings/BusinessSettingsPage';
+import { ShopSettingsPage } from './features/settings/ShopSettingsPage';
 
 /**
  * Redirect rule:
  * If subscription.status === 'Suspended' AND authenticated
  * AND current path NOT in [/contact, /login, /logout]
- * → redirect to /suspended
+ * â†’ redirect to /suspended
  */
 const SubscriptionRedirectWatcher: React.FC = () => {
   const { status } = useSubscription();
@@ -153,6 +156,7 @@ export const App: React.FC = () => {
           <Route path="whatsapp" element={<WhatsAppAdminPage />} />
           <Route path="support" element={<SupportTicketsPage />} />
           <Route path="audit" element={<AuditLogPage />} />
+          <Route path="settings" element={<PlatformSettingsPage />} />
         </Route>
 
         {/* Protected Standalone Routes */}
@@ -195,6 +199,30 @@ export const App: React.FC = () => {
             }
           />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route
+            path="/settings/business"
+            element={
+              <ProtectedRoute requiredRole={['BusinessAdmin']}>
+                <BusinessSettingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings/shop"
+            element={
+              <ProtectedRoute requiredRole={['BusinessAdmin', 'Manager']}>
+                <ShopSettingsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settings/shop/:shopID"
+            element={
+              <ProtectedRoute requiredRole={['BusinessAdmin', 'Manager']}>
+                <ShopSettingsPage />
+              </ProtectedRoute>
+            }
+          />
           <Route path="/settings/account" element={<AccountPage />} />
           <Route path="/settings/printer" element={<PrinterSettingsPage />} />
           <Route path="/settings/printer/:shopID" element={<PrinterSettingsPage />} />
@@ -511,3 +539,4 @@ export const App: React.FC = () => {
 };
 
 export default App;
+

@@ -914,6 +914,121 @@ export const phase11Handlers = [
     return HttpResponse.json({ importedCount: imported.length }, { status: 200 });
   }),
 
+  // GET */products/template
+  http.get('*/products/template', () => {
+    return HttpResponse.json({
+      _schema: {
+        description: 'Product catalog template for bulk import',
+        required: ['name', 'sellingPrice'],
+        fields: {
+          name: 'Product display name (string, min 2 chars)',
+          sku: 'Stock keeping unit, uppercase unique identifier (optional string)',
+          categoryName: 'Category name, auto-created if missing (optional string)',
+          unit: "Measurement unit, default 'pcs' (optional string)",
+          costPrice: 'Cost/Purchase price (optional decimal >= 0)',
+          sellingPrice: 'Sale/MRP price (required decimal >= 0)',
+          gstRate: 'GST rate percentage, e.g. 0, 5, 12, 18, 28 (optional decimal >= 0)',
+        },
+      },
+      sampleProducts: [
+        {
+          name: 'Classic Cotton Shirt - Blue M',
+          sku: 'SHIRT-BLU-M',
+          categoryName: 'Apparel',
+          unit: 'pcs',
+          costPrice: 450.0,
+          sellingPrice: 899.0,
+          gstRate: 12.0,
+        },
+        {
+          name: 'Organic Green Tea 250g',
+          sku: 'TEA-GRN-250',
+          categoryName: 'Beverages',
+          unit: 'pack',
+          costPrice: 120.0,
+          sellingPrice: 220.0,
+          gstRate: 5.0,
+        },
+      ],
+    });
+  }),
+
+  // POST */products/parse-only
+  http.post('*/products/parse-only', async ({ request }) => {
+    const rawBody = (await request.json()) as any;
+    const items = Array.isArray(rawBody) ? rawBody : (rawBody?.products || []);
+    const parsedRows = items.map((p: any, idx: number) => {
+      const errors: string[] = [];
+      if (!p.name || !String(p.name).trim()) errors.push('Name is required');
+      if (p.sellingPrice === undefined || p.sellingPrice === null || Number(p.sellingPrice) <= 0)
+        errors.push('Selling price must be > 0');
+      const isAutoCorrected = p.sku && p.sku !== String(p.sku).toUpperCase();
+      return {
+        rowNumber: idx + 1,
+        status: errors.length > 0 ? 'Invalid' : isAutoCorrected ? 'Fixed' : 'Ready',
+        errors,
+        data: {
+          ...p,
+          sku: p.sku ? String(p.sku).toUpperCase() : undefined,
+          unit: p.unit || 'pcs',
+          categoryName: p.categoryName || p.category || 'General',
+        },
+      };
+    });
+    const validCount = parsedRows.filter((r: any) => r.errors.length === 0).length;
+    return HttpResponse.json({
+      totalRows: parsedRows.length,
+      validCount,
+      invalidCount: parsedRows.length - validCount,
+      rows: parsedRows,
+    });
+  }),
+
+  // POST */products/import
+  http.post('*/products/import', async ({ request }) => {
+    const rawBody = (await request.json()) as any;
+    const items = Array.isArray(rawBody) ? rawBody : (rawBody?.products || []);
+    const skipInvalid = rawBody?.skipInvalid ?? false;
+    let imported = 0;
+    const skipped: Array<{ row: number; reason: string }> = [];
+    const categoriesCreated: string[] = [];
+
+    items.forEach((p: any, idx: number) => {
+      if (!p.name || !String(p.name).trim()) {
+        if (skipInvalid) {
+          skipped.push({ row: idx + 1, reason: 'Name is required' });
+          return;
+        }
+      }
+      if (p.sellingPrice === undefined || p.sellingPrice === null || Number(p.sellingPrice) <= 0) {
+        if (skipInvalid) {
+          skipped.push({ row: idx + 1, reason: 'Selling price must be > 0' });
+          return;
+        }
+      }
+      const prod: Product = {
+        id: `prod-${Date.now()}-${idx}`,
+        name: p.name,
+        sku: p.sku ? String(p.sku).toUpperCase() : '',
+        category: p.categoryName || p.category || 'General',
+        unit: p.unit || 'pcs',
+        costPrice: Number(p.costPrice) || 0,
+        sellingPrice: Number(p.sellingPrice) || 0,
+        gstRate: p.gstRate !== undefined ? Number(p.gstRate) : 0,
+        isActive: p.isActive !== false,
+        createdAt: new Date().toISOString(),
+      };
+      mockProducts.unshift(prod);
+      imported++;
+    });
+
+    return HttpResponse.json({
+      imported,
+      skipped,
+      categoriesCreated,
+    });
+  }),
+
   // ── PRODUCT CATEGORIES ──
   http.get('*/product-categories', () => {
     return HttpResponse.json(mockProductCategories);

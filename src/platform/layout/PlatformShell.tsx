@@ -1,4 +1,4 @@
-import { BrandMark } from '../../components/BrandMark';
+﻿import { BrandMark } from '../../components/BrandMark';
 import React, { useState } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -12,6 +12,7 @@ import {
   X,
   MessageSquare,
   BarChart3,
+  Settings,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { usePlatformAuthStore } from '../store/platformAuthStore';
@@ -38,6 +39,7 @@ export const PlatformShell: React.FC = () => {
     { to: '/platform/deployments', label: 'Deployments', icon: GitBranch },
     { to: '/platform/support', label: 'Support', icon: LifeBuoy },
     { to: '/platform/audit', label: 'Audit', icon: ShieldAlert },
+    { to: '/platform/settings', label: 'Settings', icon: Settings },
   ];
 
   const getPageTitle = (pathname: string): string => {
@@ -50,6 +52,7 @@ export const PlatformShell: React.FC = () => {
     if (pathname.startsWith('/platform/deployments')) return 'System Deployments';
     if (pathname.startsWith('/platform/support')) return 'Support Tickets';
     if (pathname.startsWith('/platform/audit')) return 'Security Audit Log';
+    if (pathname.startsWith('/platform/settings')) return 'Platform Settings';
     return 'Platform Super Admin';
   };
 
@@ -127,7 +130,7 @@ export const PlatformShell: React.FC = () => {
         >
           {/* Version in Platform Shell */}
           <div className="px-3.5 py-1 text-[11px] font-mono" style={{ color: 'var(--text-muted)' }}>
-            v1.0.0 · Prod
+            v1.0.0 Â· Prod
           </div>
 
           <div
@@ -203,3 +206,4 @@ export const PlatformShell: React.FC = () => {
     </div>
   );
 };
+

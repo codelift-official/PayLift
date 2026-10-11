@@ -126,6 +126,7 @@ export const CustomerPopup: React.FC<CustomerPopupProps> = ({
       <div
         className="w-full sm:max-w-md bg-card rounded-t-3xl sm:rounded-2xl border border-border shadow-2xl overflow-hidden transition-all flex flex-col max-h-[90vh]"
         onClick={(e) => e.stopPropagation()}
+        id="customer-popup-sheet"
       >
         {/* Mobile Drag Handle */}
         <div className="sm:hidden pt-3 pb-1 flex justify-center">
@@ -133,34 +134,47 @@ export const CustomerPopup: React.FC<CustomerPopupProps> = ({
         </div>
 
         {/* Modal Header */}
-        <div className="px-6 pt-3 pb-4 sm:pt-6 sm:pb-3 flex items-center justify-between border-b border-border/40">
+        <div className="px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between border-b border-border/40">
           <div>
-            <h2 className="text-lg sm:text-xl font-bold text-text-primary tracking-tight">
+            <h2 className="text-base sm:text-xl font-bold text-text-primary tracking-tight">
               <span className="sm:hidden">Who's this bill for?</span>
               <span className="hidden sm:inline">Add Customer</span>
             </h2>
             {customerMandatory && (
-              <p className="text-xs text-danger font-medium flex items-center gap-1 mt-1">
+              <p className="text-xs text-danger font-medium flex items-center gap-1 mt-0.5">
                 <AlertCircle className="w-3.5 h-3.5" />
                 This shop requires customer info
               </p>
             )}
           </div>
           {!customerMandatory && (
-            <button
-              type="button"
-              onClick={onClose}
-              id="customer-popup-close-btn"
-              className="hidden sm:flex p-1.5 text-text-muted hover:text-text-primary hover:bg-secondary/40 rounded-full transition-colors"
-              title="Close (Esc)"
-            >
-              <X className="w-5 h-5" />
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  onSkip();
+                  onClose();
+                }}
+                id="skip-customer-btn"
+                className="px-2.5 py-1 text-xs font-semibold rounded-full bg-secondary/50 hover:bg-secondary text-text-secondary hover:text-text-primary transition-colors border border-border/60 shadow-xs"
+              >
+                Skip
+              </button>
+              <button
+                type="button"
+                onClick={onClose}
+                id="customer-popup-close-btn"
+                className="hidden sm:flex p-1.5 text-text-muted hover:text-text-primary hover:bg-secondary/40 rounded-full transition-colors"
+                title="Close (Esc)"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
           )}
         </div>
 
         {/* Modal Body */}
-        <div className="p-6 overflow-y-auto space-y-4">
+        <div className="p-4 sm:p-6 overflow-y-auto space-y-3 sm:space-y-4">
           {!showManualForm ? (
             <>
               {/* Mobile Input Field */}
@@ -336,34 +350,6 @@ export const CustomerPopup: React.FC<CustomerPopupProps> = ({
             </form>
           )}
 
-          {/* Divider */}
-          <div className="border-t border-border/80 pt-2" />
-
-          {/* Action Buttons (Skip / Walk-in) */}
-          <div className="flex flex-col sm:flex-row items-center gap-2 sm:justify-end">
-            {!customerMandatory && (
-              <>
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="hidden sm:inline-flex px-4 py-2.5 text-xs font-semibold text-text-muted hover:text-text-primary rounded-xl hover:bg-secondary/30 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    onSkip();
-                    onClose();
-                  }}
-                  id="skip-customer-btn"
-                  className="w-full sm:w-auto px-5 py-3 sm:py-2.5 bg-secondary/30 hover:bg-secondary/50 text-text-primary font-semibold text-sm sm:text-xs rounded-xl border border-border transition-colors text-center"
-                >
-                  Skip — Walk-in customer
-                </button>
-              </>
-            )}
-          </div>
         </div>
       </div>
     </div>

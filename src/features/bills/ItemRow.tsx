@@ -89,12 +89,12 @@ export const ItemRow: React.FC<ItemRowProps> = ({
 
   return (
     <div
-      className="p-4 hover:bg-secondary/10 transition-colors"
+      className="p-2.5 sm:p-3.5 hover:bg-secondary/10 transition-colors"
       id={`item-row-${item.id}`}
       data-testid={`item-row-${index}`}
     >
-      {/* Top: Name & Remove */}
-      <div className="flex items-start justify-between gap-3">
+      {/* Top: Name, Line Total & Remove */}
+      <div className="flex items-center justify-between gap-2">
         <div className="flex-1 min-w-0">
           <input
             type="text"
@@ -102,73 +102,71 @@ export const ItemRow: React.FC<ItemRowProps> = ({
             onChange={(e) => onUpdate(item.id, { itemName: e.target.value })}
             placeholder="Item name"
             id={`item-name-${index}`}
-            className="w-full font-bold text-base text-text-primary bg-transparent border-0 focus:outline-none focus:ring-1 focus:ring-primary/30 rounded px-1 -ml-1 transition-all"
+            className="w-full font-bold text-sm sm:text-base text-text-primary bg-transparent border-0 focus:outline-none focus:ring-1 focus:ring-primary/30 rounded px-1 -ml-1 transition-all"
           />
         </div>
-        {canRemove && (
-          <button
-            type="button"
-            onClick={() => onRemove(item.id)}
-            id={`remove-item-${item.id}`}
-            className="p-1.5 text-text-muted hover:text-danger hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors -mr-1"
-            title="Remove item"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        )}
-      </div>
-
-      {/* Middle: Price × Qty = Line Total */}
-      <div className="flex items-center justify-between mt-2">
-        <div className="flex items-center gap-1.5 text-sm text-text-muted">
-          <span>₹</span>
-          <input
-            type="number"
-            step="any"
-            id={`item-price-${index}`}
-            data-testid={`item-price-${index}`}
-            value={item.price === 0 && !isEditingPrice ? '0' : item.price}
-            onFocus={() => setIsEditingPrice(true)}
-            onBlur={() => setIsEditingPrice(false)}
-            onChange={(e) => handlePriceChange(e.target.value)}
-            className="w-20 font-semibold text-text-primary bg-background border border-border/80 focus:border-primary rounded-lg px-2 py-0.5 text-sm focus:outline-none"
-            title="Tap to edit unit price"
-          />
-          <span className="text-text-muted">× {item.qty}</span>
-        </div>
-
-        <div className="text-right">
-          <Money value={lineTotal} className="font-bold text-base text-text-primary" />
+        <div className="flex items-center gap-1.5 shrink-0">
+          <Money value={lineTotal} className="font-bold text-sm sm:text-base text-text-primary" />
+          {canRemove && (
+            <button
+              type="button"
+              onClick={() => onRemove(item.id)}
+              id={`remove-item-${item.id}`}
+              className="p-1 text-text-muted hover:text-danger hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors"
+              title="Remove item"
+            >
+              <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Bottom: Stepper [−] Qty [+] and Discount Dropdown [10% ▾] */}
-      <div className="flex items-center justify-between mt-3 pt-1">
-        {/* Quantity Stepper */}
-        <div className="inline-flex items-center border border-border rounded-xl bg-background overflow-hidden shadow-sm">
-          <button
-            type="button"
-            onClick={() => handleQtyChange(-1)}
-            disabled={item.qty <= 1}
-            id={`item-qty-dec-${index}`}
-            className="w-8 h-8 flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-secondary/30 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-          >
-            <Minus className="w-3.5 h-3.5" />
-          </button>
-          <span
-            className="w-10 text-center font-bold text-sm text-text-primary select-none"
-            id={`item-qty-${index}`}
-          >
-            {item.qty}
-          </span>
-          <button
-            type="button"
-            onClick={() => handleQtyChange(1)}
-            id={`item-qty-inc-${index}`}
-            className="w-8 h-8 flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-secondary/30 transition-colors"
-          >
-            <Plus className="w-3.5 h-3.5" />
-          </button>
+      {/* Bottom: Price, Quantity Stepper, and Discount */}
+      <div className="flex items-center justify-between gap-2 mt-1.5 pt-0.5">
+        <div className="flex items-center gap-2">
+          {/* Unit Price */}
+          <div className="flex items-center gap-1 text-xs sm:text-sm text-text-muted">
+            <span>₹</span>
+            <input
+              type="number"
+              step="any"
+              id={`item-price-${index}`}
+              data-testid={`item-price-${index}`}
+              value={item.price === 0 && !isEditingPrice ? '0' : item.price}
+              onFocus={() => setIsEditingPrice(true)}
+              onBlur={() => setIsEditingPrice(false)}
+              onChange={(e) => handlePriceChange(e.target.value)}
+              className="w-16 sm:w-20 font-semibold text-text-primary bg-background border border-border/80 focus:border-primary rounded-lg px-1.5 py-0.5 text-xs sm:text-sm focus:outline-none"
+              title="Tap to edit unit price"
+            />
+          </div>
+
+          {/* Quantity Stepper */}
+          <div className="inline-flex items-center border border-border rounded-lg bg-background overflow-hidden shadow-xs">
+            <button
+              type="button"
+              onClick={() => handleQtyChange(-1)}
+              disabled={item.qty <= 1}
+              id={`item-qty-dec-${index}`}
+              className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-secondary/30 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+            >
+              <Minus className="w-3 h-3" />
+            </button>
+            <span
+              className="w-7 sm:w-8 text-center font-bold text-xs sm:text-sm text-text-primary select-none"
+              id={`item-qty-${index}`}
+            >
+              {item.qty}
+            </span>
+            <button
+              type="button"
+              onClick={() => handleQtyChange(1)}
+              id={`item-qty-inc-${index}`}
+              className="w-6 h-6 sm:w-7 sm:h-7 flex items-center justify-center text-text-muted hover:text-text-primary hover:bg-secondary/30 transition-colors"
+            >
+              <Plus className="w-3 h-3" />
+            </button>
+          </div>
         </div>
 
         {/* Discount Selector [10% ▾] */}
@@ -178,7 +176,7 @@ export const ItemRow: React.FC<ItemRowProps> = ({
               type="button"
               onClick={() => setDiscountDropdownOpen((prev) => !prev)}
               id={`item-discount-btn-${index}`}
-              className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-xl border border-border bg-background hover:bg-secondary/20 text-text-primary shadow-sm transition-colors"
+              className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 text-xs font-semibold rounded-lg border border-border bg-background hover:bg-secondary/20 text-text-primary shadow-xs transition-colors"
             >
               <span>{discountValue > 0 ? `${discountValue}%` : '0%'}</span>
               <ChevronDown className="w-3 h-3 text-text-muted" />

@@ -192,7 +192,17 @@ export const BusinessListPage: React.FC = () => {
                         {b.tier || 'Starter'}
                       </td>
                       <td className="px-5 py-3.5">
-                        {getStatusBadge(b.status)}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {getStatusBadge(b.status)}
+                          {b.isOverdue && (
+                            <span
+                              id="business-overdue-badge"
+                              className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-rose-500/15 text-rose-600 border border-rose-500/30"
+                            >
+                              Overdue
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="px-5 py-3.5 font-mono text-xs" style={{ color: 'var(--text-muted)' }}>
                         {endsDate ? new Date(endsDate).toLocaleDateString() : '—'}

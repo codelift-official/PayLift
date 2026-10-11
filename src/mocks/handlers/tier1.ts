@@ -117,6 +117,7 @@ export const mockBusinesses = [
     slug: 'metro-pharma',
     tier: 'Starter',
     status: 'Suspended',
+    isOverdue: true,
     trialEndsAt: '2026-09-20T00:00:00Z',
     graceEndsAt: '2026-09-27T00:00:00Z',
     daysLeft: 0,
@@ -241,6 +242,19 @@ export const mockAuditLogs = [
     action: 'SUSPEND_TENANT',
     targetTenant: 'metro-pharma',
     ip: '127.0.0.1',
+  },
+];
+
+export let mockFeePayments: any[] = [
+  {
+    id: 'fee-1',
+    businessID: '1',
+    subscriptionID: 'sub-1',
+    amount: 999,
+    paidAt: new Date(Date.now() - 15 * 86400000).toISOString(),
+    method: 'UPI',
+    reference: 'UPI/20261001/887612',
+    notes: 'September subscription license fee',
   },
 ];
 
@@ -487,45 +501,44 @@ export const tier1Handlers = [
   }),
 
   // GET */platform/businesses/:id/fees
-  http.get('*/platform/businesses/:id/fees', () => {
+  http.get('*/platform/businesses/:id/fees', ({ params }) => {
+    const payments = mockFeePayments.filter(
+      (p: any) => String(p.businessID) === String(params.id) || p.businessID === '1'
+    );
+    const total = payments.reduce((acc: number, p: any) => acc + (Number(p.amount) || 0), 0);
     return HttpResponse.json({
-      payments: [
-        {
-          id: 'fee-1',
-          businessID: 1,
-          subscriptionID: 'sub-1',
-          amount: 999,
-          paidAt: new Date(Date.now() - 15 * 86400000).toISOString(),
-          method: 'UPI',
-          reference: 'UPI/20261001/887612',
-          notes: 'September subscription license fee',
-        },
-      ],
-      totalPaidLifetime: 999,
+      payments,
+      totalPaidLifetime: total,
     });
   }),
 
   // POST */platform/businesses/:id/fees
   http.post('*/platform/businesses/:id/fees', async ({ params, request }) => {
     const body: any = await request.json();
-    return HttpResponse.json({
+    const newFee = {
       id: 'fee-' + Date.now(),
-      businessID: params.id,
-      amount: body.amount,
+      businessID: String(params.id),
+      amount: Number(body.amount) || 999,
       paidAt: new Date().toISOString(),
-      method: body.method,
-      reference: body.reference,
-      notes: body.notes,
-    });
+      method: body.method || 'UPI',
+      reference: body.reference || '',
+      notes: body.notes || '',
+    };
+    mockFeePayments.unshift(newFee);
+    return HttpResponse.json(newFee);
   }),
 
   // GET */platform/fees/report
   http.get('*/platform/fees/report', () => {
     return HttpResponse.json({
       mrr: 2999,
-      overdueAccountsCount: 0,
+      overdueAccountsCount: 1,
+      totalCollected: 5997,
       totalRevenuePeriod: 5997,
       periodPaymentsCount: 3,
+      byMethod: { cash: 1999, upi: 2999, bank: 999, other: 0 },
+      byPlan: { starter: 999, pro: 1999, enterprise: 3000 },
+      payments: [],
     });
   }),
 

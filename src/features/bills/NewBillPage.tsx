@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { ArrowLeft, Plus, User, Trash2, Banknote, Smartphone, CreditCard, Split, X, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, Plus, User, Trash2, Banknote, Smartphone, CreditCard, Split, X, ShoppingBag, Store } from 'lucide-react';
 import { billsApi } from '../../api/bills';
 import { apiClient } from '../../api/client';
 import { useAuthStore } from '../../stores/auth.store';
@@ -78,6 +78,18 @@ export const NewBillPage: React.FC = () => {
       setSelectedShopId(shops[0].id);
     }
   }, [shops, user?.tenantID, user?.defaultShopID, defaultShop, userIsAdmin]);
+
+  const handleShopChange = (shopId: string) => {
+    setSelectedShopId(shopId);
+    const storageKey = `billify.lastShop.${user?.tenantID || 'default'}`;
+    try {
+      localStorage.setItem(storageKey, shopId);
+    } catch {}
+    const newShop = shops.find((s) => s.id === shopId);
+    if (newShop) {
+      toast.info(`Billing at ${newShop.name}`);
+    }
+  };
 
   const currentShop = shops?.find((s) => s.id === selectedShopId) || shops?.[0];
   const isShopGstActive = currentShop?.gstEnabled !== false && !!(currentShop?.gst || (currentShop?.gstRate != null && currentShop.gstRate > 0));
@@ -554,28 +566,70 @@ export const NewBillPage: React.FC = () => {
       />
 
       {/* MAIN BILL SCREEN: Single centered column, max-w-[720px], NO sidebar */}
-      <div className="max-w-[720px] mx-auto px-4 py-4 sm:py-6">
+      <div className="max-w-[720px] mx-auto px-3 py-2 sm:px-4 sm:py-6 pb-24 sm:pb-8">
         {/* Top Header */}
-        <header className="flex items-center justify-between gap-3 pb-4 mb-4 border-b border-border/60">
-          <div className="flex items-center gap-3">
-            <button
-              type="button"
-              onClick={() => navigate('/bills')}
-              className="p-2 -ml-2 text-text-muted hover:text-text-primary hover:bg-secondary/20 rounded-xl transition-colors flex items-center gap-1 text-sm font-semibold"
-              title="Back to bills"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              <span className="hidden sm:inline">Back</span>
-            </button>
-            <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-text-primary">
-              New Bill
-            </h1>
+        <header className="pb-2.5 mb-2.5 border-b border-border/60">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => navigate('/bills')}
+                className="p-1.5 -ml-1.5 text-text-muted hover:text-text-primary hover:bg-secondary/20 rounded-xl transition-colors flex items-center gap-1 text-sm font-semibold"
+                title="Back to bills"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                <span className="hidden sm:inline">Back</span>
+              </button>
+              <h1 className="text-lg sm:text-2xl font-bold tracking-tight text-text-primary">
+                New Bill
+              </h1>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {hasItems && (
+                <button
+                  type="button"
+                  onClick={handleClearDraft}
+                  className="p-1.5 text-text-muted hover:text-danger hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl transition-colors text-xs font-semibold flex items-center gap-1"
+                  title="Clear bill"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span className="hidden sm:inline">Clear</span>
+                </button>
+              )}
+            </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          {/* Context bar: Shop selector (multi-shop) + Customer Chip */}
+          <div className="flex items-center flex-wrap gap-2 pt-2">
+            {shops && shops.length > 1 ? (
+              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary/30 hover:bg-secondary/50 border border-border/80 text-xs font-semibold text-text-primary transition-colors">
+                <Store className="w-3.5 h-3.5 text-primary shrink-0" />
+                <span className="text-text-muted text-[11px] font-normal">Shop:</span>
+                <select
+                  id="bill-shop-selector"
+                  aria-label="Select Shop"
+                  value={selectedShopId}
+                  onChange={(e) => handleShopChange(e.target.value)}
+                  className="bg-transparent text-text-primary text-xs font-semibold focus:outline-none cursor-pointer max-w-[130px] sm:max-w-[180px] truncate"
+                >
+                  {shops.map((s) => (
+                    <option key={s.id} value={s.id} className="bg-card text-text-primary">
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : currentShop ? (
+              <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-secondary/20 text-text-muted text-xs font-medium border border-border/50">
+                <Store className="w-3 h-3 text-text-muted" />
+                <span className="truncate max-w-[140px]">{currentShop.name}</span>
+              </div>
+            ) : null}
+
             {/* Customer Chip (tappable to re-open customer popup) */}
             {customer ? (
-              <div className="inline-flex items-center bg-primary/10 border border-primary/25 rounded-full pl-3 pr-1.5 py-1 text-xs font-semibold text-primary transition-all">
+              <div className="inline-flex items-center bg-primary/10 border border-primary/25 rounded-full pl-2.5 pr-1 py-1 text-xs font-semibold text-primary transition-all">
                 <button
                   type="button"
                   onClick={() => setCustomerPopupOpen(true)}
@@ -605,35 +659,24 @@ export const NewBillPage: React.FC = () => {
                 type="button"
                 onClick={() => setCustomerPopupOpen(true)}
                 id="customer-chip-btn"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-secondary/30 hover:bg-secondary/50 border border-border text-xs font-semibold text-text-primary transition-colors"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-secondary/30 hover:bg-secondary/50 border border-border text-xs font-semibold text-text-primary transition-colors"
               >
                 <User className="w-3.5 h-3.5 text-text-muted" />
                 Add customer
-              </button>
-            )}
-
-            {hasItems && (
-              <button
-                type="button"
-                onClick={handleClearDraft}
-                className="hidden sm:flex p-2 text-text-muted hover:text-danger hover:bg-red-50 dark:hover:bg-red-950/20 rounded-xl transition-colors"
-                title="Clear bill"
-              >
-                <Trash2 className="w-4 h-4" />
               </button>
             )}
           </div>
         </header>
 
         {/* Big [+ Add items] Button */}
-        <div className="mb-4">
+        <div className="mb-3">
           <button
             type="button"
             onClick={() => setProductPopupOpen(true)}
             id="btn-open-product-popup"
-            className="w-full py-4 bg-primary/10 hover:bg-primary/15 active:bg-primary/20 text-primary font-bold text-base rounded-2xl border-2 border-dashed border-primary/30 flex items-center justify-center gap-2 transition-all shadow-sm"
+            className="w-full py-2.5 sm:py-3.5 bg-primary/10 hover:bg-primary/15 active:bg-primary/20 text-primary font-bold text-sm sm:text-base rounded-xl sm:rounded-2xl border-2 border-dashed border-primary/30 flex items-center justify-center gap-2 transition-all shadow-xs"
           >
-            <Plus className="w-5 h-5 stroke-[2.5]" />
+            <Plus className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
             + Add items
           </button>
         </div>
@@ -641,19 +684,19 @@ export const NewBillPage: React.FC = () => {
         {/* Items Section */}
         {!hasItems ? (
           /* Empty State */
-          <div className="text-center py-16 px-4 rounded-2xl border border-dashed border-border/80 bg-card/40 my-4 flex flex-col items-center justify-center">
-            <div className="w-14 h-14 rounded-2xl bg-secondary/20 flex items-center justify-center mb-3 text-text-muted">
-              <ShoppingBag className="w-7 h-7 stroke-[1.5]" />
+          <div className="text-center py-8 sm:py-14 px-4 rounded-xl sm:rounded-2xl border border-dashed border-border/80 bg-card/40 my-2 sm:my-3 flex flex-col items-center justify-center">
+            <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-secondary/20 flex items-center justify-center mb-2.5 sm:mb-3 text-text-muted">
+              <ShoppingBag className="w-5 h-5 sm:w-7 sm:h-7 stroke-[1.5]" />
             </div>
-            <h3 className="text-base font-bold text-text-primary">No items yet</h3>
-            <p className="text-sm text-text-muted mt-1 max-w-xs">
+            <h3 className="text-sm sm:text-base font-bold text-text-primary">No items yet</h3>
+            <p className="text-xs sm:text-sm text-text-muted mt-0.5 max-w-xs">
               Tap above to add
             </p>
           </div>
         ) : (
           /* Items List */
-          <div className="space-y-4 mb-6">
-            <div className="divide-y divide-border/60 bg-card rounded-2xl border border-border overflow-hidden shadow-sm">
+          <div className="space-y-3 mb-4">
+            <div className="divide-y divide-border/60 bg-card rounded-xl sm:rounded-2xl border border-border overflow-hidden shadow-xs">
               {items.map((item, idx) => (
                 <ItemRow
                   key={item.id}
@@ -673,7 +716,7 @@ export const NewBillPage: React.FC = () => {
               type="button"
               onClick={() => setProductPopupOpen(true)}
               id="btn-add-more-items"
-              className="w-full py-3 text-sm font-bold text-primary hover:bg-primary/5 rounded-xl border border-border flex items-center justify-center gap-1.5 transition-colors"
+              className="w-full py-2.5 text-xs sm:text-sm font-bold text-primary hover:bg-primary/5 rounded-xl border border-border flex items-center justify-center gap-1.5 transition-colors"
             >
               <Plus className="w-4 h-4" />
               + Add more items
@@ -682,9 +725,9 @@ export const NewBillPage: React.FC = () => {
         )}
 
         {/* Bill Summary Section */}
-        <div className="bg-card rounded-2xl border border-border p-5 shadow-sm space-y-3.5 my-6">
+        <div className="bg-card rounded-xl sm:rounded-2xl border border-border p-3.5 sm:p-5 shadow-xs space-y-2.5 sm:space-y-3.5 my-3 sm:my-5">
           {/* Subtotal */}
-          <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center justify-between text-xs sm:text-sm">
             <span className="text-text-muted">Subtotal</span>
             <span className="font-semibold text-text-primary" id="summary-subtotal">
               <Money value={totals.subtotal} />
@@ -693,14 +736,14 @@ export const NewBillPage: React.FC = () => {
 
           {/* Item Discounts */}
           {totals.lineDiscounts > 0 && (
-            <div className="flex items-center justify-between text-sm text-green-600">
+            <div className="flex items-center justify-between text-xs sm:text-sm text-green-600">
               <span>Item Discounts</span>
               <span className="font-semibold">−<Money value={totals.lineDiscounts} /></span>
             </div>
           )}
 
           {/* Order Discount */}
-          <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center justify-between text-xs sm:text-sm">
             <span className="text-text-muted">Order Discount</span>
             {typeof orderDiscountValue === 'number' && orderDiscountValue > 0 ? (
               <div className="flex items-center gap-2">
@@ -720,7 +763,7 @@ export const NewBillPage: React.FC = () => {
                 type="button"
                 onClick={() => setOrderDiscountSheetOpen(true)}
                 id="btn-add-order-discount"
-                className="text-xs font-bold text-primary hover:underline px-2 py-1 rounded-lg hover:bg-primary/5 transition-colors"
+                className="text-xs font-bold text-primary hover:underline px-2 py-0.5 rounded-lg hover:bg-primary/5 transition-colors"
               >
                 [＋ Add]
               </button>
@@ -728,7 +771,7 @@ export const NewBillPage: React.FC = () => {
           </div>
 
           {/* Coupon */}
-          <div className="flex items-center justify-between text-sm" id="coupon-discount-row">
+          <div className="flex items-center justify-between text-xs sm:text-sm" id="coupon-discount-row">
             <span className="text-text-muted">Coupon</span>
             {appliedCoupons.length > 0 ? (
               <div className="flex items-center gap-2">
@@ -748,7 +791,7 @@ export const NewBillPage: React.FC = () => {
                 type="button"
                 onClick={() => setCouponSheetOpen(true)}
                 id="btn-add-coupon"
-                className="text-xs font-bold text-primary hover:underline px-2 py-1 rounded-lg hover:bg-primary/5 transition-colors"
+                className="text-xs font-bold text-primary hover:underline px-2 py-0.5 rounded-lg hover:bg-primary/5 transition-colors"
               >
                 [🎟 Add]
               </button>
@@ -757,7 +800,7 @@ export const NewBillPage: React.FC = () => {
 
           {/* GST */}
           {effectiveShopGstRate > 0 && (
-            <div className="flex items-center justify-between text-sm">
+            <div className="flex items-center justify-between text-xs sm:text-sm">
               <span className="text-text-muted">GST ({effectiveShopGstRate}%)</span>
               <span className="font-semibold text-text-primary">
                 +<Money value={totals.gst} />
@@ -769,15 +812,15 @@ export const NewBillPage: React.FC = () => {
           <div className="border-t border-border/80 pt-1" />
 
           {/* Total */}
-          <div className="flex items-center justify-between text-base sm:text-lg font-bold">
+          <div className="flex items-center justify-between text-sm sm:text-lg font-bold">
             <span className="text-text-primary">Total</span>
-            <span className="text-text-primary text-xl font-bold" id="summary-total">
+            <span className="text-text-primary text-lg sm:text-xl font-bold" id="summary-total">
               <Money value={totals.total} />
             </span>
           </div>
 
           {/* Payment Mode Selector Button */}
-          <div className="flex items-center justify-between pt-2">
+          <div className="flex items-center justify-between pt-1">
             <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">
               Payment
             </span>
@@ -785,7 +828,7 @@ export const NewBillPage: React.FC = () => {
               type="button"
               onClick={() => setPaymentSheetOpen(true)}
               id="payment-mode-trigger-btn"
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-secondary/30 hover:bg-secondary/50 text-text-primary text-xs font-bold border border-border shadow-sm transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-secondary/30 hover:bg-secondary/50 text-text-primary text-xs font-bold border border-border shadow-xs transition-colors"
             >
               {getPaymentIcon(paymentMode)}
               <span>{paymentMode}</span>
@@ -795,7 +838,7 @@ export const NewBillPage: React.FC = () => {
         </div>
 
         {/* Generate Bill Button (Sticky on mobile, static on desktop) */}
-        <div className="fixed sm:static bottom-0 left-0 right-0 p-4 sm:p-0 bg-background/95 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none border-t sm:border-t-0 border-border z-30">
+        <div className="fixed sm:static bottom-0 left-0 right-0 p-2.5 sm:p-0 bg-background/95 sm:bg-transparent backdrop-blur-md sm:backdrop-blur-none border-t sm:border-t-0 border-border z-30">
           <div className="max-w-[720px] mx-auto">
             <button
               type="button"
@@ -803,7 +846,7 @@ export const NewBillPage: React.FC = () => {
               disabled={!canGenerate}
               id="submit-bill-card"
               data-testid="submit-bill-card"
-              className="w-full py-4 bg-primary hover:bg-primary-hover active:bg-primary-dark disabled:opacity-40 text-white font-bold text-base sm:text-lg rounded-2xl shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+              className="w-full py-3 sm:py-4 bg-primary hover:bg-primary-hover active:bg-primary-dark disabled:opacity-40 text-white font-bold text-sm sm:text-lg rounded-xl sm:rounded-2xl shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
             >
               {createBillMutation.isPending
                 ? 'Generating Bill...'
