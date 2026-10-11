@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Search, Folder, Edit3, Plus, ArrowLeft, X, Sparkles } from 'lucide-react';
+import { Search, Folder, Edit3, Plus, Minus, Trash2, ArrowLeft, X, Sparkles } from 'lucide-react';
 import { phase11Api, Product, ProductCategory } from '../../api/phase11';
 
 export interface ProductPopupProps {
@@ -13,7 +13,11 @@ export interface ProductPopupProps {
     unit?: string;
     gstRate?: number;
     catalogPrice?: number;
+    qty?: number;
   }) => void;
+  onUpdateItemQty?: (identifier: { id?: string; name: string }, qty: number) => void;
+  onRemoveItem?: (id: string) => void;
+  currentItems?: Array<{ id: string; productId?: string | null; itemName: string; qty: number; price: number }>;
   recentProducts?: Product[];
   shopProductSource?: 'Store' | 'Generic' | 'Mix';
   effectiveShopGstRate?: number;
@@ -23,6 +27,9 @@ export const ProductPopup: React.FC<ProductPopupProps> = ({
   isOpen,
   onClose,
   onAddProduct,
+  onUpdateItemQty,
+  onRemoveItem,
+  currentItems = [],
   recentProducts = [],
   shopProductSource = 'Store',
   effectiveShopGstRate = 0,
@@ -30,7 +37,6 @@ export const ProductPopup: React.FC<ProductPopupProps> = ({
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-  const [sessionAddedCount, setSessionAddedCount] = useState(0);
 
   // View modes: 'search' | 'categories' | 'manual'
   const [viewMode, setViewMode] = useState<'search' | 'categories' | 'manual'>('search');
@@ -42,25 +48,33 @@ export const ProductPopup: React.FC<ProductPopupProps> = ({
   // Manual entry fields
   const [manualName, setManualName] = useState('');
   const [manualPrice, setManualPrice] = useState('');
+  const [manualQty, setManualQty] = useState('1');
   const [manualError, setManualError] = useState('');
 
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  // Reset and auto-focus when popup opens
+  // Lock body scroll when popup is open
+  useEffect(() => {
+    if (isOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [isOpen]);
+
+  // Reset when popup opens without auto-focusing search input
   useEffect(() => {
     if (isOpen) {
       setQuery('');
       setSearchResults([]);
       setViewMode('search');
       setSelectedCategory(null);
-      setSessionAddedCount(0);
       setManualName('');
       setManualPrice('');
+      setManualQty('1');
       setManualError('');
-      const timer = setTimeout(() => {
-        searchInputRef.current?.focus();
-      }, 50);
-      return () => clearTimeout(timer);
     }
   }, [isOpen]);
 
@@ -145,7 +159,7 @@ export const ProductPopup: React.FC<ProductPopupProps> = ({
 
   if (!isOpen) return null;
 
-  const handleAddItem = (prod: any) => {
+  const handleAddItem = (prod: any, qty = 1) => {
     onAddProduct({
       id: prod.id,
       name: prod.name,
@@ -154,8 +168,29 @@ export const ProductPopup: React.FC<ProductPopupProps> = ({
       unit: prod.unit,
       gstRate: prod.gstRate ?? effectiveShopGstRate,
       catalogPrice: prod.sellingPrice || prod.price,
+      qty,
     });
-    setSessionAddedCount((prev) => prev + 1);
+  };
+
+  const handleSetQty = (prod: any, newQty: number) => {
+    if (newQty <= 0) {
+      if (onRemoveItem) {
+        const match = currentItems?.find(
+          (it) => (prod.id && it.productId === prod.id) || (it.itemName.toLowerCase() === prod.name.toLowerCase())
+        );
+        if (match) {
+          onRemoveItem(match.id);
+        }
+      } else if (onUpdateItemQty) {
+        onUpdateItemQty(prod, 0);
+      }
+    } else {
+      if (onUpdateItemQty) {
+        onUpdateItemQty(prod, newQty);
+      } else {
+        handleAddItem(prod, newQty);
+      }
+    }
   };
 
   const handleAddManualItem = (e: React.FormEvent) => {
@@ -169,18 +204,120 @@ export const ProductPopup: React.FC<ProductPopupProps> = ({
       setManualError('Price cannot be negative');
       return;
     }
+    const parsedQty = Math.max(1, parseInt(manualQty, 10) || 1);
 
     onAddProduct({
       name: manualName.trim(),
       price: parsedPrice,
+      qty: parsedQty,
       gstRate: effectiveShopGstRate,
     });
 
-    setSessionAddedCount((prev) => prev + 1);
     setManualName('');
     setManualPrice('');
+    setManualQty('1');
     setManualError('');
     setViewMode('search');
+  };
+
+  const renderProductItem = (prod: any) => {
+    const existingItem = currentItems?.find(
+      (it) => (prod.id && it.productId === prod.id) || (it.itemName.toLowerCase() === prod.name.toLowerCase())
+    );
+    const currentQty = existingItem ? existingItem.qty : 0;
+    const isSelected = currentQty > 0;
+    const price = prod.sellingPrice ?? prod.price ?? 0;
+    const safeKey = prod.id || prod.name;
+    const slug = prod.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+
+    return (
+      <div
+        key={safeKey}
+        data-testid={`product-row-${slug}`}
+        onClick={() => {
+          if (!isSelected) {
+            handleAddItem(prod, 1);
+          }
+        }}
+        className={`py-2.5 px-3 rounded-xl flex items-center justify-between transition-all cursor-pointer ${
+          isSelected
+            ? 'bg-primary/10 border border-primary/30 shadow-xs'
+            : 'hover:bg-secondary/25 active:bg-secondary/40 border border-transparent'
+        }`}
+      >
+        <div className="min-w-0 flex-1 pr-3">
+          <div className="font-semibold text-sm text-text-primary flex items-center gap-2">
+            <span>{prod.name}</span>
+            {prod.source === 'generic' && (
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-normal">
+                Catalog
+              </span>
+            )}
+          </div>
+          <div className="text-xs text-text-muted mt-0.5 flex items-center gap-2">
+            <span className="font-semibold text-text-primary">₹{price}</span>
+            {prod.unit && <span>· {prod.unit}</span>}
+            {prod.category && <span>· {prod.category}</span>}
+          </div>
+        </div>
+
+        {isSelected ? (
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex items-center border border-primary/40 rounded-xl bg-background overflow-hidden shadow-xs shrink-0"
+          >
+            <button
+              type="button"
+              onClick={() => handleSetQty(prod, currentQty - 1)}
+              id={`btn-dec-product-${slug}`}
+              className="w-7 h-7 flex items-center justify-center text-text-muted hover:text-danger hover:bg-secondary/30 transition-colors"
+              title={currentQty === 1 ? 'Remove from bill' : 'Decrease quantity'}
+            >
+              {currentQty === 1 ? (
+                <Trash2 className="w-3.5 h-3.5 text-danger" />
+              ) : (
+                <Minus className="w-3.5 h-3.5" />
+              )}
+            </button>
+            <input
+              type="number"
+              min="1"
+              value={currentQty}
+              onChange={(e) => {
+                const val = parseInt(e.target.value, 10);
+                handleSetQty(prod, isNaN(val) ? 1 : Math.max(0, val));
+              }}
+              id={`input-qty-product-${slug}`}
+              className="w-8 text-center font-bold text-xs text-text-primary bg-transparent focus:outline-none"
+              title="Edit quantity"
+            />
+            <button
+              type="button"
+              onClick={() => handleSetQty(prod, currentQty + 1)}
+              id={`btn-inc-product-${slug}`}
+              className="w-7 h-7 flex items-center justify-center text-text-muted hover:text-primary hover:bg-secondary/30 transition-colors"
+              title="Increase quantity"
+            >
+              <Plus className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        ) : (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAddItem(prod, 1);
+            }}
+            id={`btn-add-product-${slug}`}
+            className="px-3 py-1.5 rounded-xl bg-primary hover:bg-primary-hover active:bg-primary-dark text-white text-xs font-bold transition-all shadow-xs flex items-center gap-1 shrink-0"
+            title="Add to bill"
+          >
+            <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
+            <span>Add</span>
+          </button>
+        )}
+      </div>
+    );
   };
 
   return (
@@ -226,22 +363,33 @@ export const ProductPopup: React.FC<ProductPopupProps> = ({
                 ? selectedCategory || 'Browse Categories'
                 : 'Add Manually'}
             </h2>
-            {sessionAddedCount > 0 && (
+            {currentItems.length > 0 && (
               <span className="px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/20 animate-in fade-in">
-                {sessionAddedCount} {sessionAddedCount === 1 ? 'item' : 'items'} added
+                {currentItems.length} {currentItems.length === 1 ? 'item' : 'items'} in bill
               </span>
             )}
           </div>
 
-          {/* Top-Right [Done] Button */}
-          <button
-            type="button"
-            onClick={onClose}
-            id="product-popup-done-btn"
-            className="px-4 py-1.5 bg-primary hover:bg-primary-hover text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-sm"
-          >
-            Done
-          </button>
+          {/* Top-Right Buttons */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onClose}
+              id="product-popup-done-btn"
+              className="px-4 py-1.5 bg-primary hover:bg-primary-hover text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-sm"
+            >
+              Done
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              id="product-popup-close-btn"
+              className="p-1.5 text-text-muted hover:text-text-primary rounded-full hover:bg-secondary/30 transition-colors"
+              title="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Modal Content */}
@@ -321,42 +469,7 @@ export const ProductPopup: React.FC<ProductPopupProps> = ({
                     </div>
 
                     <div className="divide-y divide-border/40">
-                      {searchResults.map((prod) => (
-                        <div
-                          key={prod.id || prod.name}
-                          onClick={() => handleAddItem(prod)}
-                          className="py-3 px-3 rounded-xl flex items-center justify-between hover:bg-secondary/25 active:bg-secondary/40 transition-colors cursor-pointer group"
-                        >
-                          <div className="min-w-0 flex-1 pr-3">
-                            <div className="font-semibold text-sm text-text-primary group-hover:text-primary transition-colors flex items-center gap-2">
-                              <span>{prod.name}</span>
-                              {prod.source === 'generic' && (
-                                <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300 font-normal">
-                                  Catalog
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-xs text-text-muted mt-0.5 flex items-center gap-2">
-                              <span className="font-semibold text-text-primary">
-                                ₹{prod.sellingPrice ?? prod.price ?? 0}
-                              </span>
-                              {prod.unit && <span>· {prod.unit}</span>}
-                              {prod.category && <span>· {prod.category}</span>}
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleAddItem(prod);
-                            }}
-                            className="w-8 h-8 rounded-full bg-primary/10 hover:bg-primary text-primary hover:text-white flex items-center justify-center transition-all shrink-0 font-bold"
-                            title="Add to bill"
-                          >
-                            <Plus className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
+                      {searchResults.map(renderProductItem)}
                     </div>
                   </div>
                 ) : (
@@ -368,36 +481,7 @@ export const ProductPopup: React.FC<ProductPopupProps> = ({
                     </div>
 
                     <div className="divide-y divide-border/40">
-                      {defaultRecent.map((prod) => (
-                        <div
-                          key={prod.id || prod.name}
-                          onClick={() => handleAddItem(prod)}
-                          className="py-3 px-3 rounded-xl flex items-center justify-between hover:bg-secondary/25 active:bg-secondary/40 transition-colors cursor-pointer group"
-                        >
-                          <div className="min-w-0 flex-1 pr-3">
-                            <div className="font-semibold text-sm text-text-primary group-hover:text-primary transition-colors">
-                              {prod.name}
-                            </div>
-                            <div className="text-xs text-text-muted mt-0.5 flex items-center gap-2">
-                              <span className="font-semibold text-text-primary">
-                                ₹{prod.sellingPrice ?? (prod as any).price ?? 0}
-                              </span>
-                              {prod.unit && <span>· {prod.unit}</span>}
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleAddItem(prod);
-                            }}
-                            className="w-8 h-8 rounded-full bg-primary/10 hover:bg-primary text-primary hover:text-white flex items-center justify-center transition-all shrink-0 font-bold"
-                            title="Add to bill"
-                          >
-                            <Plus className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
+                      {defaultRecent.map(renderProductItem)}
                     </div>
                   </div>
                 )}
@@ -435,33 +519,7 @@ export const ProductPopup: React.FC<ProductPopupProps> = ({
                 /* Category Products */
                 <div className="space-y-2">
                   <div className="divide-y divide-border/40">
-                    {categoryProducts.map((prod) => (
-                      <div
-                        key={prod.id}
-                        onClick={() => handleAddItem(prod)}
-                        className="py-3 px-3 rounded-xl flex items-center justify-between hover:bg-secondary/25 transition-colors cursor-pointer group"
-                      >
-                        <div className="min-w-0 flex-1 pr-3">
-                          <div className="font-semibold text-sm text-text-primary group-hover:text-primary transition-colors">
-                            {prod.name}
-                          </div>
-                          <div className="text-xs text-text-muted mt-0.5">
-                            <span className="font-semibold text-text-primary">₹{prod.sellingPrice}</span>
-                            {prod.unit && <span> · {prod.unit}</span>}
-                          </div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleAddItem(prod);
-                          }}
-                          className="w-8 h-8 rounded-full bg-primary/10 hover:bg-primary text-primary hover:text-white flex items-center justify-center transition-all shrink-0 font-bold"
-                        >
-                          <Plus className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
+                    {categoryProducts.map(renderProductItem)}
                   </div>
                 </div>
               )}
@@ -507,6 +565,21 @@ export const ProductPopup: React.FC<ProductPopupProps> = ({
                 />
               </div>
 
+              <div>
+                <label className="block text-xs font-semibold text-text-muted mb-1 uppercase tracking-wider">
+                  Quantity
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  id="manual-item-qty"
+                  value={manualQty}
+                  onChange={(e) => setManualQty(e.target.value)}
+                  placeholder="1"
+                  className="w-full px-3.5 py-2.5 text-sm bg-background border border-border focus:border-primary rounded-xl text-text-primary placeholder:text-text-muted/60 focus:outline-none font-semibold"
+                />
+              </div>
+
               {manualError && (
                 <p className="text-xs text-danger font-medium">{manualError}</p>
               )}
@@ -523,6 +596,27 @@ export const ProductPopup: React.FC<ProductPopupProps> = ({
               </div>
             </form>
           )}
+        </div>
+
+        {/* Modal Sticky Footer */}
+        <div className="px-5 py-3 border-t border-border/50 bg-card flex items-center justify-between gap-3 shrink-0">
+          <div className="text-xs text-text-muted" id="product-popup-footer-count">
+            {currentItems.length > 0 ? (
+              <span>
+                <strong className="text-text-primary text-sm font-bold">{currentItems.length}</strong> {currentItems.length === 1 ? 'item' : 'items'} in bill
+              </span>
+            ) : (
+              <span>No items added yet</span>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            id="product-popup-bottom-done-btn"
+            className="px-5 py-2 bg-primary hover:bg-primary-hover active:bg-primary-dark text-white text-xs sm:text-sm font-bold rounded-xl transition-all shadow-sm flex items-center gap-1.5"
+          >
+            Done
+          </button>
         </div>
       </div>
     </div>

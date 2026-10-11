@@ -486,9 +486,9 @@ export const mockCustomers: Customer[] = [
     lastVisit: '2026-10-02T11:20:00Z',
     notes: 'Prefers Basmati Rice and specific brand atta. Frequent weekend shopper.',
     recentBills: [
-      { id: 'b-101', billNumber: 'INV-2026-001', date: '2026-10-02T11:20:00Z', amount: 980, status: 'Completed' },
-      { id: 'b-94', billNumber: 'BILL-000094', date: '2026-09-24T18:15:00Z', amount: 1420, status: 'Completed' },
-      { id: 'b-82', billNumber: 'BILL-000082', date: '2026-09-15T10:05:00Z', amount: 650, status: 'Completed' },
+      { id: 'b-101', billNumber: '02102026-0001', date: '2026-10-02T11:20:00Z', amount: 980, status: 'Completed' },
+      { id: 'b-94', billNumber: '24092026-0001', date: '2026-09-24T18:15:00Z', amount: 1420, status: 'Completed' },
+      { id: 'b-82', billNumber: '15092026-0001', date: '2026-09-15T10:05:00Z', amount: 650, status: 'Completed' },
     ],
   },
   {
@@ -502,8 +502,8 @@ export const mockCustomers: Customer[] = [
     lastVisit: '2026-09-28T16:45:00Z',
     notes: 'Regular organic grocery buyer.',
     recentBills: [
-      { id: 'b-98', billNumber: 'BILL-000098', date: '2026-09-28T16:45:00Z', amount: 760, status: 'Completed' },
-      { id: 'b-75', billNumber: 'BILL-000075', date: '2026-09-10T14:30:00Z', amount: 1240, status: 'Completed' },
+      { id: 'b-98', billNumber: '28092026-0001', date: '2026-09-28T16:45:00Z', amount: 760, status: 'Completed' },
+      { id: 'b-75', billNumber: '10092026-0001', date: '2026-09-10T14:30:00Z', amount: 1240, status: 'Completed' },
     ],
   },
   {
@@ -517,8 +517,8 @@ export const mockCustomers: Customer[] = [
     lastVisit: '2026-10-01T09:15:00Z',
     notes: 'Usually pays via UPI PhonePe.',
     recentBills: [
-      { id: 'b-100', billNumber: 'BILL-000100', date: '2026-10-01T09:15:00Z', amount: 1120, status: 'Completed' },
-      { id: 'b-89', billNumber: 'BILL-000089', date: '2026-09-20T19:00:00Z', amount: 890, status: 'Completed' },
+      { id: 'b-100', billNumber: '01102026-0001', date: '2026-10-01T09:15:00Z', amount: 1120, status: 'Completed' },
+      { id: 'b-89', billNumber: '20092026-0001', date: '2026-09-20T19:00:00Z', amount: 890, status: 'Completed' },
     ],
   },
   {
@@ -532,7 +532,7 @@ export const mockCustomers: Customer[] = [
     lastVisit: '2026-09-15T14:10:00Z',
     notes: 'Lives in local apartment block.',
     recentBills: [
-      { id: 'b-83', billNumber: 'BILL-000083', date: '2026-09-15T14:10:00Z', amount: 630, status: 'Completed' },
+      { id: 'b-83', billNumber: '15092026-0002', date: '2026-09-15T14:10:00Z', amount: 630, status: 'Completed' },
     ],
   },
   {

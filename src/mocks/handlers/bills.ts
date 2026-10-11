@@ -7,6 +7,7 @@ import type {
   BillQuoteItemResponse,
 } from '../../api/types';
 import { seedStore } from '../seed';
+import { mockCoupons } from './phase11';
 
 export const billHandlers = [
   // POST /api/v1/bills
@@ -50,7 +51,36 @@ export const billHandlers = [
     const itemDiscounts = Number(
       items.reduce((acc, i) => acc + i.discountAmount * i.qty, 0).toFixed(2)
     );
-    let total = Number((subtotal - itemDiscounts).toFixed(2));
+    const subtotalAfterItems = Math.max(0, subtotal - itemDiscounts);
+
+    let orderDiscount = 0;
+    if (body.orderDiscountValue && body.orderDiscountValue > 0) {
+      if (body.orderDiscountType === 'Percentage') {
+        orderDiscount = Number((((subtotalAfterItems * Math.min(100, body.orderDiscountValue)) / 100)).toFixed(2));
+      } else {
+        orderDiscount = Number(Math.min(body.orderDiscountValue, subtotalAfterItems).toFixed(2));
+      }
+    }
+
+    let couponDiscount = 0;
+    if (body.couponCodes && body.couponCodes.length > 0) {
+      const remainingForCoupons = Math.max(0, subtotalAfterItems - orderDiscount);
+      for (const code of body.couponCodes) {
+        const c = mockCoupons.find((coup) => coup.code.toUpperCase() === code.toUpperCase());
+        if (c && c.isActive) {
+          if (c.discountType === 'Amount') {
+            couponDiscount += Math.min(remainingForCoupons, c.discountValue);
+          } else {
+            let disc = (remainingForCoupons * c.discountValue) / 100;
+            if (c.maxDiscountAmount) disc = Math.min(disc, c.maxDiscountAmount);
+            couponDiscount += disc;
+          }
+        }
+      }
+      couponDiscount = Number(couponDiscount.toFixed(2));
+    }
+
+    let total = Math.max(0, Number((subtotal - itemDiscounts - orderDiscount - couponDiscount).toFixed(2)));
     const isStrictModeBill = body.negotiatedTotal != null;
 
     if (body.negotiatedTotal != null) {
@@ -102,10 +132,13 @@ export const billHandlers = [
     }
 
     if (search) {
+      const lowerSearch = search.toLowerCase();
+      const cleanSearch = lowerSearch.replace(/[-\s]/g, '');
       filtered = filtered.filter(
         (b) =>
-          b.billNumber.toLowerCase().includes(search) ||
-          (b.customerName && b.customerName.toLowerCase().includes(search)) ||
+          b.billNumber.toLowerCase().includes(lowerSearch) ||
+          b.billNumber.replace(/[-\s]/g, '').toLowerCase().includes(cleanSearch) ||
+          (b.customerName && b.customerName.toLowerCase().includes(lowerSearch)) ||
           (b.customerPhone && b.customerPhone.includes(search))
       );
     }

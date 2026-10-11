@@ -31,6 +31,18 @@ export const CustomerPopup: React.FC<CustomerPopupProps> = ({
 
   const inputRef = useRef<HTMLInputElement>(null);
 
+  // Lock body scroll while popup is open and ensure window scroll is reset
+  useEffect(() => {
+    if (isOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prev;
+        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      };
+    }
+  }, [isOpen]);
+
   // Auto-focus on open
   useEffect(() => {
     if (isOpen) {
@@ -39,9 +51,9 @@ export const CustomerPopup: React.FC<CustomerPopupProps> = ({
       setManualPhone(currentCustomer?.phone || '');
       setShowManualForm(!customerRecommendEnabled);
       setManualError('');
-      // Delay slightly for smooth modal entrance animation
+      // Delay slightly for smooth modal entrance animation without scrolling page
       const timer = setTimeout(() => {
-        inputRef.current?.focus();
+        inputRef.current?.focus({ preventScroll: true });
       }, 50);
       return () => clearTimeout(timer);
     }

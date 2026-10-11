@@ -132,7 +132,7 @@ export const ReceiptSettingsPage: React.FC = () => {
                 {activeShop?.name || 'Kirana Mart'}
               </p>
               <p className="text-[10px]">{activeShop?.address}</p>
-              <p className="text-[10px]">BILL-000101 • 30 Sep 2026</p>
+              <p className="text-[10px]">30092026-0001 • 30 Sep 2026</p>
             </div>
 
             <div className="border-t border-b border-dashed border-slate-300 py-2 space-y-1 text-[11px]">

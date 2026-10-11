@@ -32,7 +32,15 @@ export const CouponSheet: React.FC<CouponSheetProps> = ({
   const handleApply = async (e: React.FormEvent) => {
     e.preventDefault();
     const code = couponCode.trim().toUpperCase();
-    if (!code) return;
+    if (!code) {
+      setErrorMsg('Please enter a coupon code');
+      return;
+    }
+
+    if (subtotal <= 0) {
+      setErrorMsg('Please add items to your bill before applying a coupon');
+      return;
+    }
 
     if (appliedCoupons.some((c) => c.code === code)) {
       setErrorMsg('Coupon already applied');
@@ -95,7 +103,7 @@ export const CouponSheet: React.FC<CouponSheetProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 text-text-muted hover:text-text-primary rounded-full"
+            className="p-1.5 text-text-muted hover:text-text-primary rounded-full transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -167,7 +175,7 @@ export const CouponSheet: React.FC<CouponSheetProps> = ({
                       setCouponCode(e.target.value.toUpperCase());
                       setErrorMsg(null);
                     }}
-                    placeholder="e.g. SAVE10"
+                    placeholder="Enter coupon code"
                     className="flex-1 px-3.5 py-2.5 text-sm bg-background border border-border focus:border-primary rounded-xl text-text-primary uppercase font-mono font-bold tracking-wider placeholder:normal-case placeholder:font-sans placeholder:font-normal placeholder:tracking-normal focus:outline-none"
                     autoFocus
                   />
@@ -194,43 +202,11 @@ export const CouponSheet: React.FC<CouponSheetProps> = ({
             </form>
           )}
 
-          {/* Quick presets / available coupons */}
-          <div className="pt-2 border-t border-border/60">
-            <span className="text-[11px] font-semibold text-text-muted uppercase tracking-wider block mb-2">
-              Available Offers
-            </span>
-            <div className="space-y-1.5">
-              {[
-                { code: 'SAVE10', desc: 'Flat 10% discount on order' },
-                { code: 'WELCOME100', desc: 'Flat ₹100 off on order above ₹1,000' },
-              ].map((c) => (
-                <button
-                  key={c.code}
-                  type="button"
-                  onClick={() => {
-                    setCouponCode(c.code);
-                    setErrorMsg(null);
-                  }}
-                  className="w-full p-2.5 rounded-xl border border-border/80 hover:border-primary/50 bg-background hover:bg-secondary/15 transition-all text-left flex items-center justify-between group"
-                >
-                  <div>
-                    <span className="font-mono font-bold text-xs text-text-primary group-hover:text-primary transition-colors">
-                      {c.code}
-                    </span>
-                    <p className="text-[11px] text-text-muted">{c.desc}</p>
-                  </div>
-                  <span className="text-xs font-semibold text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                    Use →
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-
           <div className="pt-2">
             <button
               type="button"
               onClick={onClose}
+              id="coupon-sheet-done-btn"
               className="w-full py-2.5 bg-secondary/30 hover:bg-secondary/50 text-text-primary text-xs font-bold rounded-xl transition-colors"
             >
               Done

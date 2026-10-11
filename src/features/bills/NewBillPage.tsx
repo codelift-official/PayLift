@@ -253,7 +253,12 @@ export const NewBillPage: React.FC = () => {
     let computedTotal = Math.max(0, subtotal - totalDiscount);
 
     if (serverQuote && serverQuote.total !== undefined) {
-      computedTotal = serverQuote.total;
+      const serverDiscountIncludesCoupon = (serverQuote.discount || 0) >= (itemsDiscount + orderDiscountAmt + totalCouponDiscount - 0.05);
+      if (serverDiscountIncludesCoupon) {
+        computedTotal = serverQuote.total;
+      } else {
+        computedTotal = Math.max(0, serverQuote.total - totalCouponDiscount);
+      }
     }
 
     const finalGst = serverQuote?.gst !== undefined ? Math.round(serverQuote.gst * 100) / 100 : Math.round(totalGst * 100) / 100;
@@ -327,6 +332,16 @@ export const NewBillPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, [items, selectedShopId, currentShop?.id, appliedCoupons, isStrictMode, orderDiscountType, orderDiscountValue, effectiveShopGstRate, shopDiscountMode, customer]);
 
+  // Dismiss customer popup, reset scroll to top, and automatically open product popup
+  const handleCustomerPopupDismiss = (newCustomer?: { id?: string; name: string; phone: string } | null) => {
+    if (newCustomer !== undefined) {
+      setCustomer(newCustomer);
+    }
+    setCustomerPopupOpen(false);
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    setProductPopupOpen(true);
+  };
+
   // Add product from ProductPopup
   const handleAddProduct = (prod: {
     id?: string;
@@ -336,14 +351,17 @@ export const NewBillPage: React.FC = () => {
     unit?: string;
     gstRate?: number;
     catalogPrice?: number;
+    qty?: number;
   }) => {
     const existingIndex = items.findIndex(
       (i) => (prod.id && i.productId === prod.id) || (i.itemName && i.itemName.toLowerCase() === prod.name.toLowerCase())
     );
 
+    const addQty = prod.qty || 1;
+
     if (existingIndex >= 0) {
       setItems((prev) =>
-        prev.map((it, idx) => (idx === existingIndex ? { ...it, qty: (it.qty || 1) + 1 } : it))
+        prev.map((it, idx) => (idx === existingIndex ? { ...it, qty: (it.qty || 1) + addQty } : it))
       );
     } else {
       const newItem: BillItemFormState = {
@@ -352,7 +370,7 @@ export const NewBillPage: React.FC = () => {
         itemName: prod.name,
         price: prod.price,
         catalogPrice: prod.catalogPrice ?? prod.price,
-        qty: 1,
+        qty: addQty,
         sku: prod.sku || null,
         unit: prod.unit || null,
         gstRate: prod.gstRate ?? effectiveShopGstRate,
@@ -361,6 +379,21 @@ export const NewBillPage: React.FC = () => {
         discountValue: 0,
       };
       setItems((prev) => [...prev, newItem]);
+    }
+  };
+
+  const handleUpdateProductQty = (prod: { id?: string; name: string }, newQty: number) => {
+    const existingIndex = items.findIndex(
+      (i) => (prod.id && i.productId === prod.id) || (i.itemName && i.itemName.toLowerCase() === prod.name.toLowerCase())
+    );
+    if (existingIndex >= 0) {
+      if (newQty <= 0) {
+        setItems((prev) => prev.filter((_, idx) => idx !== existingIndex));
+      } else {
+        setItems((prev) =>
+          prev.map((it, idx) => (idx === existingIndex ? { ...it, qty: newQty } : it))
+        );
+      }
     }
   };
 
@@ -505,25 +538,22 @@ export const NewBillPage: React.FC = () => {
       {/* POPUP 1: Customer Popup (auto-opens on page load) */}
       <CustomerPopup
         isOpen={customerPopupOpen}
-        onClose={() => setCustomerPopupOpen(false)}
-        onSelectCustomer={(c) => {
-          setCustomer(c);
-          setCustomerPopupOpen(false);
-        }}
-        onSkip={() => {
-          setCustomer(null);
-          setCustomerPopupOpen(false);
-        }}
+        onClose={() => handleCustomerPopupDismiss()}
+        onSelectCustomer={(c) => handleCustomerPopupDismiss(c)}
+        onSkip={() => handleCustomerPopupDismiss(null)}
         customerMandatory={customerMandatory}
         customerRecommendEnabled={customerRecommendEnabled}
         currentCustomer={customer}
       />
 
-      {/* POPUP 2: Product Popup (opens when user taps [+ Add items]) */}
+      {/* POPUP 2: Product Popup (opens when user taps [+ Add items] or after customer popup) */}
       <ProductPopup
         isOpen={productPopupOpen}
         onClose={() => setProductPopupOpen(false)}
         onAddProduct={handleAddProduct}
+        onUpdateItemQty={handleUpdateProductQty}
+        onRemoveItem={handleRemoveItem}
+        currentItems={items}
         recentProducts={allProducts}
         shopProductSource={shopProductSource}
         effectiveShopGstRate={effectiveShopGstRate}

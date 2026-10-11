@@ -27,9 +27,17 @@ class MockSeedStore {
       import.meta.env.VITE_MOCK_STRICT === 'true',
   };
 
+  loadBills(): BillResponse[] {
+    try {
+      const saved = typeof localStorage !== 'undefined' ? localStorage.getItem('billify.mockBills') : null;
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return JSON.parse(JSON.stringify(mockBills));
+  }
+
   shops: ShopResponse[] = JSON.parse(JSON.stringify(mockShops));
   users: UserProfileResponse[] = JSON.parse(JSON.stringify(mockUsers));
-  bills: BillResponse[] = JSON.parse(JSON.stringify(mockBills));
+  bills: BillResponse[] = this.loadBills();
   returns: ReturnExchangeResponse[] = JSON.parse(JSON.stringify(mockReturns));
   billSequence: number = 111;
 
@@ -43,6 +51,11 @@ class MockSeedStore {
     };
     this.shops = JSON.parse(JSON.stringify(mockShops));
     this.users = JSON.parse(JSON.stringify(mockUsers));
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('billify.mockBills');
+      }
+    } catch {}
     this.bills = JSON.parse(JSON.stringify(mockBills));
     this.returns = JSON.parse(JSON.stringify(mockReturns));
     this.billSequence = 111;
@@ -50,9 +63,29 @@ class MockSeedStore {
 
   createBill(payload: CreateBillRequest, userId: string): BillResponse {
     const seq = this.billSequence++;
-    const billNumber = `BILL-${String(seq).padStart(6, '0')}`;
+    const now = new Date();
+    const day = String(now.getDate()).padStart(2, '0');
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const year = String(now.getFullYear());
+    const datePrefix = `${day}${month}${year}`;
+
+    // Find all bills for this date and calculate max sequence
+    let maxSeqToday = 0;
+    this.bills.forEach((b) => {
+      if (!b.billNumber) return;
+      const clean = b.billNumber.replace(/[-\s]/g, '');
+      if (clean.startsWith(datePrefix)) {
+        const seqPart = parseInt(clean.slice(datePrefix.length), 10);
+        if (!isNaN(seqPart) && seqPart > maxSeqToday) {
+          maxSeqToday = seqPart;
+        }
+      }
+    });
+
+    const daySeq = maxSeqToday + 1;
+    const billNumber = `${datePrefix}-${String(daySeq).padStart(4, '0')}`;
     const id = `b1111111-0000-0000-0000-${String(seq).padStart(12, '0')}`;
-    const createdAt = new Date().toISOString();
+    const createdAt = now.toISOString();
 
     const items: BillItemResponse[] = payload.items.map((item, index) => {
       let discountAmount = 0;
@@ -98,7 +131,34 @@ class MockSeedStore {
     const itemDiscounts = Number(
       items.reduce((acc, i) => acc + i.discountAmount * i.qty, 0).toFixed(2)
     );
-    let total = Number((subtotal - itemDiscounts).toFixed(2));
+    const subtotalAfterItems = Math.max(0, subtotal - itemDiscounts);
+
+    let orderDiscount = 0;
+    if (payload.orderDiscountValue && payload.orderDiscountValue > 0) {
+      if (payload.orderDiscountType === 'Percentage') {
+        orderDiscount = Number((((subtotalAfterItems * Math.min(100, payload.orderDiscountValue)) / 100)).toFixed(2));
+      } else {
+        orderDiscount = Number(Math.min(payload.orderDiscountValue, subtotalAfterItems).toFixed(2));
+      }
+    }
+
+    let couponDiscount = 0;
+    if (payload.couponCodes && payload.couponCodes.length > 0) {
+      const remainingForCoupons = Math.max(0, subtotalAfterItems - orderDiscount);
+      for (const code of payload.couponCodes) {
+        const upper = code.toUpperCase();
+        if (upper.includes('10')) {
+          couponDiscount += remainingForCoupons * 0.1;
+        } else if (upper.includes('100')) {
+          couponDiscount += Math.min(remainingForCoupons, 100);
+        } else if (upper.includes('50')) {
+          couponDiscount += Math.min(remainingForCoupons, 50);
+        }
+      }
+      couponDiscount = Number(couponDiscount.toFixed(2));
+    }
+
+    let total = Math.max(0, Number((subtotal - itemDiscounts - orderDiscount - couponDiscount).toFixed(2)));
     const isStrictModeBill = payload.negotiatedTotal != null;
 
     if (payload.negotiatedTotal != null) {
@@ -152,6 +212,11 @@ class MockSeedStore {
 
     // Prepend to list
     this.bills.unshift(newBill);
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('billify.mockBills', JSON.stringify(this.bills));
+      }
+    } catch {}
     return newBill;
   }
 
