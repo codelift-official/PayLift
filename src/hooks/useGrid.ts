@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 import { PagedResult } from '../api/types';
+import { getClientStorage, setClientStorage } from '../lib/gridStorage';
 
 export interface UseGridOptions {
   queryKey: string[];
@@ -16,8 +17,14 @@ export function useGrid<T>({
   filters = {},
   initialPageSize = 50,
 }: UseGridOptions) {
+  const gridStorageKey = `grid_settings_${endpoint.replace(/[^a-zA-Z0-9]/g, '_')}`;
+  const savedSettings = useMemo(
+    () => getClientStorage<{ pageSize?: number }>(gridStorageKey, {}),
+    [gridStorageKey]
+  );
+
   const [page, setPage] = useState<number>(1);
-  const [pageSize, setPageSizeState] = useState<number>(initialPageSize);
+  const [pageSize, setPageSizeState] = useState<number>(savedSettings.pageSize || initialPageSize);
   const [search, setSearchState] = useState<string>('');
   const [debouncedSearch, setDebouncedSearch] = useState<string>('');
 
@@ -40,6 +47,7 @@ export function useGrid<T>({
   const setPageSize = (size: number) => {
     setPageSizeState(size);
     setPage(1);
+    setClientStorage(gridStorageKey, { pageSize: size });
   };
 
   const setSearch = (term: string) => {

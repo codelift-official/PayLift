@@ -9,16 +9,27 @@ import { Money } from '../../components/Money';
 import { formatDate } from '../../lib/format';
 import { Plus, X, Filter } from 'lucide-react';
 import { Button } from '../../components/ui/Button';
+import { getClientStorage, setClientStorage } from '../../lib/gridStorage';
 
 export const BillsListPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Read URL query params on mount to pre-populate filters (Item 4 & Item 6)
-  const initialMode = searchParams.get('mode') || searchParams.get('Mode') || 'All';
-  const initialDate = searchParams.get('dateRange') || searchParams.get('date') || 'All';
-  const initialStatus = searchParams.get('status') || searchParams.get('Status') || 'All';
-  const initialShop = searchParams.get('shop') || searchParams.get('shopID') || searchParams.get('ShopID') || 'All';
+  // Read saved filters from client storage (cookie / localStorage) if not in URL params
+  const savedFilters = useMemo(
+    () =>
+      getClientStorage<{ mode: string; dateRange: string; status: string; shop: string }>(
+        'grid_filters_bills',
+        { mode: 'All', dateRange: 'All', status: 'All', shop: 'All' }
+      ),
+    []
+  );
+
+  // Read URL query params or saved client storage on mount to pre-populate filters
+  const initialMode = searchParams.get('mode') || searchParams.get('Mode') || savedFilters.mode || 'All';
+  const initialDate = searchParams.get('dateRange') || searchParams.get('date') || savedFilters.dateRange || 'All';
+  const initialStatus = searchParams.get('status') || searchParams.get('Status') || savedFilters.status || 'All';
+  const initialShop = searchParams.get('shop') || searchParams.get('shopID') || searchParams.get('ShopID') || savedFilters.shop || 'All';
 
   const [dateFilter, setDateFilter] = useState<'All' | 'Today' | 'Week' | 'Month'>(
     (['Today', 'Week', 'Month'].includes(initialDate) ? initialDate : 'All') as any
@@ -29,7 +40,7 @@ export const BillsListPage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState<string>(initialStatus);
   const [shopFilter, setShopFilter] = useState<string>(initialShop);
 
-  // Sync state to URL params when filters change (Item 4 & 6)
+  // Sync state to URL params and save in client storage (cookie / localStorage)
   const updateUrlParams = (newFilters: {
     mode?: string;
     dateRange?: string;
@@ -55,6 +66,14 @@ export const BillsListPage: React.FC = () => {
     else next.delete('shop');
 
     setSearchParams(next, { replace: true });
+
+    // Persist to cookie / localStorage
+    setClientStorage('grid_filters_bills', {
+      mode: m,
+      dateRange: d,
+      status: s,
+      shop: sh,
+    });
   };
 
   const handlePaymentChange = (mode: 'All' | 'Cash' | 'UPI' | 'Card') => {
@@ -198,7 +217,7 @@ export const BillsListPage: React.FC = () => {
             variant="primary"
             size="sm"
             onClick={() => navigate('/bills/new')}
-            className="hidden sm:inline-flex"
+            className="inline-flex"
             id="bills-list-create-bill-btn"
           >
             <Plus className="w-4 h-4 mr-1.5" />
@@ -245,6 +264,12 @@ export const BillsListPage: React.FC = () => {
               next.delete('status');
               next.delete('shop');
               setSearchParams(next, { replace: true });
+              setClientStorage('grid_filters_bills', {
+                mode: 'All',
+                dateRange: 'All',
+                status: 'All',
+                shop: 'All',
+              });
             }}
             className="text-text-muted hover:text-text-primary underline ml-1 font-medium"
           >

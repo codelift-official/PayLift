@@ -114,11 +114,6 @@ export const ReceiptPreview: React.FC = () => {
               <tr key={idx} className="py-1">
                 <td className="py-1.5 font-medium pr-1">
                   <div>{it.itemName}</div>
-                  {it.discountAmount > 0 && (
-                    <div className="text-[10px] text-emerald-600">
-                      -Disc: <Money value={it.discountAmount} size="sm" />
-                    </div>
-                  )}
                 </td>
                 <td className="py-1.5 text-center">{it.qty}</td>
                 <td className="py-1.5 text-right">

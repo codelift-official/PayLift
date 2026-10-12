@@ -764,14 +764,6 @@ export const NewBillPage: React.FC = () => {
             </span>
           </div>
 
-          {/* Item Discounts */}
-          {totals.lineDiscounts > 0 && (
-            <div className="flex items-center justify-between text-xs sm:text-sm text-green-600">
-              <span>Item Discounts</span>
-              <span className="font-semibold">−<Money value={totals.lineDiscounts} /></span>
-            </div>
-          )}
-
           {/* Order Discount */}
           <div className="flex items-center justify-between text-xs sm:text-sm">
             <span className="text-text-muted">Order Discount</span>

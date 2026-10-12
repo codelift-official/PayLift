@@ -7,7 +7,7 @@ export const SubscriptionBanner: React.FC = () => {
   const location = useLocation();
   const { status, daysLeft, isGraceUnlimited, isTrialUnlimited, isLoading } = useSubscription();
 
-  // Hidden paths
+  // Hidden paths (including bill creation POS view)
   const hiddenPrefixes = [
     '/login',
     '/register',
@@ -16,6 +16,7 @@ export const SubscriptionBanner: React.FC = () => {
     '/setup',
     '/platform',
     '/suspended',
+    '/bills/new',
   ];
 
   const isHidden = hiddenPrefixes.some(

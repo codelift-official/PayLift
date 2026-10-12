@@ -373,8 +373,6 @@ export const BillDetailPage: React.FC = () => {
                 <th className="py-2.5 px-4">Item</th>
                 <th className="py-2.5 px-4 text-center">Qty</th>
                 <th className="py-2.5 px-4 text-right">Price</th>
-                <th className="py-2.5 px-4 text-right">Disc</th>
-                <th className="py-2.5 px-4 text-right">GST</th>
                 <th className="py-2.5 px-4 text-right">Total</th>
               </tr>
             </thead>
@@ -407,16 +405,6 @@ export const BillDetailPage: React.FC = () => {
                     </td>
                     <td className="py-3 px-4 text-right">
                       <Money value={item.originalPrice || item.price} size="sm" />
-                    </td>
-                    <td className="py-3 px-4 text-right text-emerald-600 font-medium">
-                      {item.discountAmount > 0 ? (
-                        <Money value={item.discountAmount * item.qty} size="sm" />
-                      ) : (
-                        '—'
-                      )}
-                    </td>
-                    <td className="py-3 px-4 text-right text-text-muted">
-                      {item.gstRate}%
                     </td>
                     <td className="py-3 px-4 text-right font-bold" style={{ color: 'var(--text-primary)' }}>
                       <Money

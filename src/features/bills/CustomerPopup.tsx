@@ -31,11 +31,12 @@ export const CustomerPopup: React.FC<CustomerPopupProps> = ({
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Lock body scroll while popup is open and ensure window scroll is reset
+  // Lock body scroll while popup is open and ensure scroll is reset to top
   useEffect(() => {
     if (isOpen) {
       const prev = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
       return () => {
         document.body.style.overflow = prev;
         window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -99,14 +100,6 @@ export const CustomerPopup: React.FC<CustomerPopupProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, customerMandatory, onClose]);
 
-  if (!isOpen) return null;
-
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget && !customerMandatory) {
-      onClose();
-    }
-  };
-
   const handleSelect = (c: Customer | { id?: string; name: string; phone: string }) => {
     onSelectCustomer({
       id: c.id,
@@ -128,31 +121,25 @@ export const CustomerPopup: React.FC<CustomerPopupProps> = ({
     });
   };
 
+  if (!isOpen) return null;
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity p-0 sm:p-4"
-      style={{ height: '100dvh' }}
-      onClick={handleBackdropClick}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity p-3 sm:p-4"
       data-testid="customer-popup-backdrop"
       id="customer-popup-modal"
     >
       <div
-        className="w-full sm:max-w-md bg-card rounded-t-3xl sm:rounded-2xl border border-border shadow-2xl overflow-hidden transition-all flex flex-col"
-        style={{ maxHeight: 'min(90dvh, 90vh)', paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+        className="w-full sm:max-w-md bg-card rounded-2xl border border-border shadow-2xl overflow-hidden transition-all flex flex-col my-auto"
+        style={{ maxHeight: 'min(90dvh, 88vh)' }}
         onClick={(e) => e.stopPropagation()}
         id="customer-popup-sheet"
       >
-        {/* Mobile Drag Handle */}
-        <div className="sm:hidden pt-3 pb-1 flex justify-center">
-          <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full" />
-        </div>
-
         {/* Modal Header */}
-        <div className="px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between border-b border-border/40">
+        <div className="px-5 py-3.5 sm:px-6 sm:py-4 flex items-center justify-between border-b border-border/40 shrink-0">
           <div>
-            <h2 className="text-base sm:text-xl font-bold text-text-primary tracking-tight">
-              <span className="sm:hidden">Who's this bill for?</span>
-              <span className="hidden sm:inline">Add Customer</span>
+            <h2 className="text-base sm:text-lg font-bold text-text-primary tracking-tight">
+              <span>Who's this bill for?</span>
             </h2>
             {customerMandatory && (
               <p className="text-xs text-danger font-medium flex items-center gap-1 mt-0.5">
@@ -170,7 +157,7 @@ export const CustomerPopup: React.FC<CustomerPopupProps> = ({
                   onClose();
                 }}
                 id="skip-customer-btn"
-                className="px-2.5 py-1 text-xs font-semibold rounded-full bg-secondary/50 hover:bg-secondary text-text-secondary hover:text-text-primary transition-colors border border-border/60 shadow-xs"
+                className="px-3 py-1 text-xs font-semibold rounded-full bg-secondary/50 hover:bg-secondary text-text-secondary hover:text-text-primary transition-colors border border-border/60 shadow-xs"
               >
                 Skip
               </button>
@@ -178,7 +165,7 @@ export const CustomerPopup: React.FC<CustomerPopupProps> = ({
                 type="button"
                 onClick={onClose}
                 id="customer-popup-close-btn"
-                className="hidden sm:flex p-1.5 text-text-muted hover:text-text-primary hover:bg-secondary/40 rounded-full transition-colors"
+                className="p-1.5 text-text-muted hover:text-text-primary hover:bg-secondary/40 rounded-full transition-colors"
                 title="Close (Esc)"
               >
                 <X className="w-5 h-5" />

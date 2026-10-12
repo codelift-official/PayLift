@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Trash2, Plus, Minus, ChevronDown } from 'lucide-react';
+import React, { useState } from 'react';
+import { Trash2, Plus, Minus } from 'lucide-react';
 import { Money } from '../../components/Money';
 
 export interface BillItemFormState {
@@ -40,8 +40,6 @@ export const ItemRow: React.FC<ItemRowProps> = ({
   onRemove,
 }) => {
   const [isEditingPrice, setIsEditingPrice] = useState(false);
-  const [discountDropdownOpen, setDiscountDropdownOpen] = useState(false);
-  const discountDropdownRef = useRef<HTMLDivElement>(null);
 
   const discountType = item.discountType || defaultDiscountMode;
   const discountValue = item.discountValue !== undefined ? item.discountValue : (item.discountPct || 0);
@@ -57,17 +55,6 @@ export const ItemRow: React.FC<ItemRowProps> = ({
   }
   const lineTotal = Math.max(0, lineSubtotal - lineDiscount);
 
-  // Close discount dropdown on outside click
-  useEffect(() => {
-    const handleOutside = (e: MouseEvent) => {
-      if (discountDropdownRef.current && !discountDropdownRef.current.contains(e.target as Node)) {
-        setDiscountDropdownOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleOutside);
-    return () => document.removeEventListener('mousedown', handleOutside);
-  }, []);
-
   const handleQtyChange = (delta: number) => {
     const nextQty = Math.max(1, (item.qty || 1) + delta);
     onUpdate(item.id, { qty: nextQty });
@@ -76,15 +63,6 @@ export const ItemRow: React.FC<ItemRowProps> = ({
   const handlePriceChange = (val: string) => {
     const parsed = parseFloat(val);
     onUpdate(item.id, { price: isNaN(parsed) ? 0 : Math.max(0, parsed) });
-  };
-
-  const handleSelectDiscountPct = (pct: number) => {
-    onUpdate(item.id, {
-      discountType: 'Percentage',
-      discountValue: pct,
-      discountPct: pct,
-    });
-    setDiscountDropdownOpen(false);
   };
 
   return (
@@ -121,7 +99,7 @@ export const ItemRow: React.FC<ItemRowProps> = ({
         </div>
       </div>
 
-      {/* Bottom: Price, Quantity Stepper, and Discount */}
+      {/* Bottom: Price and Quantity Stepper */}
       <div className="flex items-center justify-between gap-2 mt-1.5 pt-0.5">
         <div className="flex items-center gap-2">
           {/* Unit Price */}
@@ -168,41 +146,6 @@ export const ItemRow: React.FC<ItemRowProps> = ({
             </button>
           </div>
         </div>
-
-        {/* Discount Selector [10% ▾] */}
-        {!isStrictMode && (
-          <div className="relative" ref={discountDropdownRef}>
-            <button
-              type="button"
-              onClick={() => setDiscountDropdownOpen((prev) => !prev)}
-              id={`item-discount-btn-${index}`}
-              className="inline-flex items-center gap-1 px-2 py-0.5 sm:px-2.5 sm:py-1 text-xs font-semibold rounded-lg border border-border bg-background hover:bg-secondary/20 text-text-primary shadow-xs transition-colors"
-            >
-              <span>{discountValue > 0 ? `${discountValue}%` : '0%'}</span>
-              <ChevronDown className="w-3 h-3 text-text-muted" />
-            </button>
-
-            {discountDropdownOpen && (
-              <div className="absolute right-0 bottom-full mb-1 z-20 w-32 bg-card border border-border rounded-xl shadow-lg p-1 space-y-0.5 animate-in fade-in zoom-in-95">
-                {[0, 5, 10, 15, 20].map((pct) => (
-                  <button
-                    key={pct}
-                    type="button"
-                    onClick={() => handleSelectDiscountPct(pct)}
-                    className={`w-full px-3 py-1.5 text-xs font-medium rounded-lg text-left transition-colors flex items-center justify-between ${
-                      discountValue === pct
-                        ? 'bg-primary text-white font-bold'
-                        : 'text-text-primary hover:bg-secondary/30'
-                    }`}
-                  >
-                    <span>{pct === 0 ? 'No discount' : `${pct}% off`}</span>
-                    {discountValue === pct && <span className="text-[10px]">✓</span>}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );

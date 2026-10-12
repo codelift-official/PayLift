@@ -201,9 +201,36 @@ export const DashboardPage: React.FC = () => {
     ];
   }, [range, summary]);
 
+  // Dynamic comparison with previous period
+  const { prevFromDate, prevToDate } = useMemo(() => {
+    const currentFrom = new Date(fromDate);
+    const currentTo = new Date(toDate);
+    const durationMs = Math.max(currentTo.getTime() - currentFrom.getTime(), 86400000);
+    const prevTo = new Date(currentFrom.getTime());
+    const prevFrom = new Date(prevTo.getTime() - durationMs);
+    return {
+      prevFromDate: prevFrom.toISOString(),
+      prevToDate: prevTo.toISOString(),
+    };
+  }, [fromDate, toDate]);
+
+  const { data: prevSummary } = useQuery({
+    queryKey: ['dashboard', 'prev-summary', range, assignedShopId, prevFromDate],
+    queryFn: () => reportsApi.getSummary({ fromDate: prevFromDate, toDate: prevToDate, shopID: assignedShopId }),
+    staleTime: Infinity,
+    gcTime: 1000 * 60 * 60 * 24,
+  });
+
   const hasRecords = Boolean(summary && summary.totalBills > 0 && summary.totalSales > 0);
-  const growthPct = hasRecords ? 24.3 : null;
-  const prevSales = hasRecords && growthPct !== null && summary ? summary.totalSales / (1 + growthPct / 100) : 0;
+  const prevSales = prevSummary?.totalSales ?? 0;
+  const currentSales = summary?.totalSales ?? 0;
+
+  const growthPct = useMemo(() => {
+    if (!hasRecords) return null;
+    if (prevSales <= 0) return null;
+    const delta = ((currentSales - prevSales) / prevSales) * 100;
+    return Number(delta.toFixed(1));
+  }, [hasRecords, currentSales, prevSales]);
 
   return (
     <div className="space-y-4">

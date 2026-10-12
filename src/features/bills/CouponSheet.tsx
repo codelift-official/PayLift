@@ -82,20 +82,14 @@ export const CouponSheet: React.FC<CouponSheetProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity p-0 sm:p-4"
-      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity p-3 sm:p-4"
     >
       <div
-        className="w-full sm:max-w-md bg-card rounded-t-3xl sm:rounded-2xl border border-border shadow-2xl overflow-hidden transition-all flex flex-col max-h-[85vh]"
+        className="w-full sm:max-w-md bg-card rounded-2xl border border-border shadow-2xl overflow-hidden transition-all flex flex-col max-h-[88vh] my-auto"
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Drag handle */}
-        <div className="sm:hidden pt-3 pb-1 flex justify-center">
-          <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full" />
-        </div>
-
         {/* Header */}
-        <div className="px-6 pt-3 pb-3 sm:pt-5 flex items-center justify-between border-b border-border/40">
+        <div className="px-6 py-4 flex items-center justify-between border-b border-border/40 shrink-0">
           <div className="flex items-center gap-2">
             <Ticket className="w-5 h-5 text-primary" />
             <h2 className="text-lg font-bold text-text-primary">Coupons & Offers</h2>

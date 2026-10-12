@@ -322,23 +322,17 @@ export const ProductPopup: React.FC<ProductPopupProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity p-0 sm:p-4"
-      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity p-3 sm:p-4"
       id="product-popup-backdrop"
       data-testid="product-popup-backdrop"
     >
       <div
-        className="w-full sm:max-w-lg bg-card rounded-t-3xl sm:rounded-2xl border border-border shadow-2xl overflow-hidden transition-all flex flex-col max-h-[85vh] h-[640px]"
+        className="w-full sm:max-w-lg bg-card rounded-2xl border border-border shadow-2xl overflow-hidden transition-all flex flex-col max-h-[90dvh] h-[600px] my-auto"
         onClick={(e) => e.stopPropagation()}
         id="product-popup-modal"
       >
-        {/* Mobile Drag Handle */}
-        <div className="sm:hidden pt-3 pb-1 flex justify-center">
-          <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-600 rounded-full" />
-        </div>
-
         {/* Modal Header */}
-        <div className="px-5 pt-3 pb-3 sm:pt-5 flex items-center justify-between border-b border-border/50">
+        <div className="px-5 py-3.5 sm:py-4 flex items-center justify-between border-b border-border/50 shrink-0">
           <div className="flex items-center gap-2.5">
             {viewMode !== 'search' && (
               <button
