@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { shopsApi } from '../../api/shops';
@@ -131,12 +131,12 @@ export const SettingsPage: React.FC = () => {
                 />
 
                 <SettingsRow
-                  to="/settings/shop"
+                  to={shopId ? `/settings/shop/${shopId}` : '/settings/shop'}
                   icon={<Store className="w-4 h-4" />}
                   iconBg="bg-emerald-50 dark:bg-emerald-950/30"
                   iconColor="text-emerald-600"
                   title="Shop Settings"
-                  subtitle="Branch POS policies & hardware preferences"
+                  subtitle="Branch GST, POS policies & hardware preferences"
                   dataTestId="settings-row-shop"
                 />
 

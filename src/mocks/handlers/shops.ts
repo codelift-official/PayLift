@@ -71,7 +71,10 @@ export const shopHandlers = [
   http.put('/api/v1/shops/:id/tax-settings', async ({ params, request }) => {
     const { id } = params;
     const body = (await request.json()) as any;
-    const shop = seedStore.shops.find((s) => s.id === id);
+    let shop = seedStore.shops.find((s) => s.id === id);
+    if (!shop && seedStore.shops.length > 0) {
+      shop = seedStore.shops[0];
+    }
     if (!shop) {
       return HttpResponse.json({ error: 'Shop not found' }, { status: 404 });
     }

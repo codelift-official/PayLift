@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
@@ -12,6 +12,7 @@ import { Card } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { getApiErrorMessage } from '../../lib/errors';
+import { apiClient } from '../../api/client';
 import {
   Store,
   MapPin,
@@ -22,6 +23,7 @@ import {
   Loader2,
   Percent,
   ShoppingCart,
+  AlertTriangle,
 } from 'lucide-react';
 
 // ─── Validation schema ────────────────────────────────────────────
@@ -29,7 +31,14 @@ const shopSchema = z.object({
   name: z.string().min(2, 'Shop name must be at least 2 characters'),
   address: z.string().min(5, 'Please enter a full address'),
   mobile: z.string().regex(/^\+?[\d\s\-()]{7,15}$/, 'Enter a valid phone number'),
-  gst: z.string().optional().or(z.literal('')),
+  gst: z
+    .string()
+    .optional()
+    .or(z.literal(''))
+    .refine(
+      (val) => !val || /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(val.trim().toUpperCase()),
+      'Invalid GSTIN format (must be 15 alphanumeric characters, e.g. 27AABCU9603R1ZM)'
+    ),
   gstEnabled: z.boolean().default(true),
   gstRate: z.coerce.number().min(0).max(100).default(18),
   gstInclusive: z.boolean().default(true),
@@ -186,14 +195,16 @@ export const ShopFormPage: React.FC = () => {
   const discountMode = watch('discountMode');
   const productSource = watch('productSource');
 
+  const [criticalErrors, setCriticalErrors] = useState<string[]>([]);
+
   // Create mutation
   const createMutation = useMutation({
-    mutationFn: (data: ShopFormValues) => {
+    mutationFn: async (data: ShopFormValues) => {
       const payload: CreateShopRequest = {
         name: data.name,
         address: data.address,
         mobile: data.mobile,
-        gst: data.gstEnabled ? (data.gst || null) : null,
+        gst: data.gstEnabled ? (data.gst?.trim().toUpperCase() || null) : null,
         gstEnabled: data.gstEnabled,
         gstRate: data.gstEnabled ? Number(data.gstRate || 0) : 0,
         gstInclusive: data.gstInclusive,
@@ -206,14 +217,29 @@ export const ShopFormPage: React.FC = () => {
         notificationEmail: data.notificationEmail || null,
         notificationSms: data.notificationSms ?? false,
       };
-      return shopsApi.createShop(payload);
+      const created = await shopsApi.createShop(payload);
+      if (created?.id) {
+        try {
+          await apiClient.put(`/shops/${created.id}/settings`, { key: 'DefaultGstRate', value: String(payload.gstRate ?? 18) });
+          await apiClient.put(`/shops/${created.id}/settings`, { key: 'PricesIncludeGst', value: String(payload.gstInclusive ?? true) });
+          await apiClient.put(`/shops/${created.id}/settings`, { key: 'ShopGstin', value: payload.gst || '' });
+          await apiClient.put(`/shops/${created.id}/settings`, { key: 'GstEnabled', value: String(payload.gstEnabled ?? true) });
+        } catch {
+          // silent sync
+        }
+      }
+      return created;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shops'] });
       toast.success('Shop created successfully!');
       navigate('/settings/shops');
     },
-    onError: (err) => toast.error(getApiErrorMessage(err)),
+    onError: (err) => {
+      const msg = getApiErrorMessage(err);
+      setCriticalErrors([msg]);
+      toast.error(msg);
+    },
   });
 
   // Update mutation
@@ -223,7 +249,7 @@ export const ShopFormPage: React.FC = () => {
         name: data.name,
         address: data.address,
         mobile: data.mobile,
-        gst: data.gstEnabled ? (data.gst || null) : null,
+        gst: data.gstEnabled ? (data.gst?.trim().toUpperCase() || null) : null,
         gstEnabled: data.gstEnabled,
         gstRate: data.gstEnabled ? Number(data.gstRate || 0) : 0,
         gstInclusive: data.gstInclusive,
@@ -248,19 +274,46 @@ export const ShopFormPage: React.FC = () => {
         discountMode: data.discountMode,
         productSource: data.productSource,
       });
+
+      // Also sync key-value settings for unified consistency
+      try {
+        await apiClient.put(`/shops/${id}/settings`, { key: 'DefaultGstRate', value: String(payload.gstRate ?? 18) });
+        await apiClient.put(`/shops/${id}/settings`, { key: 'PricesIncludeGst', value: String(payload.gstInclusive ?? true) });
+        await apiClient.put(`/shops/${id}/settings`, { key: 'ShopGstin', value: payload.gst || '' });
+        await apiClient.put(`/shops/${id}/settings`, { key: 'GstEnabled', value: String(payload.gstEnabled ?? true) });
+      } catch {
+        // silent sync
+      }
+
       return res;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shops'] });
+      queryClient.invalidateQueries({ queryKey: ['shop', id, 'settings'] });
       toast.success('Shop updated successfully!');
       navigate('/settings/shops');
     },
-    onError: (err) => toast.error(getApiErrorMessage(err)),
+    onError: (err) => {
+      const msg = getApiErrorMessage(err);
+      setCriticalErrors([msg]);
+      toast.error(msg);
+    },
   });
 
   const isPending = createMutation.isPending || updateMutation.isPending;
 
+  const onInvalid = (formErrors: any) => {
+    const errList = Object.entries(formErrors).map(([field, err]: any) => {
+      const fieldName = field.replace(/([A-Z])/g, ' $1').replace(/^./, (str: string) => str.toUpperCase());
+      return `${fieldName}: ${err?.message || 'Invalid value'}`;
+    });
+    setCriticalErrors(errList);
+    toast.error(`Critical validation error: ${errList[0] || 'Please fix the errors below'}`);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const onSubmit = (data: ShopFormValues) => {
+    setCriticalErrors([]);
     if (isEdit) {
       updateMutation.mutate(data);
     } else {
@@ -288,16 +341,36 @@ export const ShopFormPage: React.FC = () => {
           <Button
             variant="primary"
             size="sm"
-            onClick={handleSubmit(onSubmit)}
+            onClick={handleSubmit(onSubmit, onInvalid)}
             isLoading={isPending}
             className="hidden sm:inline-flex"
+            id="btn-save-shop-form-desktop"
           >
             {isEdit ? 'Save Changes' : 'Create Shop'}
           </Button>
         }
       />
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+      {/* Critical Validation Error Banner */}
+      {criticalErrors.length > 0 && (
+        <div
+          className="p-4 rounded-xl border border-rose-500/40 bg-rose-500/10 text-rose-600 dark:text-rose-400 space-y-2 shadow-sm"
+          id="critical-validation-banner"
+        >
+          <div className="flex items-center gap-2 font-bold text-sm">
+            <AlertTriangle className="w-5 h-5 text-rose-500 shrink-0" />
+            <span>Critical Store Settings Errors</span>
+          </div>
+          <p className="text-xs">The store settings cannot be saved until the following issues are resolved:</p>
+          <ul className="list-disc list-inside text-xs space-y-1 font-medium pl-1">
+            {criticalErrors.map((msg: string, idx: number) => (
+              <li key={idx}>{msg}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit(onSubmit, onInvalid)} className="space-y-5">
         {/* ── Basic Info ── */}
         <Card className="border-border shadow-card overflow-hidden" style={{ backgroundColor: 'var(--bg-card)' }}>
           <SectionHeader icon={<Store className="w-3.5 h-3.5" />} label="Basic Information" />
@@ -349,9 +422,14 @@ export const ShopFormPage: React.FC = () => {
               <div className="space-y-4 pt-2 border-t border-border">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <Input
-                    label="Shop GSTIN"
+                    label="Shop GSTIN (15 Digits)"
                     placeholder="27AABCU9603R1ZM"
-                    {...register('gst')}
+                    maxLength={15}
+                    {...register('gst', {
+                      onChange: (e) => {
+                        e.target.value = e.target.value.toUpperCase();
+                      },
+                    })}
                     error={errors.gst?.message}
                   />
 

@@ -33,20 +33,33 @@ export const ShopDetailsPage: React.FC = () => {
     }
   }, [activeShop]);
 
+  const [validationError, setValidationError] = useState<string | null>(null);
+
   const mutation = useMutation({
     mutationFn: () => {
+      const cleanGst = gst.trim().toUpperCase();
+      if (cleanGst) {
+        const gstinRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+        if (!gstinRegex.test(cleanGst)) {
+          setValidationError('Invalid GSTIN format. Must be 15 alphanumeric characters (e.g. 27AABCU9603R1ZM).');
+          throw new Error('Invalid GSTIN format. Must be 15 alphanumeric characters (e.g. 27AABCU9603R1ZM).');
+        }
+      }
+      setValidationError(null);
+
       const effectiveId = (shops?.some((s) => s.id === shopID) ? shopID : undefined) || activeShop?.id || shops?.[0]?.id;
       if (!effectiveId) throw new Error('No valid shop found');
       return shopsApi.updateShop(effectiveId, {
         name,
         address,
         mobile,
-        gst: gst || null,
+        gst: cleanGst || null,
       });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shops'] });
       toast.success('Shop profile updated');
+      setValidationError(null);
     },
     onError: (err: any) => {
       toast.error(err.message || 'Failed to update shop');
@@ -130,11 +143,20 @@ export const ShopDetailsPage: React.FC = () => {
             </label>
             <input
               type="text"
+              maxLength={15}
               value={gst}
-              onChange={(e) => setGst(e.target.value)}
+              onChange={(e) => {
+                setGst(e.target.value.toUpperCase());
+                setValidationError(null);
+              }}
               placeholder="e.g. 27AABCU9603R1ZM"
-              className="w-full text-sm border border-border rounded-input px-3.5 py-2.5 uppercase focus:outline-none focus:ring-1 focus:ring-primary"
+              className={`w-full text-sm border rounded-input px-3.5 py-2.5 uppercase focus:outline-none focus:ring-1 ${
+                validationError ? 'border-rose-500 focus:ring-rose-500 bg-rose-50/20' : 'border-border focus:ring-primary'
+              }`}
             />
+            {validationError && (
+              <p className="text-xs text-rose-500 mt-1 font-medium">{validationError}</p>
+            )}
           </div>
         </div>
       </Card>

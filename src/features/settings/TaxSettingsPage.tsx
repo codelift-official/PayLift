@@ -32,6 +32,8 @@ export const TaxSettingsPage: React.FC = () => {
     }
   }, [activeShop]);
 
+  const [validationError, setValidationError] = useState<string | null>(null);
+
   const mutation = useMutation({
     mutationFn: async () => {
       if (!shopId) throw new Error('No active shop found');
@@ -39,7 +41,7 @@ export const TaxSettingsPage: React.FC = () => {
         name: activeShop?.name || 'Main Shop',
         address: activeShop?.address || 'Main Address',
         mobile: activeShop?.mobile || '9999999999',
-        gst: gst.trim(),
+        gst: gst.trim().toUpperCase() || null,
         gstEnabled,
         gstRate: Number(gstRate),
         gstInclusive,
@@ -47,7 +49,9 @@ export const TaxSettingsPage: React.FC = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shops'] });
+      queryClient.invalidateQueries({ queryKey: ['shop', shopId, 'settings'] });
       toast.success('Tax and GST settings saved successfully');
+      setValidationError(null);
     },
     onError: (err: any) => {
       toast.error(err.response?.data?.message || 'Failed to save tax settings');
@@ -55,6 +59,16 @@ export const TaxSettingsPage: React.FC = () => {
   });
 
   const handleSave = () => {
+    const cleanGst = gst.trim().toUpperCase();
+    if (gstEnabled && cleanGst) {
+      const gstinRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+      if (!gstinRegex.test(cleanGst)) {
+        setValidationError('Invalid GSTIN format. Must be 15 alphanumeric characters (e.g. 27AABCU9603R1ZM).');
+        toast.error('Critical Error: Invalid GSTIN format (15 characters required)');
+        return;
+      }
+    }
+    setValidationError(null);
     mutation.mutate();
   };
 
@@ -158,10 +172,20 @@ export const TaxSettingsPage: React.FC = () => {
                   placeholder="e.g. 07AAAAA0000A1Z5"
                   maxLength={15}
                   value={gst}
-                  onChange={(e) => setGst(e.target.value.toUpperCase())}
-                  className="w-full text-sm font-mono border border-border rounded-input px-3.5 py-2 focus:outline-none focus:ring-1 focus:ring-primary"
+                  onChange={(e) => {
+                    setGst(e.target.value.toUpperCase());
+                    setValidationError(null);
+                  }}
+                  className={`w-full text-sm font-mono border rounded-input px-3.5 py-2 focus:outline-none focus:ring-1 ${
+                    validationError ? 'border-rose-500 focus:ring-rose-500 bg-rose-50/20' : 'border-border focus:ring-primary'
+                  }`}
                   id="input-tax-gstin"
                 />
+                {validationError && (
+                  <p className="text-xs text-rose-500 mt-1 font-medium" id="tax-gstin-error">
+                    {validationError}
+                  </p>
+                )}
               </div>
             </>
           )}

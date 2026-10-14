@@ -323,7 +323,7 @@ export const App: React.FC = () => {
             }
           />
           <Route
-            path="/settings/shop/:shopID"
+            path="/settings/shop-profile/:shopID"
             element={
               <ProtectedRoute requiredRole={['BusinessAdmin']}>
                 <ShopDetailsPage />
@@ -486,30 +486,6 @@ export const App: React.FC = () => {
             element={
               <ProtectedRoute requiredRole={['BusinessAdmin', 'Manager']}>
                 <OfferDetailPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/settings/shops"
-            element={
-              <ProtectedRoute requiredRole={['BusinessAdmin']}>
-                <ShopsPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/settings/shops/new"
-            element={
-              <ProtectedRoute requiredRole={['BusinessAdmin']}>
-                <ShopFormPage />
-              </ProtectedRoute>
-            }
-          />
-          <Route
-            path="/settings/shops/:id"
-            element={
-              <ProtectedRoute requiredRole={['BusinessAdmin']}>
-                <ShopFormPage />
               </ProtectedRoute>
             }
           />

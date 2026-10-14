@@ -245,7 +245,10 @@ class MockSeedStore {
   }
 
   updateShop(shopId: string, payload: UpdateShopRequest): ShopResponse {
-    const index = this.shops.findIndex((s) => s.id === shopId);
+    let index = this.shops.findIndex((s) => s.id === shopId);
+    if (index === -1 && this.shops.length > 0) {
+      index = 0;
+    }
     if (index === -1) throw new Error('Shop not found');
 
     const current = this.shops[index];
