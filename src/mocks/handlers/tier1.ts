@@ -312,13 +312,41 @@ export const tier1Handlers = [
   }),
 
   // Platform Auth
-  http.post('*/platform/auth/login', () => {
+  http.post('*/platform/auth/login', async ({ request }) => {
+    let body: any = {};
+    try {
+      body = await request.json();
+    } catch {
+      body = {};
+    }
+
+    const email = (body?.email || '').toLowerCase().trim();
+
+    // Only allow platform super admin emails - reject business logins!
+    const isPlatformEmail =
+      email === 'admin@billify.internal' ||
+      email === 'admin@sahayak.internal' ||
+      email === 'superadmin@billify.com' ||
+      email.endsWith('@billify.internal') ||
+      email.endsWith('@sahayak.internal');
+
+    if (!isPlatformEmail) {
+      return HttpResponse.json(
+        {
+          error: 'Forbidden',
+          message:
+            'Access denied: Business user credentials cannot be used for Platform Super Admin login. Please sign in via the Store POS login page.',
+        },
+        { status: 403 }
+      );
+    }
+
     return HttpResponse.json({
       accessToken: 'mock-platform-jwt-token',
       refreshToken: 'mock-platform-refresh-token',
       user: {
         id: 'admin-1',
-        email: 'admin@billify.internal',
+        email: email || 'admin@billify.internal',
         name: 'Platform Super Admin',
         role: 'SuperAdmin',
       },

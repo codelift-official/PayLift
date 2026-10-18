@@ -10,6 +10,8 @@ export const PlatformProtectedRoute: React.FC<{ children: React.ReactNode }> = (
   const isAuthenticated = usePlatformAuthStore((s) => s.isAuthenticated);
   const isHydrated = usePlatformAuthStore((s) => s.isHydrated);
 
+  const user = usePlatformAuthStore((s) => s.user);
+
   if (!isHydrated) {
     return (
       <div className="flex h-screen items-center justify-center" data-testid="platform-hydrating-spinner">
@@ -18,7 +20,9 @@ export const PlatformProtectedRoute: React.FC<{ children: React.ReactNode }> = (
     );
   }
 
-  if (!isAuthenticated) {
+  const isSuperAdmin = !!user && (user.role === 'SuperAdmin' || user.role === 'PlatformAdmin');
+
+  if (!isAuthenticated || !isSuperAdmin) {
     return <Navigate to="/platform/login" state={{ from: location }} replace />;
   }
 

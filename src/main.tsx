@@ -1,4 +1,5 @@
 import { usePlatformAuthStore } from './platform/store/platformAuthStore';
+import { useAuthStore } from './stores/auth.store';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
@@ -25,8 +26,9 @@ if (import.meta.env.VITE_SENTRY_DSN) {
   });
 }
 
-// Hydrate platform auth store before mounting
+// Hydrate auth stores before mounting
 usePlatformAuthStore.getState().hydrate();
+useAuthStore.getState().hydrate();
 
 async function enableMocking() {
   if (import.meta.env.VITE_USE_MOCKS === 'true') {

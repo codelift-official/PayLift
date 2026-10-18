@@ -26,6 +26,10 @@ const STORAGE_KEYS = {
   IMP_BACKUP: 'platform_imp_backup',
 };
 
+export const isPlatformUserRole = (user: PlatformUser | null): boolean => {
+  return !!user && (user.role === 'SuperAdmin' || user.role === 'PlatformAdmin');
+};
+
 export const usePlatformAuthStore = create<PlatformAuthState>((set) => {
   // Read initial sync if in browser
   let initialAt: string | null = null;
@@ -39,9 +43,16 @@ export const usePlatformAuthStore = create<PlatformAuthState>((set) => {
       initialRt = localStorage.getItem(STORAGE_KEYS.RT);
       const rawUser = localStorage.getItem(STORAGE_KEYS.USER);
       if (rawUser) {
-        initialUser = JSON.parse(rawUser);
+        const parsed = JSON.parse(rawUser);
+        if (isPlatformUserRole(parsed)) {
+          initialUser = parsed;
+        } else {
+          localStorage.removeItem(STORAGE_KEYS.USER);
+          localStorage.removeItem(STORAGE_KEYS.AT);
+          localStorage.removeItem(STORAGE_KEYS.RT);
+        }
       }
-      initialAuth = !!(initialAt && initialUser);
+      initialAuth = !!(initialAt && initialUser && isPlatformUserRole(initialUser));
     } catch {
       // Ignore JSON parse error
     }
@@ -67,16 +78,19 @@ export const usePlatformAuthStore = create<PlatformAuthState>((set) => {
     },
 
     setUser: (user: PlatformUser | null) => {
+      const isPlatform = isPlatformUserRole(user);
       if (typeof window !== 'undefined') {
-        if (user) {
+        if (user && isPlatform) {
           localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user));
         } else {
           localStorage.removeItem(STORAGE_KEYS.USER);
+          localStorage.removeItem(STORAGE_KEYS.AT);
+          localStorage.removeItem(STORAGE_KEYS.RT);
         }
       }
       set({
-        user,
-        isAuthenticated: !!user,
+        user: isPlatform ? user : null,
+        isAuthenticated: isPlatform,
       });
     },
 
@@ -102,7 +116,7 @@ export const usePlatformAuthStore = create<PlatformAuthState>((set) => {
         const userStr = localStorage.getItem(STORAGE_KEYS.USER);
         const user = userStr ? JSON.parse(userStr) : null;
 
-        if (at && user) {
+        if (at && isPlatformUserRole(user)) {
           set({
             accessToken: at,
             refreshToken: rt,
@@ -111,6 +125,9 @@ export const usePlatformAuthStore = create<PlatformAuthState>((set) => {
             isHydrated: true,
           });
         } else {
+          localStorage.removeItem(STORAGE_KEYS.AT);
+          localStorage.removeItem(STORAGE_KEYS.RT);
+          localStorage.removeItem(STORAGE_KEYS.USER);
           set({
             accessToken: null,
             refreshToken: null,

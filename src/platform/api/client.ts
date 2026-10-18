@@ -92,7 +92,14 @@ platformApiClient.interceptors.response.use(
       originalRequest._retry = true;
 
       const refreshToken = usePlatformAuthStore.getState().refreshToken;
-      if (!refreshToken || refreshToken.startsWith('mock-')) {
+      if (!refreshToken) {
+        usePlatformAuthStore.getState().logout();
+        if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/platform/login')) {
+          window.location.replace('/platform/login');
+        }
+        return Promise.reject(error);
+      }
+      if (refreshToken.startsWith('mock-')) {
         return Promise.reject(error);
       }
 
