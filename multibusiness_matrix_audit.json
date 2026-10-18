@@ -1,0 +1,41 @@
+[
+  {
+    "branch": "Jai Ambe",
+    "industry": "Boutique & Luxury Apparel",
+    "shopId": "462b77d0-b0e8-4427-9b1b-1d63af8f56da",
+    "settingsVerified": false,
+    "customerMandatoryPolicyCompliant": true,
+    "billCreatedSuccessfully": true,
+    "billNumber": "000158",
+    "billTotal": 15700,
+    "roundingMode": "floor",
+    "pricesIncludeGst": "true",
+    "exchangePolicyDays": "30"
+  },
+  {
+    "branch": "Zenith Tech",
+    "industry": "High-Ticket Electronics & B2B Gadgets",
+    "shopId": "60887329-6a81-4d99-b9a6-95c4dc54693a",
+    "settingsVerified": false,
+    "customerMandatoryPolicyCompliant": true,
+    "billCreatedSuccessfully": true,
+    "billNumber": "000001",
+    "billTotal": 89998,
+    "roundingMode": "none",
+    "pricesIncludeGst": "false",
+    "exchangePolicyDays": "15"
+  },
+  {
+    "branch": "Metro Hypermarket",
+    "industry": "Fast-Moving FMCG & Supermarket",
+    "shopId": "f66238d5-aad8-49ff-8557-efac60bb66f6",
+    "settingsVerified": false,
+    "customerMandatoryPolicyCompliant": true,
+    "billCreatedSuccessfully": true,
+    "billNumber": "000002",
+    "billTotal": 830,
+    "roundingMode": "round",
+    "pricesIncludeGst": "true",
+    "exchangePolicyDays": "7"
+  }
+]
