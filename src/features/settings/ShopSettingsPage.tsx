@@ -43,7 +43,7 @@ export const ShopSettingsPage: React.FC = () => {
     DefaultGstRate: '18',
     PricesIncludeGst: 'true',
     RoundingMode: 'round',
-    DiscountMode: 'flat',
+    DiscountMode: 'both',
     ProductSource: 'both',
     CouponStackingEnabled: 'false',
     CustomerRecommendEnabled: 'true',
@@ -71,8 +71,8 @@ export const ShopSettingsPage: React.FC = () => {
         PricesIncludeGst: String(activeShop.gstInclusive ?? prev.PricesIncludeGst ?? 'true'),
         CustomerMandatory: String(activeShop.customerMandatory ?? prev.CustomerMandatory ?? 'false'),
         CustomerRecommendEnabled: String(activeShop.customerRecommendEnabled ?? prev.CustomerRecommendEnabled ?? 'true'),
-        DiscountMode: activeShop.discountMode === 'Amount' ? 'flat' : prev.DiscountMode || 'percentage',
-        ProductSource: activeShop.productSource === 'Store' ? 'local' : activeShop.productSource === 'Generic' ? 'master' : prev.ProductSource || 'both',
+        DiscountMode: activeShop.discountMode === 'Amount' ? 'bill' : prev.DiscountMode || 'both',
+        ProductSource: activeShop.productSource === 'Store' ? 'catalog' : activeShop.productSource === 'Generic' ? 'manual' : prev.ProductSource || 'both',
         ExchangePolicyDays: String(activeShop.exchangePolicyDays ?? prev.ExchangePolicyDays ?? '14'),
         ReceiptFooter: activeShop.receiptFooter ?? prev.ReceiptFooter ?? 'Thank you for shopping with us!',
         PrinterType: activeShop.printerType ?? prev.PrinterType ?? 'Thermal',
@@ -176,11 +176,11 @@ export const ShopSettingsPage: React.FC = () => {
           gstInclusive: isPricesInc,
           customerRecommendEnabled: updatedSettings.CustomerRecommendEnabled?.toLowerCase() === 'true',
           customerMandatory: updatedSettings.CustomerMandatory?.toLowerCase() === 'true',
-          discountMode: updatedSettings.DiscountMode === 'flat' ? 'Amount' : 'Percentage',
+          discountMode: updatedSettings.DiscountMode === 'item' ? 'Percentage' : 'Amount',
           productSource:
-            updatedSettings.ProductSource === 'local'
+            updatedSettings.ProductSource === 'catalog'
               ? 'Store'
-              : updatedSettings.ProductSource === 'master'
+              : updatedSettings.ProductSource === 'manual'
               ? 'Generic'
               : 'Mix',
         });
@@ -640,7 +640,7 @@ export const ShopSettingsPage: React.FC = () => {
                 </label>
                 <select
                   id="select-discount-mode"
-                  value={formData.DiscountMode || 'flat'}
+                  value={formData.DiscountMode || 'both'}
                   onChange={(e) => handleInputChange('DiscountMode', e.target.value)}
                   className="w-full px-3 py-2 text-sm rounded-md border focus:ring-2 focus:ring-primary focus:outline-none"
                   style={{
@@ -649,12 +649,12 @@ export const ShopSettingsPage: React.FC = () => {
                     color: 'var(--text-primary)',
                   }}
                 >
-                  <option value="flat">Flat discount only</option>
-                  <option value="percentage">Percentage only</option>
-                  <option value="both">Both flat and percentage</option>
+                  <option value="both">Both item & bill discounts</option>
+                  <option value="item">Line-item discounts only</option>
+                  <option value="bill">Overall bill discount only</option>
                 </select>
                 <p className="text-[11px] mt-1" style={{ color: 'var(--text-muted)' }}>
-                  Discount calculation mode at checkout.
+                  Permitted discount levels during POS checkout.
                 </p>
               </div>
 
@@ -673,12 +673,12 @@ export const ShopSettingsPage: React.FC = () => {
                     color: 'var(--text-primary)',
                   }}
                 >
-                  <option value="local">Local shop inventory only</option>
-                  <option value="master">Global enterprise catalog only</option>
-                  <option value="both">Search both local and central catalog</option>
+                  <option value="both">Both catalog & custom items</option>
+                  <option value="catalog">Store catalog items only</option>
+                  <option value="manual">Custom / manual items only</option>
                 </select>
                 <p className="text-[11px] mt-1" style={{ color: 'var(--text-muted)' }}>
-                  Barcode search catalog priority.
+                  Product lookup and barcode source restrictions.
                 </p>
               </div>
             </div>

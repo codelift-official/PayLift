@@ -1,0 +1,210 @@
+{
+  "summary": {
+    "total": 33,
+    "passed": 33,
+    "failed": 0,
+    "passRate": "100%",
+    "timestamp": "2026-10-18T08:16:21.420Z"
+  },
+  "bugs": [],
+  "testResults": [
+    {
+      "category": "Auth",
+      "testName": "Tenant A Authentication",
+      "passed": true,
+      "details": "Status: 200"
+    },
+    {
+      "category": "Multi-Tenant",
+      "testName": "Tenant A Fetch Shops",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "category": "Multi-Tenant",
+      "testName": "Cross-Tenant Header Rejection or Scoped Isolation",
+      "passed": true,
+      "details": "Status: 200"
+    },
+    {
+      "category": "Sequencing",
+      "testName": "Concurrent Bill Creation Succeeded (3/3)",
+      "passed": true,
+      "details": "Created: 3"
+    },
+    {
+      "category": "Sequencing",
+      "testName": "Bill Numbers are Strictly Unique without Collision",
+      "passed": true,
+      "details": "Nums: 000151, 000152, 000153"
+    },
+    {
+      "category": "Sequencing",
+      "testName": "Bill Number Format Standardized (>= 4 digits/characters)",
+      "passed": true,
+      "details": "Sample: 000151"
+    },
+    {
+      "category": "Big Orders",
+      "testName": "High Value Order (₹10,00,000 / 25 Line Items) Created",
+      "passed": true,
+      "details": "Status: 201"
+    },
+    {
+      "category": "Big Orders",
+      "testName": "Subtotal Equals ₹10,00,000 Without Floating-Point Truncation",
+      "passed": true,
+      "details": "Recorded: ₹1000000"
+    },
+    {
+      "category": "Big Orders",
+      "testName": "Line Items Preserved Exactly (25 Items in Payload)",
+      "passed": true,
+      "details": "Lines: 25"
+    },
+    {
+      "category": "Settings: StrictStockMode",
+      "testName": "StrictStock ON Blocks Overdraft (qty 5 > stock 2)",
+      "passed": true,
+      "details": "Status: 400"
+    },
+    {
+      "category": "Settings: StrictStockMode",
+      "testName": "StrictStock OFF Permits Checkout (qty 5 > stock 2)",
+      "passed": true,
+      "details": "Status: 201"
+    },
+    {
+      "category": "Settings: CustomerMandatory",
+      "testName": "CustomerMandatory setting successfully written and read",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "category": "Settings: GST Calculation",
+      "testName": "Quote API evaluates tax breakdown correctly",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "category": "Settings: RoundingMode",
+      "testName": "RoundingMode set to \"round\" successfully",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "category": "Settings: RoundingMode",
+      "testName": "RoundingMode set to \"floor\" successfully",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "category": "Settings: RoundingMode",
+      "testName": "RoundingMode set to \"ceil\" successfully",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "category": "Settings: RoundingMode",
+      "testName": "RoundingMode set to \"none\" successfully",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "category": "Settings: DiscountMode",
+      "testName": "DiscountMode set to \"item\" successfully",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "category": "Settings: DiscountMode",
+      "testName": "DiscountMode set to \"bill\" successfully",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "category": "Settings: DiscountMode",
+      "testName": "DiscountMode set to \"both\" successfully",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "category": "Settings: ProductSource",
+      "testName": "ProductSource set to \"catalog\" successfully",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "category": "Settings: ProductSource",
+      "testName": "ProductSource set to \"manual\" successfully",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "category": "Settings: ProductSource",
+      "testName": "ProductSource set to \"both\" successfully",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "category": "Settings: CouponStacking",
+      "testName": "AllowCouponStacking enabled on business",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "category": "Settings: StrictBillingMode",
+      "testName": "StrictBillingMode set to false",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "category": "Returns",
+      "testName": "Return 1 Unit Recorded (Status 201)",
+      "passed": true,
+      "details": "Status: 201"
+    },
+    {
+      "category": "Returns",
+      "testName": "Stock Invariant: Restored exactly 1 unit (7 + 1 = 8)",
+      "passed": true,
+      "details": "Stock: 8"
+    },
+    {
+      "category": "Returns",
+      "testName": "Excess Return Beyond Remaining Balance Rejected (HTTP 400)",
+      "passed": true,
+      "details": "Status: 400"
+    },
+    {
+      "category": "Subscriptions",
+      "testName": "Fetch Tenant Subscription Profile (/api/v1/businesses/subscription)",
+      "passed": true,
+      "details": "Plan: Starter"
+    },
+    {
+      "category": "Subscriptions",
+      "testName": "Alias Route /api/v1/subscription Functional",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "category": "Reports",
+      "testName": "Fetch Daily Reports Summary",
+      "passed": true,
+      "details": ""
+    },
+    {
+      "category": "Reports",
+      "testName": "Daily Sales Aggregate Non-Negative",
+      "passed": true,
+      "details": "Sales: ₹3619836"
+    },
+    {
+      "category": "Reports",
+      "testName": "Total Bills Count Matches Activity",
+      "passed": true,
+      "details": "Bills: 93"
+    }
+  ]
+}
