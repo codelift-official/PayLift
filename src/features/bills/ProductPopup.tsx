@@ -13,6 +13,7 @@ export interface ProductPopupProps {
     unit?: string;
     gstRate?: number;
     catalogPrice?: number;
+    availableStock?: number;
     qty?: number;
   }) => void;
   onUpdateItemQty?: (identifier: { id?: string; name: string }, qty: number) => void;
@@ -21,6 +22,7 @@ export interface ProductPopupProps {
   recentProducts?: Product[];
   shopProductSource?: 'Store' | 'Generic' | 'Mix';
   effectiveShopGstRate?: number;
+  stockMap?: Map<string, number>;
 }
 
 export const ProductPopup: React.FC<ProductPopupProps> = ({
@@ -33,6 +35,7 @@ export const ProductPopup: React.FC<ProductPopupProps> = ({
   recentProducts = [],
   shopProductSource = 'Store',
   effectiveShopGstRate = 0,
+  stockMap,
 }) => {
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
@@ -51,7 +54,33 @@ export const ProductPopup: React.FC<ProductPopupProps> = ({
   const [manualQty, setManualQty] = useState('1');
   const [manualError, setManualError] = useState('');
 
+  const [viewportHeight, setViewportHeight] = useState<number | null>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  // Dynamic visualViewport tracking for mobile virtual keyboard
+  useEffect(() => {
+    if (!isOpen || typeof window === 'undefined') return;
+
+    const handleViewportChange = () => {
+      if (window.visualViewport) {
+        setViewportHeight(window.visualViewport.height);
+      }
+    };
+
+    handleViewportChange();
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportChange);
+      window.visualViewport.addEventListener('scroll', handleViewportChange);
+    }
+
+    return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleViewportChange);
+        window.visualViewport.removeEventListener('scroll', handleViewportChange);
+      }
+    };
+  }, [isOpen]);
 
   // Lock body scroll when popup is open
   useEffect(() => {
@@ -160,6 +189,7 @@ export const ProductPopup: React.FC<ProductPopupProps> = ({
   if (!isOpen) return null;
 
   const handleAddItem = (prod: any, qty = 1) => {
+    const stockQty = prod.id && stockMap ? stockMap.get(prod.id) : undefined;
     onAddProduct({
       id: prod.id,
       name: prod.name,
@@ -168,6 +198,7 @@ export const ProductPopup: React.FC<ProductPopupProps> = ({
       unit: prod.unit,
       gstRate: prod.gstRate ?? effectiveShopGstRate,
       catalogPrice: prod.sellingPrice || prod.price,
+      availableStock: stockQty,
       qty,
     });
   };
@@ -229,6 +260,7 @@ export const ProductPopup: React.FC<ProductPopupProps> = ({
     const price = prod.sellingPrice ?? prod.price ?? 0;
     const safeKey = prod.id || prod.name;
     const slug = prod.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+    const stockQty = prod.id && stockMap ? stockMap.get(prod.id) : undefined;
 
     return (
       <div
@@ -254,10 +286,21 @@ export const ProductPopup: React.FC<ProductPopupProps> = ({
               </span>
             )}
           </div>
-          <div className="text-xs text-text-muted mt-0.5 flex items-center gap-2">
+          <div className="text-xs text-text-muted mt-0.5 flex items-center gap-2 flex-wrap">
             <span className="font-semibold text-text-primary">₹{price}</span>
             {prod.unit && <span>· {prod.unit}</span>}
             {prod.category && <span>· {prod.category}</span>}
+            {stockQty !== undefined && (
+              <span
+                className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${
+                  stockQty <= 0
+                    ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 font-bold'
+                    : 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300'
+                }`}
+              >
+                {stockQty <= 0 ? 'Out of stock' : `${stockQty} in stock`}
+              </span>
+            )}
           </div>
         </div>
 
@@ -322,12 +365,21 @@ export const ProductPopup: React.FC<ProductPopupProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity p-3 sm:p-4"
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity p-2 sm:p-4 overflow-y-auto"
       id="product-popup-backdrop"
       data-testid="product-popup-backdrop"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          onClose();
+        }
+      }}
     >
       <div
-        className="w-full sm:max-w-lg bg-card rounded-2xl border border-border shadow-2xl overflow-hidden transition-all flex flex-col max-h-[90dvh] h-[600px] my-auto"
+        className="w-full sm:max-w-lg bg-card rounded-2xl border border-border shadow-2xl overflow-hidden transition-all flex flex-col mt-1 sm:my-auto shrink-0 animate-in fade-in zoom-in-95 duration-150"
+        style={{
+          maxHeight: viewportHeight ? `${Math.min(viewportHeight - 16, 620)}px` : 'min(92dvh, 620px)',
+          height: viewportHeight ? `${Math.min(viewportHeight - 16, 600)}px` : 'min(88dvh, 600px)',
+        }}
         onClick={(e) => e.stopPropagation()}
         id="product-popup-modal"
       >

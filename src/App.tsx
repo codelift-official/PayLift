@@ -53,7 +53,6 @@ import { PlatformDashboard } from './platform/pages/PlatformDashboard';
 import { BusinessListPage } from './platform/pages/BusinessListPage';
 import { BusinessDetailPage } from './platform/pages/BusinessDetailPage';
 import { CreateBusinessPage } from './platform/pages/CreateBusinessPage';
-import { TaxSettingsPage } from './features/settings/TaxSettingsPage';
 import { DeploymentsPage } from './platform/pages/DeploymentsPage';
 import { SupportTicketsPage } from './platform/pages/SupportTicketsPage';
 import { AuditLogPage } from './platform/pages/AuditLogPage';
@@ -62,7 +61,6 @@ import { WhatsAppSettingsPage } from './features/settings/whatsapp/WhatsAppSetti
 import { WhatsAppDashboardPage } from './features/settings/whatsapp/WhatsAppDashboardPage';
 
 // Phase 11 Pages
-import { InventorySettingsPage } from './features/settings/inventory/InventorySettingsPage';
 import { ProductsListPage } from './features/settings/products/ProductsListPage';
 import { ProductFormPage } from './features/settings/products/ProductFormPage';
 import { ProductCategoriesPage } from './features/settings/products/ProductCategoriesPage';
@@ -338,24 +336,9 @@ export const App: React.FC = () => {
               </ProtectedRoute>
             }
           />
-          {/* Phase 11: Inventory Settings */}
-          <Route
-            path="/settings/inventory"
-            element={
-              <ProtectedRoute requiredRole={['BusinessAdmin']}>
-                <InventorySettingsPage />
-              </ProtectedRoute>
-            }
-          />
-          {/* Tax & GST Settings */}
-          <Route
-            path="/settings/tax"
-            element={
-              <ProtectedRoute requiredRole={['BusinessAdmin']}>
-                <TaxSettingsPage />
-              </ProtectedRoute>
-            }
-          />
+          {/* Redirect redundant settings routes to canonical unified pages */}
+          <Route path="/settings/inventory" element={<Navigate to="/settings/business" replace />} />
+          <Route path="/settings/tax" element={<Navigate to="/settings/shop" replace />} />
           {/* Phase 11: Products & Categories */}
           <Route
             path="/settings/products"

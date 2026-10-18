@@ -218,102 +218,102 @@ export const ReportsPage: React.FC = () => {
           ))}
         </div>
       ) : (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {/* Gross Sales */}
-          <Card className="p-4 border-border shadow-card flex flex-col justify-between" style={{ backgroundColor: 'var(--bg-card)' }}>
-            <div className="flex items-center justify-between text-text-muted">
-              <span className="text-xs font-semibold uppercase tracking-wider">Gross Sales</span>
-              <TrendingUp className="w-4 h-4 text-primary" />
+          <Card className="p-3.5 sm:p-4 border-border shadow-card flex flex-col justify-between min-w-0 overflow-hidden" style={{ backgroundColor: 'var(--bg-card)' }}>
+            <div className="flex items-center justify-between text-text-muted gap-1 min-w-0">
+              <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider truncate">Gross Sales</span>
+              <TrendingUp className="w-4 h-4 text-primary shrink-0" />
             </div>
-            <div className="mt-3">
-              <Money value={summary?.totalSales ?? 0} size="display" />
-              <p className="text-[11px] text-text-muted mt-1">{summary?.totalBills ?? 0} bills total</p>
+            <div className="mt-2.5 sm:mt-3 min-w-0 overflow-hidden">
+              <Money value={summary?.totalSales ?? 0} size="display" className="block max-w-full truncate" />
+              <p className="text-[10px] sm:text-[11px] text-text-muted mt-1 truncate">{summary?.totalBills ?? 0} bills total</p>
             </div>
           </Card>
 
           {/* Net Sales */}
-          <Card className="p-4 border-border shadow-card flex flex-col justify-between" style={{ backgroundColor: 'var(--bg-card)' }}>
-            <div className="flex items-center justify-between text-text-muted">
-              <span className="text-xs font-semibold uppercase tracking-wider">Net Sales</span>
-              <IndianRupee className="w-4 h-4 text-success" />
+          <Card className="p-3.5 sm:p-4 border-border shadow-card flex flex-col justify-between min-w-0 overflow-hidden" style={{ backgroundColor: 'var(--bg-card)' }}>
+            <div className="flex items-center justify-between text-text-muted gap-1 min-w-0">
+              <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider truncate">Net Sales</span>
+              <IndianRupee className="w-4 h-4 text-success shrink-0" />
             </div>
-            <div className="mt-3">
-              <div className="text-success">
-                <Money value={summary?.netSales ?? 0} size="display" />
+            <div className="mt-2.5 sm:mt-3 min-w-0 overflow-hidden">
+              <div className="text-success min-w-0 overflow-hidden">
+                <Money value={summary?.netSales ?? 0} size="display" className="block max-w-full truncate" />
               </div>
-              <p className="text-[11px] text-text-muted mt-1">Realized revenue</p>
+              <p className="text-[10px] sm:text-[11px] text-text-muted mt-1 truncate">Realized revenue</p>
             </div>
           </Card>
 
           {/* Returns */}
-          <Card className="p-4 border-border shadow-card flex flex-col justify-between" style={{ backgroundColor: 'var(--bg-card)' }}>
-            <div className="flex items-center justify-between text-text-muted">
-              <span className="text-xs font-semibold uppercase tracking-wider">Returns</span>
-              <RotateCcw className="w-4 h-4 text-danger" />
+          <Card className="p-3.5 sm:p-4 border-border shadow-card flex flex-col justify-between min-w-0 overflow-hidden" style={{ backgroundColor: 'var(--bg-card)' }}>
+            <div className="flex items-center justify-between text-text-muted gap-1 min-w-0">
+              <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider truncate">Returns</span>
+              <RotateCcw className="w-4 h-4 text-danger shrink-0" />
             </div>
-            <div className="mt-3 text-danger">
-              <Money value={summary?.returns ?? 0} size="display" negative />
-              <p className="text-[11px] text-text-muted mt-1">Total refunds processed</p>
+            <div className="mt-2.5 sm:mt-3 min-w-0 overflow-hidden text-danger">
+              <Money value={summary?.returns ?? 0} size="display" negative className="block max-w-full truncate" />
+              <p className="text-[10px] sm:text-[11px] text-text-muted mt-1 truncate">Total refunds processed</p>
             </div>
           </Card>
 
           {/* GST Collected */}
-          <Card className="p-4 border-border shadow-card flex flex-col justify-between" style={{ backgroundColor: 'var(--bg-card)' }}>
-            <div className="flex items-center justify-between text-text-muted">
-              <span className="text-xs font-semibold uppercase tracking-wider">GST Collected</span>
-              <Receipt className="w-4 h-4 text-blue-600" />
+          <Card className="p-3.5 sm:p-4 border-border shadow-card flex flex-col justify-between min-w-0 overflow-hidden" style={{ backgroundColor: 'var(--bg-card)' }}>
+            <div className="flex items-center justify-between text-text-muted gap-1 min-w-0">
+              <span className="text-[11px] sm:text-xs font-semibold uppercase tracking-wider truncate">GST Collected</span>
+              <Receipt className="w-4 h-4 text-blue-600 shrink-0" />
             </div>
-            <div className="mt-3">
-              <Money value={summary?.gstCollected ?? 0} size="display" />
-              <p className="text-[11px] text-text-muted mt-1">Output tax payable</p>
+            <div className="mt-2.5 sm:mt-3 min-w-0 overflow-hidden">
+              <Money value={summary?.gstCollected ?? 0} size="display" className="block max-w-full truncate" />
+              <p className="text-[10px] sm:text-[11px] text-text-muted mt-1 truncate">Output tax payable</p>
             </div>
           </Card>
         </div>
       )}
 
       {/* Payment Modes Breakdown */}
-      <Card className="border-border shadow-card p-5" style={{ backgroundColor: 'var(--bg-card)' }}>
-        <h3 className="text-sm font-bold uppercase tracking-wider mb-4 text-text-muted">
+      <Card className="border-border shadow-card p-4 sm:p-5 overflow-hidden" style={{ backgroundColor: 'var(--bg-card)' }}>
+        <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider mb-4 text-text-muted">
           Payment Modes Breakdown
         </h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="p-4 rounded-xl border border-border flex items-center justify-between" style={{ backgroundColor: 'var(--bg-app)' }}>
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-lg bg-emerald-50 dark:bg-emerald-950 text-emerald-600 flex items-center justify-center">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
+          <div className="p-3.5 sm:p-4 rounded-xl border border-border flex items-center justify-between min-w-0 overflow-hidden" style={{ backgroundColor: 'var(--bg-app)' }}>
+            <div className="flex items-center space-x-3 min-w-0 overflow-hidden">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-emerald-50 dark:bg-emerald-950 text-emerald-600 flex items-center justify-center shrink-0">
                 <Banknote className="w-5 h-5" />
               </div>
-              <div>
-                <p className="text-xs text-text-muted font-medium">Cash</p>
-                <div className="font-bold text-sm mt-0.5" style={{ color: 'var(--text-primary)' }}>
-                  <Money value={summary?.cash ?? 0} />
+              <div className="min-w-0 overflow-hidden">
+                <p className="text-xs text-text-muted font-medium truncate">Cash</p>
+                <div className="font-bold text-sm mt-0.5 truncate" style={{ color: 'var(--text-primary)' }}>
+                  <Money value={summary?.cash ?? 0} className="truncate" />
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="p-4 rounded-xl border border-border flex items-center justify-between" style={{ backgroundColor: 'var(--bg-app)' }}>
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-600 flex items-center justify-center">
+          <div className="p-3.5 sm:p-4 rounded-xl border border-border flex items-center justify-between min-w-0 overflow-hidden" style={{ backgroundColor: 'var(--bg-app)' }}>
+            <div className="flex items-center space-x-3 min-w-0 overflow-hidden">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-blue-50 dark:bg-blue-950 text-blue-600 flex items-center justify-center shrink-0">
                 <Smartphone className="w-5 h-5" />
               </div>
-              <div>
-                <p className="text-xs text-text-muted font-medium">UPI</p>
-                <div className="font-bold text-sm mt-0.5" style={{ color: 'var(--text-primary)' }}>
-                  <Money value={summary?.upi ?? 0} />
+              <div className="min-w-0 overflow-hidden">
+                <p className="text-xs text-text-muted font-medium truncate">UPI</p>
+                <div className="font-bold text-sm mt-0.5 truncate" style={{ color: 'var(--text-primary)' }}>
+                  <Money value={summary?.upi ?? 0} className="truncate" />
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="p-4 rounded-xl border border-border flex items-center justify-between" style={{ backgroundColor: 'var(--bg-app)' }}>
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-lg bg-purple-50 dark:bg-purple-950 text-purple-600 flex items-center justify-center">
+          <div className="p-3.5 sm:p-4 rounded-xl border border-border flex items-center justify-between min-w-0 overflow-hidden" style={{ backgroundColor: 'var(--bg-app)' }}>
+            <div className="flex items-center space-x-3 min-w-0 overflow-hidden">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg bg-purple-50 dark:bg-purple-950 text-purple-600 flex items-center justify-center shrink-0">
                 <CreditCard className="w-5 h-5" />
               </div>
-              <div>
-                <p className="text-xs text-text-muted font-medium">Card</p>
-                <div className="font-bold text-sm mt-0.5" style={{ color: 'var(--text-primary)' }}>
-                  <Money value={summary?.card ?? 0} />
+              <div className="min-w-0 overflow-hidden">
+                <p className="text-xs text-text-muted font-medium truncate">Card</p>
+                <div className="font-bold text-sm mt-0.5 truncate" style={{ color: 'var(--text-primary)' }}>
+                  <Money value={summary?.card ?? 0} className="truncate" />
                 </div>
               </div>
             </div>

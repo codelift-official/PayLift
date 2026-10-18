@@ -120,6 +120,21 @@ export const NewBillPage: React.FC = () => {
     queryFn: () => phase11Api.getProducts({}),
   });
 
+  // Real-time stock per product in selected shop
+  const { data: rawStock = [] } = useQuery({
+    queryKey: ['stock', selectedShopId],
+    queryFn: () => phase11Api.getStock({ shopId: selectedShopId }),
+    enabled: !!selectedShopId,
+  });
+
+  const stockMap = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const s of rawStock) {
+      if (s.productId) map.set(s.productId, s.quantity);
+    }
+    return map;
+  }, [rawStock]);
+
   // ─── STATE MACHINE ─────────────────────────────────────────────
   // 1. Popup states: Customer popup auto-opens on mount
   const [customerPopupOpen, setCustomerPopupOpen] = useState(true);
@@ -351,6 +366,7 @@ export const NewBillPage: React.FC = () => {
     unit?: string;
     gstRate?: number;
     catalogPrice?: number;
+    availableStock?: number;
     qty?: number;
   }) => {
     const existingIndex = items.findIndex(
@@ -358,10 +374,15 @@ export const NewBillPage: React.FC = () => {
     );
 
     const addQty = prod.qty || 1;
+    const computedStock = prod.availableStock ?? (prod.id ? stockMap.get(prod.id) ?? null : null);
 
     if (existingIndex >= 0) {
       setItems((prev) =>
-        prev.map((it, idx) => (idx === existingIndex ? { ...it, qty: (it.qty || 1) + addQty } : it))
+        prev.map((it, idx) =>
+          idx === existingIndex
+            ? { ...it, qty: (it.qty || 1) + addQty, availableStock: it.availableStock ?? computedStock }
+            : it
+        )
       );
     } else {
       const newItem: BillItemFormState = {
@@ -377,6 +398,7 @@ export const NewBillPage: React.FC = () => {
         discountPct: 0,
         discountType: shopDiscountMode,
         discountValue: 0,
+        availableStock: computedStock,
       };
       setItems((prev) => [...prev, newItem]);
     }
@@ -486,7 +508,12 @@ export const NewBillPage: React.FC = () => {
       navigate(`/bills/${data.id}`);
     },
     onError: (err: any) => {
-      toast.error(err?.message || 'Failed to create bill');
+      const serverMsg =
+        err?.response?.data?.error ||
+        err?.response?.data?.message ||
+        err?.message ||
+        'Failed to create bill';
+      toast.error(serverMsg);
     },
   });
 
@@ -557,6 +584,7 @@ export const NewBillPage: React.FC = () => {
         recentProducts={allProducts}
         shopProductSource={shopProductSource}
         effectiveShopGstRate={effectiveShopGstRate}
+        stockMap={stockMap}
       />
 
       {/* POPUP 3: Payment Sheet */}
@@ -730,7 +758,10 @@ export const NewBillPage: React.FC = () => {
               {items.map((item, idx) => (
                 <ItemRow
                   key={item.id}
-                  item={item}
+                  item={{
+                    ...item,
+                    availableStock: item.productId ? stockMap.get(item.productId) ?? item.availableStock ?? null : null,
+                  }}
                   index={idx}
                   canRemove={items.length > 0}
                   isStrictMode={isStrictMode}

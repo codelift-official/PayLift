@@ -7,6 +7,9 @@ import {
   UserX,
   Loader2,
   ShieldCheck,
+  Mail,
+  Phone,
+  Store,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { PageHeader } from '../../../components/PageHeader';
@@ -72,27 +75,27 @@ export const UsersPage: React.FC = () => {
         className="border-border shadow-card overflow-hidden"
         style={{ backgroundColor: 'var(--bg-card)' }}
       >
-        {/* Header row: Email | Mobile | Role | Shops | Actions */}
+        {/* Desktop Table Header (md+) */}
         <div
-          className="px-5 py-3 border-b border-border grid grid-cols-12 gap-3 text-[11px] font-bold uppercase tracking-wider"
+          className="hidden md:grid px-5 py-3 border-b border-border grid-cols-12 gap-3 text-[11px] font-bold uppercase tracking-wider"
           style={{ backgroundColor: 'var(--bg-app)', color: 'var(--text-muted)' }}
         >
-          <div className="col-span-3">Email</div>
+          <div className="col-span-4">Team Member / Email</div>
           <div className="col-span-2">Mobile</div>
           <div className="col-span-2">Role</div>
-          <div className="col-span-3">Shops</div>
-          <div className="col-span-2 text-right">Actions</div>
+          <div className="col-span-3">Assigned Shops</div>
+          <div className="col-span-1 text-right">Actions</div>
         </div>
 
         {isLoading && users.length === 0 ? (
-          <div className="divide-y divide-border animate-pulse">
+          <div className="divide-y divide-border animate-pulse p-4 sm:p-0">
             {[1, 2, 3].map((n) => (
-              <div key={n} className="px-5 py-4 grid grid-cols-12 gap-3 items-center">
-                <div className="col-span-3 h-4 rounded bg-slate-200 dark:bg-slate-700 w-3/4" />
-                <div className="col-span-2 h-4 rounded bg-slate-200 dark:bg-slate-700 w-2/3" />
-                <div className="col-span-2 h-4 rounded bg-slate-200 dark:bg-slate-700 w-1/2" />
-                <div className="col-span-3 h-4 rounded bg-slate-200 dark:bg-slate-700 w-4/5" />
-                <div className="col-span-2 h-4 rounded bg-slate-200 dark:bg-slate-700 w-1/4 ml-auto" />
+              <div key={n} className="py-4 md:px-5 md:py-4 md:grid md:grid-cols-12 gap-3 items-center space-y-2 md:space-y-0">
+                <div className="md:col-span-4 h-5 rounded bg-slate-200 dark:bg-slate-700 w-3/4" />
+                <div className="md:col-span-2 h-4 rounded bg-slate-200 dark:bg-slate-700 w-2/3" />
+                <div className="md:col-span-2 h-4 rounded bg-slate-200 dark:bg-slate-700 w-1/2" />
+                <div className="md:col-span-3 h-4 rounded bg-slate-200 dark:bg-slate-700 w-4/5" />
+                <div className="md:col-span-1 h-4 rounded bg-slate-200 dark:bg-slate-700 w-8 ml-auto" />
               </div>
             ))}
           </div>
@@ -116,91 +119,171 @@ export const UsersPage: React.FC = () => {
                 .join(', ');
               const effectiveUserId = u.userID || (u as any).id || '';
               const isUserActive = u.isActive !== false;
+              const initials = (u.name || u.email || 'U')
+                .split(' ')
+                .map((w: string) => w[0])
+                .slice(0, 2)
+                .join('')
+                .toUpperCase();
 
               return (
                 <div
                   key={effectiveUserId || u.email}
-                  className="px-5 py-3 grid grid-cols-12 gap-3 items-center text-sm transition-colors"
+                  className="transition-colors"
                   style={{
                     opacity: isUserActive ? 1 : 0.45,
                   }}
-                  onMouseEnter={(e) =>
-                    (e.currentTarget.style.backgroundColor = 'var(--bg-app)')
-                  }
-                  onMouseLeave={(e) =>
-                    (e.currentTarget.style.backgroundColor = '')
-                  }
                 >
-                  {/* Email */}
-                  <div className="col-span-3 min-w-0">
-                    <p
-                      className="font-semibold truncate text-xs sm:text-sm"
-                      style={{ color: 'var(--text-primary)' }}
-                    >
-                      {u.email}
-                    </p>
-                    {u.name && (
-                      <p
-                        className="text-[11px] truncate"
-                        style={{ color: 'var(--text-muted)' }}
-                      >
-                        {u.name}
-                      </p>
-                    )}
+                  {/* MOBILE VIEW CARD (< md) - Clean, Spacious, Never Cluttered */}
+                  <div className="block md:hidden p-4 space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-9 h-9 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center shrink-0 border border-primary/20">
+                          {initials}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)' }}>
+                            {u.name || u.email.split('@')[0]}
+                          </p>
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold mt-0.5 ${badge.classes}`}>
+                            {badge.label}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Status / Mobile Actions */}
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Link
+                          to={`/settings/users/${effectiveUserId}`}
+                          className="p-2 rounded-lg border border-border bg-background hover:bg-secondary/40 text-text-muted hover:text-text-primary transition-colors"
+                          title="Edit"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Link>
+                        {isUserActive && (
+                          <button
+                            type="button"
+                            onClick={() => setDeactivateTarget(u)}
+                            className="p-2 rounded-lg border border-border bg-background hover:bg-red-50 dark:hover:bg-red-950/30 text-text-muted hover:text-red-600 transition-colors"
+                            title="Deactivate"
+                          >
+                            <UserX className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Dedicated Email Display: Break-all & Selectable */}
+                    <div className="p-2.5 rounded-xl bg-secondary/30 border border-border/50 flex items-center gap-2 text-xs">
+                      <Mail className="w-3.5 h-3.5 text-text-muted shrink-0" />
+                      <span className="font-mono text-text-primary break-all select-all flex-1" title={u.email}>
+                        {u.email}
+                      </span>
+                    </div>
+
+                    {/* Mobile Details: Phone & Shops */}
+                    <div className="grid grid-cols-2 gap-2 text-xs text-text-muted pt-0.5">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <Phone className="w-3.5 h-3.5 shrink-0 opacity-70" />
+                        <span className="font-mono truncate">{u.mobile || 'No mobile'}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 min-w-0" title={shopNames}>
+                        <Store className="w-3.5 h-3.5 shrink-0 opacity-70" />
+                        <span className="truncate">{shopNames || 'All shops'}</span>
+                      </div>
+                    </div>
+
                     {!isUserActive && (
-                      <span className="text-[10px] font-bold text-red-500 uppercase">
-                        Deactivated
+                      <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider block">
+                        ● Deactivated
                       </span>
                     )}
                   </div>
 
-                  {/* Mobile */}
+                  {/* DESKTOP TABLE ROW (md+) */}
                   <div
-                    className="col-span-2 text-xs font-mono"
-                    style={{ color: 'var(--text-muted)' }}
+                    className="hidden md:grid px-5 py-3.5 grid-cols-12 gap-3 items-center text-sm"
+                    onMouseEnter={(e) =>
+                      (e.currentTarget.style.backgroundColor = 'var(--bg-app)')
+                    }
+                    onMouseLeave={(e) =>
+                      (e.currentTarget.style.backgroundColor = '')
+                    }
                   >
-                    {u.mobile || '—'}
-                  </div>
+                    {/* Member & Email (Col 4) */}
+                    <div className="col-span-4 min-w-0 flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center shrink-0 border border-primary/20">
+                        {initials}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        {u.name && (
+                          <p className="font-semibold text-xs text-text-primary truncate">
+                            {u.name}
+                          </p>
+                        )}
+                        <p
+                          className="font-mono text-xs text-text-muted truncate select-all"
+                          title={u.email}
+                        >
+                          {u.email}
+                        </p>
+                        {!isUserActive && (
+                          <span className="text-[10px] font-bold text-red-500 uppercase">
+                            Deactivated
+                          </span>
+                        )}
+                      </div>
+                    </div>
 
-                  {/* Role badge */}
-                  <div className="col-span-2">
-                    <span
-                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${badge.classes}`}
-                    >
-                      {badge.label}
-                    </span>
-                  </div>
-
-                  {/* Shops */}
-                  <div
-                    className="col-span-3 text-xs truncate"
-                    style={{ color: 'var(--text-muted)' }}
-                    title={shopNames}
-                  >
-                    {shopNames || <span className="italic opacity-50">All shops</span>}
-                  </div>
-
-                  {/* Actions */}
-                  <div className="col-span-2 flex items-center justify-end gap-1">
-                    <Link
-                      to={`/settings/users/${effectiveUserId}`}
-                      className="p-1.5 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
-                      title="Edit"
+                    {/* Mobile (Col 2) */}
+                    <div
+                      className="col-span-2 text-xs font-mono"
                       style={{ color: 'var(--text-muted)' }}
                     >
-                      <Pencil className="w-4 h-4" />
-                    </Link>
-                    {isUserActive && (
-                      <button
-                        type="button"
-                        onClick={() => setDeactivateTarget(u)}
-                        className="p-1.5 rounded-lg transition-colors hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600"
-                        title="Deactivate"
+                      {u.mobile || '—'}
+                    </div>
+
+                    {/* Role badge (Col 2) */}
+                    <div className="col-span-2">
+                      <span
+                        className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold ${badge.classes}`}
+                      >
+                        {badge.label}
+                      </span>
+                    </div>
+
+                    {/* Shops (Col 3) */}
+                    <div
+                      className="col-span-3 text-xs truncate flex items-center gap-1.5"
+                      style={{ color: 'var(--text-muted)' }}
+                      title={shopNames}
+                    >
+                      <Store className="w-3.5 h-3.5 shrink-0 opacity-60" />
+                      <span className="truncate">{shopNames || <span className="italic opacity-50">All shops</span>}</span>
+                    </div>
+
+                    {/* Actions (Col 1) */}
+                    <div className="col-span-1 flex items-center justify-end gap-1">
+                      <Link
+                        to={`/settings/users/${effectiveUserId}`}
+                        className="p-1.5 rounded-lg transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+                        title="Edit"
                         style={{ color: 'var(--text-muted)' }}
                       >
-                        <UserX className="w-4 h-4" />
-                      </button>
-                    )}
+                        <Pencil className="w-4 h-4" />
+                      </Link>
+                      {isUserActive && (
+                        <button
+                          type="button"
+                          onClick={() => setDeactivateTarget(u)}
+                          className="p-1.5 rounded-lg transition-colors hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600"
+                          title="Deactivate"
+                          style={{ color: 'var(--text-muted)' }}
+                        >
+                          <UserX className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
               );

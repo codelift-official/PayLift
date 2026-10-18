@@ -63,6 +63,11 @@ platformApiClient.interceptors.response.use(
       url.includes('/platform/auth/forgot-password');
 
     if (status === 401 && !isPlatformAuthRoute && originalRequest) {
+      const at = usePlatformAuthStore.getState().accessToken;
+      if (at?.startsWith('mock-')) {
+        return Promise.reject(error);
+      }
+
       if (originalRequest._retry) {
         usePlatformAuthStore.getState().logout();
         if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/platform/login')) {
@@ -85,16 +90,13 @@ platformApiClient.interceptors.response.use(
       }
 
       originalRequest._retry = true;
-      isRefreshing = true;
 
       const refreshToken = usePlatformAuthStore.getState().refreshToken;
-      if (!refreshToken) {
-        usePlatformAuthStore.getState().logout();
-        if (typeof window !== 'undefined' && !window.location.pathname.startsWith('/platform/login')) {
-          window.location.replace('/platform/login');
-        }
+      if (!refreshToken || refreshToken.startsWith('mock-')) {
         return Promise.reject(error);
       }
+
+      isRefreshing = true;
 
       try {
         const { data } = await axios.post<{

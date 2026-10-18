@@ -151,17 +151,61 @@ export interface PlatformErrorLogItem {
   stackTrace: string;
 }
 
+export function normalizeStockItem(raw: any): StockItem {
+  if (!raw) return raw;
+  const quantity = Number(raw.quantity ?? raw.qty ?? 0);
+  const lowStockThreshold = Number(raw.lowStockThreshold ?? 5);
+  return {
+    id: raw.id || '',
+    shopId: raw.shopID || raw.shopId || '',
+    productId: raw.productID || raw.productId || '',
+    productName: raw.productName || raw.name || '',
+    sku: raw.sku || '',
+    quantity,
+    unit: raw.unit || 'pcs',
+    lowStockThreshold,
+    unitCost: Number(raw.unitCost ?? raw.costPrice ?? 0),
+    isLowStock: raw.isLowStock !== undefined ? Boolean(raw.isLowStock) : quantity <= lowStockThreshold,
+  };
+}
+
+export function normalizeStockMovement(raw: any): StockMovement {
+  if (!raw) return raw;
+  let type = raw.movementType || raw.type || 'Adjust';
+  if (type === 'Adjustment') type = 'Adjust';
+  return {
+    id: raw.id || '',
+    timestamp: raw.createdAt || raw.timestamp || new Date().toISOString(),
+    productId: raw.productID || raw.productId || '',
+    productName: raw.productName || '',
+    type: type as 'Adjust' | 'Purchase' | 'Sale' | 'Return',
+    qty: Number(raw.quantity ?? raw.qty ?? 0),
+    balance: Number(raw.balanceAfter ?? raw.balance ?? 0),
+    by: raw.createdByUserID || raw.by || 'Staff',
+    notes: raw.notes || '',
+  };
+}
+
 // ─── API Client methods ──────────────────────────────────────────
 
 export const phase11Api = {
   // Inventory Settings
   getInventorySettings: async (): Promise<InventorySettings> => {
-    const res = await apiClient.get<InventorySettings>('/api/v1/business/inventory-settings');
-    return res.data;
+    const res = await apiClient.get<any>('/api/v1/business/inventory-settings');
+    return {
+      inventoryModeEnabled: Boolean(res.data?.inventoryModeEnabled),
+      strictStockMode: Boolean(res.data?.strictStockMode),
+    };
   },
-  updateInventorySettings: async (settings: InventorySettings): Promise<InventorySettings> => {
-    const res = await apiClient.put<InventorySettings>('/api/v1/business/inventory-settings', settings);
-    return res.data;
+  updateInventorySettings: async (settings: Partial<InventorySettings>): Promise<InventorySettings> => {
+    const res = await apiClient.put<any>('/api/v1/business/inventory-settings', {
+      inventoryModeEnabled: settings.inventoryModeEnabled,
+      strictStockMode: settings.strictStockMode,
+    });
+    return {
+      inventoryModeEnabled: Boolean(res.data?.inventoryModeEnabled),
+      strictStockMode: Boolean(res.data?.strictStockMode),
+    };
   },
 
   // Products
@@ -213,42 +257,140 @@ export const phase11Api = {
 
   // Product Categories
   getCategories: async (): Promise<ProductCategory[]> => {
-    const res = await apiClient.get<ProductCategory[]>('/api/v1/product-categories');
-    return res.data;
+    try {
+      const res = await apiClient.get<ProductCategory[]>('/api/v1/categories');
+      return res.data;
+    } catch {
+      const res = await apiClient.get<ProductCategory[]>('/api/v1/product-categories');
+      return res.data;
+    }
   },
   createCategory: async (category: Omit<ProductCategory, 'id'>): Promise<ProductCategory> => {
-    const res = await apiClient.post<ProductCategory>('/api/v1/product-categories', category);
-    return res.data;
+    try {
+      const res = await apiClient.post<ProductCategory>('/api/v1/categories', category);
+      return res.data;
+    } catch {
+      const res = await apiClient.post<ProductCategory>('/api/v1/product-categories', category);
+      return res.data;
+    }
   },
   updateCategory: async (id: string, category: Partial<ProductCategory>): Promise<ProductCategory> => {
-    const res = await apiClient.put<ProductCategory>(`/api/v1/product-categories/${id}`, category);
-    return res.data;
+    try {
+      const res = await apiClient.put<ProductCategory>(`/api/v1/categories/${id}`, category);
+      return res.data;
+    } catch {
+      const res = await apiClient.put<ProductCategory>(`/api/v1/product-categories/${id}`, category);
+      return res.data;
+    }
   },
   deleteCategory: async (id: string): Promise<{ success: boolean }> => {
-    const res = await apiClient.delete<{ success: boolean }>(`/api/v1/product-categories/${id}`);
-    return res.data;
+    try {
+      const res = await apiClient.delete<{ success: boolean }>(`/api/v1/categories/${id}`);
+      return res.data;
+    } catch {
+      const res = await apiClient.delete<{ success: boolean }>(`/api/v1/product-categories/${id}`);
+      return res.data;
+    }
   },
+
 
   // Stock
   getStock: async (params?: { shopId?: string; lowStockOnly?: boolean }): Promise<StockItem[]> => {
-    const res = await apiClient.get<StockItem[]>('/api/v1/stock', { params });
-    return res.data;
+    const queryParams: Record<string, any> = {};
+    if (params?.shopId) {
+      queryParams.shopId = params.shopId;
+      queryParams.shopID = params.shopId;
+    }
+    if (params?.lowStockOnly !== undefined) {
+      queryParams.lowStockOnly = params.lowStockOnly;
+    }
+    const res = await apiClient.get<any[]>('/api/v1/stock', { params: queryParams });
+    const items = Array.isArray(res.data) ? res.data : [];
+    let normalized = items.map(normalizeStockItem);
+    if (params?.shopId) {
+      normalized = normalized.filter((i) => i.shopId === params.shopId);
+    }
+    if (params?.lowStockOnly) {
+      normalized = normalized.filter((i) => i.isLowStock);
+    }
+    return normalized;
   },
   adjustStock: async (payload: { shopId: string; productId: string; newQuantity: number; notes?: string }): Promise<StockItem> => {
-    const res = await apiClient.post<StockItem>('/api/v1/stock/adjust', payload);
-    return res.data;
+    const res = await apiClient.post<any>('/api/v1/stock/adjust', {
+      shopId: payload.shopId,
+      shopID: payload.shopId,
+      productId: payload.productId,
+      productID: payload.productId,
+      quantity: Number(payload.newQuantity),
+      qty: Number(payload.newQuantity),
+      newQuantity: Number(payload.newQuantity),
+      notes: payload.notes,
+    });
+    return normalizeStockItem(res.data);
   },
   purchaseStock: async (payload: { shopId: string; productId: string; addQuantity: number; costPrice?: number; notes?: string }): Promise<StockItem> => {
-    const res = await apiClient.post<StockItem>('/api/v1/stock/purchase', payload);
-    return res.data;
+    const parsedCost =
+      payload.costPrice !== undefined && payload.costPrice !== null && (payload.costPrice as any) !== '' && !isNaN(Number(payload.costPrice))
+        ? Number(payload.costPrice)
+        : undefined;
+
+    const res = await apiClient.post<any>('/api/v1/stock/purchase', {
+      shopId: payload.shopId,
+      shopID: payload.shopId,
+      productId: payload.productId,
+      productID: payload.productId,
+      quantity: Number(payload.addQuantity),
+      qty: Number(payload.addQuantity),
+      addQuantity: Number(payload.addQuantity),
+      costPrice: parsedCost,
+      notes: payload.notes,
+    });
+    return normalizeStockItem(res.data);
   },
   bulkPurchaseStock: async (payload: { shopId: string; items: Array<{ productId: string; qty: number; costPrice?: number }> }): Promise<{ success: boolean; updatedCount: number }> => {
-    const res = await apiClient.post<{ success: boolean; updatedCount: number }>('/api/v1/stock/bulk-purchase', payload);
-    return res.data;
+    const res = await apiClient.post<any>('/api/v1/stock/bulk-purchase', {
+      shopId: payload.shopId,
+      shopID: payload.shopId,
+      items: payload.items.map((it) => {
+        const parsedCost =
+          it.costPrice !== undefined && it.costPrice !== null && (it.costPrice as any) !== '' && !isNaN(Number(it.costPrice))
+            ? Number(it.costPrice)
+            : undefined;
+
+        return {
+          productId: it.productId,
+          productID: it.productId,
+          quantity: Number(it.qty),
+          qty: Number(it.qty),
+          costPrice: parsedCost,
+        };
+      }),
+    });
+    const updatedCount = Array.isArray(res.data) ? res.data.length : (res.data?.updatedCount ?? payload.items.length);
+    return { success: true, updatedCount };
   },
   getStockMovements: async (params?: { productId?: string; type?: string; fromDate?: string; toDate?: string }): Promise<StockMovement[]> => {
-    const res = await apiClient.get<StockMovement[]>('/api/v1/stock/movements', { params });
-    return res.data;
+    const queryParams: Record<string, any> = {};
+    if (params?.productId) {
+      queryParams.productId = params.productId;
+      queryParams.productID = params.productId;
+    }
+    if (params?.type) {
+      queryParams.type = params.type;
+      queryParams.movementType = params.type;
+    }
+    if (params?.fromDate) queryParams.fromDate = params.fromDate;
+    if (params?.toDate) queryParams.toDate = params.toDate;
+    const res = await apiClient.get<any[]>('/api/v1/stock/movements', { params: queryParams });
+    const items = Array.isArray(res.data) ? res.data : [];
+    let normalized = items.map(normalizeStockMovement);
+    if (params?.productId) {
+      normalized = normalized.filter((m) => m.productId === params.productId);
+    }
+    if (params?.type) {
+      normalized = normalized.filter((m) => m.type.toLowerCase() === params.type!.toLowerCase());
+    }
+    return normalized;
   },
 
   // Coupons
@@ -283,8 +425,18 @@ export const phase11Api = {
     };
   },
   validateCoupon: async (payload: { code: string; orderAmount: number }): Promise<{ valid: boolean; discount: number; reason?: string; coupon?: Coupon }> => {
-    const res = await apiClient.post<{ valid: boolean; discount: number; reason?: string; coupon?: Coupon }>('/api/v1/coupons/validate', payload);
-    return res.data;
+    const res = await apiClient.post<any>('/api/v1/coupons/validate', {
+      code: payload.code,
+      orderAmount: payload.orderAmount,
+      subtotal: payload.orderAmount,
+    });
+    const d = res.data || {};
+    return {
+      valid: Boolean(d.valid ?? d.isValid ?? false),
+      discount: Number(d.discount ?? d.discountAmount ?? 0),
+      reason: d.reason ?? d.errorMessage ?? d.error ?? undefined,
+      coupon: d.coupon,
+    };
   },
 
   // Customers
@@ -311,16 +463,40 @@ export const phase11Api = {
 
   // Offers
   getOffers: async (): Promise<Offer[]> => {
-    const res = await apiClient.get<Offer[]>('/api/v1/offers');
-    return res.data;
+    const res = await apiClient.get<any[]>('/api/v1/offers');
+    return (res.data || []).map((o) => ({
+      ...o,
+      body: o.body || o.message || '',
+      totalRecipients: o.totalRecipients ?? o.totalEligible ?? 0,
+      sentCount: o.sentCount ?? 0,
+      failedCount: o.failedCount ?? 0,
+    }));
   },
   getOffer: async (id: string): Promise<Offer> => {
-    const res = await apiClient.get<Offer>(`/api/v1/offers/${id}`);
-    return res.data;
+    const res = await apiClient.get<any>(`/api/v1/offers/${id}`);
+    const o = res.data;
+    return {
+      ...o,
+      body: o.body || o.message || '',
+      totalRecipients: o.totalRecipients ?? o.totalEligible ?? 0,
+      sentCount: o.sentCount ?? 0,
+      failedCount: o.failedCount ?? 0,
+    };
   },
-  createOffer: async (offer: { title: string; body: string; validFrom?: string; validTo?: string; sendNow?: boolean }): Promise<Offer> => {
-    const res = await apiClient.post<Offer>('/api/v1/offers', offer);
-    return res.data;
+  createOffer: async (offer: { title: string; body: string; message?: string; validFrom?: string; validTo?: string; sendNow?: boolean }): Promise<Offer> => {
+    const payload = {
+      ...offer,
+      message: offer.message || offer.body,
+    };
+    const res = await apiClient.post<any>('/api/v1/offers', payload);
+    const o = res.data;
+    return {
+      ...o,
+      body: o.body || o.message || '',
+      totalRecipients: o.totalRecipients ?? o.totalEligible ?? 0,
+      sentCount: o.sentCount ?? 0,
+      failedCount: o.failedCount ?? 0,
+    };
   },
   sendOffer: async (id: string): Promise<Offer> => {
     const res = await apiClient.post<Offer>(`/api/v1/offers/${id}/send`);

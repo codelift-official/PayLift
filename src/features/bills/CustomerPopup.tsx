@@ -29,17 +29,41 @@ export const CustomerPopup: React.FC<CustomerPopupProps> = ({
   const [manualPhone, setManualPhone] = useState('');
   const [manualError, setManualError] = useState('');
 
+  const [viewportHeight, setViewportHeight] = useState<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Lock body scroll while popup is open and ensure scroll is reset to top
+  // Dynamic visualViewport tracking for mobile virtual keyboard
+  useEffect(() => {
+    if (!isOpen || typeof window === 'undefined') return;
+
+    const handleViewportChange = () => {
+      if (window.visualViewport) {
+        setViewportHeight(window.visualViewport.height);
+      }
+    };
+
+    handleViewportChange();
+
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', handleViewportChange);
+      window.visualViewport.addEventListener('scroll', handleViewportChange);
+    }
+
+    return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', handleViewportChange);
+        window.visualViewport.removeEventListener('scroll', handleViewportChange);
+      }
+    };
+  }, [isOpen]);
+
+  // Lock body scroll while popup is open
   useEffect(() => {
     if (isOpen) {
       const prev = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
-      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
       return () => {
         document.body.style.overflow = prev;
-        window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
       };
     }
   }, [isOpen]);
@@ -52,10 +76,10 @@ export const CustomerPopup: React.FC<CustomerPopupProps> = ({
       setManualPhone(currentCustomer?.phone || '');
       setShowManualForm(!customerRecommendEnabled);
       setManualError('');
-      // Delay slightly for smooth modal entrance animation without scrolling page
+      // Smooth focus without causing mobile browser viewport scroll jumps
       const timer = setTimeout(() => {
         inputRef.current?.focus({ preventScroll: true });
-      }, 50);
+      }, 60);
       return () => clearTimeout(timer);
     }
   }, [isOpen, currentCustomer, customerRecommendEnabled]);
@@ -125,18 +149,25 @@ export const CustomerPopup: React.FC<CustomerPopupProps> = ({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity p-3 sm:p-4"
+      className="fixed inset-0 z-50 flex items-start sm:items-center justify-center bg-black/60 backdrop-blur-sm transition-opacity p-2 sm:p-4 overflow-y-auto"
       data-testid="customer-popup-backdrop"
       id="customer-popup-modal"
+      onClick={(e) => {
+        if (e.target === e.currentTarget && !customerMandatory) {
+          onClose();
+        }
+      }}
     >
       <div
-        className="w-full sm:max-w-md bg-card rounded-2xl border border-border shadow-2xl overflow-hidden transition-all flex flex-col my-auto"
-        style={{ maxHeight: 'min(90dvh, 88vh)' }}
+        className="w-full sm:max-w-md bg-card rounded-2xl border border-border shadow-2xl overflow-hidden transition-all flex flex-col mt-1 sm:my-auto shrink-0 animate-in fade-in zoom-in-95 duration-150"
+        style={{
+          maxHeight: viewportHeight ? `${Math.min(viewportHeight - 16, 560)}px` : 'min(92dvh, 560px)',
+        }}
         onClick={(e) => e.stopPropagation()}
         id="customer-popup-sheet"
       >
         {/* Modal Header */}
-        <div className="px-5 py-3.5 sm:px-6 sm:py-4 flex items-center justify-between border-b border-border/40 shrink-0">
+        <div className="px-4 py-3 sm:px-6 sm:py-4 flex items-center justify-between border-b border-border/40 shrink-0">
           <div>
             <h2 className="text-base sm:text-lg font-bold text-text-primary tracking-tight">
               <span>Who's this bill for?</span>
@@ -175,7 +206,7 @@ export const CustomerPopup: React.FC<CustomerPopupProps> = ({
         </div>
 
         {/* Modal Body */}
-        <div className="p-4 sm:p-6 overflow-y-auto space-y-3 sm:space-y-4">
+        <div className="p-3.5 sm:p-6 overflow-y-auto overscroll-contain space-y-3 sm:space-y-4 flex-1">
           {!showManualForm ? (
             <>
               {/* Mobile Input Field */}
@@ -190,12 +221,14 @@ export const CustomerPopup: React.FC<CustomerPopupProps> = ({
                   <input
                     ref={inputRef}
                     type="tel"
+                    inputMode="tel"
+                    enterKeyHint="search"
                     id="customer-autocomplete-input"
                     data-testid="customer-autocomplete-input"
                     value={mobileQuery}
                     onChange={(e) => setMobileQuery(e.target.value)}
                     placeholder="Mobile number"
-                    className="w-full pl-11 pr-4 py-3 text-base sm:text-sm bg-background border border-border focus:border-primary rounded-xl text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+                    className="w-full pl-11 pr-4 py-2.5 sm:py-3 text-base sm:text-sm bg-background border border-border focus:border-primary rounded-xl text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium"
                     autoComplete="off"
                   />
                   {mobileQuery && (
@@ -292,6 +325,8 @@ export const CustomerPopup: React.FC<CustomerPopupProps> = ({
                     type="text"
                     id="customer-manual-name-input"
                     value={manualName}
+                    autoCapitalize="words"
+                    enterKeyHint="next"
                     onChange={(e) => {
                       setManualName(e.target.value);
                       setManualError('');
@@ -313,6 +348,8 @@ export const CustomerPopup: React.FC<CustomerPopupProps> = ({
                   </div>
                   <input
                     type="tel"
+                    inputMode="tel"
+                    enterKeyHint="done"
                     id="customer-manual-phone-input"
                     value={manualPhone}
                     onChange={(e) => {

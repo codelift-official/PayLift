@@ -27,22 +27,42 @@ export const Money: React.FC<MoneyProps> = ({
   const sizeClasses: Record<MoneySize, string> = {
     sm: 'text-xs font-medium',
     md: 'text-sm font-semibold',
-    lg: 'text-lg font-bold',
-    display: 'text-2xl sm:text-3xl font-extrabold tracking-tight',
+    lg: 'text-base sm:text-lg font-bold',
+    display: 'text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight',
+  };
+
+  // Dynamic responsive scaling for high numbers so they fit smoothly in mobile cards
+  const getScaledSize = () => {
+    if (size === 'display') {
+      if (absValue >= 10000000) {
+        // 1 Crore+
+        return 'text-sm sm:text-base lg:text-xl font-extrabold tracking-tight';
+      }
+      if (absValue >= 100000) {
+        // 1 Lakh+ (e.g. 200000.00)
+        return 'text-base sm:text-lg lg:text-2xl font-extrabold tracking-tight';
+      }
+      return sizeClasses.display;
+    }
+    if (size === 'lg' && absValue >= 100000) {
+      return 'text-sm sm:text-base font-bold';
+    }
+    return sizeClasses[size];
   };
 
   return (
     <span
+      title={`${isNegative ? '−' : ''}₹${formatted}`}
       className={clsx(
-        'font-mono tabular-nums inline-flex items-baseline',
-        sizeClasses[size],
+        'font-mono tabular-nums inline-flex items-baseline min-w-0 max-w-full overflow-hidden text-ellipsis whitespace-nowrap',
+        getScaledSize(),
         isNegative ? 'text-danger' : 'text-text-primary',
         className
       )}
     >
-      {isNegative && <span className="mr-0.5">−</span>}
-      <span className="mr-0.5">₹</span>
-      <span>{formatted}</span>
+      {isNegative && <span className="mr-0.5 shrink-0">−</span>}
+      <span className="mr-0.5 shrink-0">₹</span>
+      <span className="truncate">{formatted}</span>
     </span>
   );
 };

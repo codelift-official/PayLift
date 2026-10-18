@@ -141,7 +141,7 @@ export const DashboardPage: React.FC = () => {
   const { data: summary, isLoading: isSummaryLoading } = useQuery({
     queryKey: ['dashboard', 'summary', range, assignedShopId],
     queryFn: () => reportsApi.getSummary({ fromDate, toDate, shopID: assignedShopId }),
-    staleTime: Infinity,
+    staleTime: 30_000,
     gcTime: 1000 * 60 * 60 * 24,
   });
 
@@ -150,7 +150,7 @@ export const DashboardPage: React.FC = () => {
   const { data: billsData, isLoading: isBillsLoading } = useQuery({
     queryKey: ['dashboard', 'recent-bills', pageSize, assignedShopId],
     queryFn: () => billsApi.getBills({ page: 1, pageSize, shopID: assignedShopId }),
-    staleTime: Infinity,
+    staleTime: 30_000,
     gcTime: 1000 * 60 * 60 * 24,
   });
 
@@ -383,7 +383,7 @@ export const DashboardPage: React.FC = () => {
           {/* Cash -> /bills?mode=Cash */}
           <Card
             onClick={() => navigate('/bills?mode=Cash')}
-            className="p-4 border-border shadow-card flex flex-col justify-between cursor-pointer group hover:border-primary/50 hover:shadow-raised transition-all"
+            className="p-3.5 sm:p-4 border-border shadow-card flex flex-col justify-between cursor-pointer group hover:border-primary/50 hover:shadow-raised transition-all min-w-0 overflow-hidden"
             style={{ backgroundColor: 'var(--bg-card)' }}
           >
             <div className="flex items-center justify-between text-text-muted">
@@ -393,15 +393,15 @@ export const DashboardPage: React.FC = () => {
                 <ChevronRight className="w-3.5 h-3.5 text-text-muted group-hover:text-primary transition-colors" />
               </div>
             </div>
-            <div className="mt-2">
-              <Money value={summary?.cash ?? 0} size="lg" className="font-bold" />
+            <div className="mt-2 min-w-0 overflow-hidden">
+              <Money value={summary?.cash ?? 0} size="lg" className="font-bold block max-w-full truncate" />
             </div>
           </Card>
 
           {/* UPI -> /bills?mode=UPI */}
           <Card
             onClick={() => navigate('/bills?mode=UPI')}
-            className="p-4 border-border shadow-card flex flex-col justify-between cursor-pointer group hover:border-primary/50 hover:shadow-raised transition-all"
+            className="p-3.5 sm:p-4 border-border shadow-card flex flex-col justify-between cursor-pointer group hover:border-primary/50 hover:shadow-raised transition-all min-w-0 overflow-hidden"
             style={{ backgroundColor: 'var(--bg-card)' }}
           >
             <div className="flex items-center justify-between text-text-muted">
@@ -411,15 +411,15 @@ export const DashboardPage: React.FC = () => {
                 <ChevronRight className="w-3.5 h-3.5 text-text-muted group-hover:text-primary transition-colors" />
               </div>
             </div>
-            <div className="mt-2">
-              <Money value={summary?.upi ?? 0} size="lg" className="font-bold" />
+            <div className="mt-2 min-w-0 overflow-hidden">
+              <Money value={summary?.upi ?? 0} size="lg" className="font-bold block max-w-full truncate" />
             </div>
           </Card>
 
           {/* Card -> /bills?mode=Card */}
           <Card
             onClick={() => navigate('/bills?mode=Card')}
-            className="p-4 border-border shadow-card flex flex-col justify-between cursor-pointer group hover:border-primary/50 hover:shadow-raised transition-all"
+            className="p-3.5 sm:p-4 border-border shadow-card flex flex-col justify-between cursor-pointer group hover:border-primary/50 hover:shadow-raised transition-all min-w-0 overflow-hidden"
             style={{ backgroundColor: 'var(--bg-card)' }}
           >
             <div className="flex items-center justify-between text-text-muted">
@@ -429,15 +429,15 @@ export const DashboardPage: React.FC = () => {
                 <ChevronRight className="w-3.5 h-3.5 text-text-muted group-hover:text-primary transition-colors" />
               </div>
             </div>
-            <div className="mt-2">
-              <Money value={summary?.card ?? 0} size="lg" className="font-bold" />
+            <div className="mt-2 min-w-0 overflow-hidden">
+              <Money value={summary?.card ?? 0} size="lg" className="font-bold block max-w-full truncate" />
             </div>
           </Card>
 
           {/* Returns -> /returns */}
           <Card
             onClick={() => navigate('/returns')}
-            className="p-4 border-border shadow-card flex flex-col justify-between cursor-pointer group hover:border-danger/50 hover:shadow-raised transition-all"
+            className="p-3.5 sm:p-4 border-border shadow-card flex flex-col justify-between cursor-pointer group hover:border-danger/50 hover:shadow-raised transition-all min-w-0 overflow-hidden"
             style={{ backgroundColor: 'var(--bg-card)' }}
           >
             <div className="flex items-center justify-between text-text-muted">
@@ -447,26 +447,28 @@ export const DashboardPage: React.FC = () => {
                 <ChevronRight className="w-3.5 h-3.5 text-text-muted group-hover:text-danger transition-colors" />
               </div>
             </div>
-            <div className="mt-2 text-danger">
-              <Money value={summary?.returns ?? 0} size="lg" negative className="font-bold" />
+            <div className="mt-2 text-danger min-w-0 overflow-hidden">
+              <Money value={summary?.returns ?? 0} size="lg" negative className="font-bold block max-w-full truncate" />
             </div>
           </Card>
 
           {/* Net Sales Highlight (Span 2 cols) -> /reports */}
           <Card
             onClick={() => navigate('/reports')}
-            className="col-span-2 p-4 bg-success-soft dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 shadow-sm flex items-center justify-between cursor-pointer group hover:shadow-raised transition-all"
+            className="col-span-2 p-3.5 sm:p-4 bg-success-soft dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 shadow-sm flex items-center justify-between cursor-pointer group hover:shadow-raised transition-all min-w-0 overflow-hidden"
           >
-            <div>
+            <div className="min-w-0 mr-2">
               <div className="flex items-center space-x-1.5">
-                <span className="text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
+                <span className="text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300 truncate">
                   Net Realized Sales
                 </span>
-                <ChevronRight className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
+                <ChevronRight className="w-3.5 h-3.5 text-emerald-700 dark:text-emerald-400 group-hover:translate-x-0.5 transition-transform shrink-0" />
               </div>
-              <p className="text-xs text-emerald-700 dark:text-emerald-400 mt-0.5">After returns & discounts</p>
+              <p className="text-xs text-emerald-700 dark:text-emerald-400 mt-0.5 truncate">After returns & discounts</p>
             </div>
-            <Money value={summary?.netSales ?? 0} size="lg" className="font-extrabold text-emerald-700 dark:text-emerald-300" />
+            <div className="min-w-0 shrink-0">
+              <Money value={summary?.netSales ?? 0} size="lg" className="font-extrabold text-emerald-700 dark:text-emerald-300 block max-w-full truncate" />
+            </div>
           </Card>
         </div>
       </div>

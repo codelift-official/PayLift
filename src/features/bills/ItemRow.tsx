@@ -145,6 +145,23 @@ export const ItemRow: React.FC<ItemRowProps> = ({
               <Plus className="w-3 h-3" />
             </button>
           </div>
+
+          {/* Available Stock Indicator */}
+          {item.availableStock != null && (
+            <span
+              id={`item-stock-badge-${index}`}
+              className={`text-[10px] sm:text-[11px] font-medium px-1.5 py-0.5 rounded transition-colors ${
+                (item.qty || 1) > item.availableStock
+                  ? 'bg-rose-100 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300 font-bold'
+                  : 'text-text-muted bg-secondary/30'
+              }`}
+              title={`Available Stock: ${item.availableStock}`}
+            >
+              {(item.qty || 1) > item.availableStock
+                ? `Avail: ${item.availableStock}`
+                : `Stock: ${item.availableStock}`}
+            </span>
+          )}
         </div>
       </div>
     </div>

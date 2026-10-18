@@ -13,7 +13,7 @@ import { PageHeader } from '../../../components/PageHeader';
 import { Card } from '../../../components/ui/Card';
 import { Button } from '../../../components/ui/Button';
 import { Money } from '../../../components/Money';
-import { phase11Api, StockItem } from '../../../api/phase11';
+import { phase11Api, StockItem, Product } from '../../../api/phase11';
 import { useAccessibleShops } from '../../../hooks/useAccessibleShops';
 import { useAuthStore, isBusinessAdmin } from '../../../stores/auth.store';
 import { StockAdjustModal } from './StockAdjustModal';
@@ -37,7 +37,20 @@ export const StockListPage: React.FC = () => {
     }
   }, [shops, selectedShopId]);
 
-  const { data: stockItems = [], isLoading } = useQuery<StockItem[]>({
+  const { data: catalogProducts = [] } = useQuery<Product[]>({
+    queryKey: ['products'],
+    queryFn: () => phase11Api.getProducts(),
+  });
+
+  const productMap = React.useMemo(() => {
+    const map = new Map<string, Product>();
+    for (const p of catalogProducts) {
+      if (p.id) map.set(p.id, p);
+    }
+    return map;
+  }, [catalogProducts]);
+
+  const { data: rawStockItems = [], isLoading } = useQuery<StockItem[]>({
     queryKey: ['stock', selectedShopId, lowStockOnly],
     queryFn: () =>
       phase11Api.getStock({
@@ -45,6 +58,17 @@ export const StockListPage: React.FC = () => {
         lowStockOnly,
       }),
   });
+
+  const stockItems = React.useMemo(() => {
+    return rawStockItems.map((item) => {
+      const prod = productMap.get(item.productId);
+      return {
+        ...item,
+        unit: prod?.unit || item.unit || 'pcs',
+        unitCost: item.unitCost || prod?.costPrice || 0,
+      };
+    });
+  }, [rawStockItems, productMap]);
 
   const lowStockCount = stockItems.filter(
     (s) => s.isLowStock || s.quantity <= s.lowStockThreshold

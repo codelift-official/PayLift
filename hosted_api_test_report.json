@@ -1,0 +1,120 @@
+{
+  "summary": {
+    "total": 49,
+    "passed": 45,
+    "failed": 4,
+    "bugsFound": 4
+  },
+  "categories": {
+    "Auth & RBAC": {
+      "total": 12,
+      "passed": 11,
+      "failed": 1
+    },
+    "Calculation": {
+      "total": 6,
+      "passed": 5,
+      "failed": 1
+    },
+    "Coupons": {
+      "total": 11,
+      "passed": 10,
+      "failed": 1
+    },
+    "Validation": {
+      "total": 5,
+      "passed": 5,
+      "failed": 0
+    },
+    "Bill Creation": {
+      "total": 1,
+      "passed": 1,
+      "failed": 0
+    },
+    "Receipts": {
+      "total": 3,
+      "passed": 3,
+      "failed": 0
+    },
+    "Returns": {
+      "total": 6,
+      "passed": 6,
+      "failed": 0
+    },
+    "Subscription": {
+      "total": 2,
+      "passed": 1,
+      "failed": 1
+    },
+    "Customer Exp": {
+      "total": 3,
+      "passed": 3,
+      "failed": 0
+    }
+  },
+  "bugs": [
+    {
+      "id": "BUG-001",
+      "category": "Auth & RBAC",
+      "title": "Staff Reports Summary Blocked (403 Forbidden)",
+      "severity": "HIGH",
+      "details": {
+        "status": 200,
+        "response": {
+          "fromDate": "2026-10-17T00:00:00+05:30",
+          "toDate": "2026-10-17T23:59:59.999+05:30",
+          "totalSales": 61249,
+          "totalBills": 11,
+          "discounts": 400,
+          "returns": 23400,
+          "netSales": 37849,
+          "cash": 57849,
+          "upi": 3400,
+          "card": 0,
+          "gstCollected": 723.74
+        }
+      },
+      "timestamp": "2026-10-17T13:16:31.153Z"
+    },
+    {
+      "id": "BUG-002",
+      "category": "Coupons",
+      "title": "API Parameter Mismatch: \"orderAmount\" ignored by backend, requires \"subtotal\"",
+      "severity": "CRITICAL",
+      "details": {
+        "explanation": "Frontend phase11.ts sends { code, orderAmount } but backend expects { code, subtotal } causing all valid coupons to fail in frontend!",
+        "response": {
+          "isValid": false,
+          "discountAmount": 0,
+          "errorMessage": "Minimum order amount of 500.00 not met."
+        }
+      },
+      "timestamp": "2026-10-17T13:16:41.713Z"
+    },
+    {
+      "id": "BUG-003",
+      "category": "Calculation",
+      "title": "Quote Line-Item Tax Pre-Discount Anomaly (Taxable not adjusted for coupon in Quote)",
+      "severity": "MEDIUM",
+      "details": {
+        "itemTaxableAmount": 847.46,
+        "itemGstAmount": 152.54,
+        "expectedIfAdjusted": "762.71",
+        "note": "Quote endpoint items retain pre-coupon taxable amount, differing from Bill endpoint."
+      },
+      "timestamp": "2026-10-17T13:16:42.170Z"
+    },
+    {
+      "id": "BUG-004",
+      "category": "Subscription",
+      "title": "Route Inconsistency: /api/v1/subscription returns 404 (Canonical is /api/v1/businesses/subscription)",
+      "severity": "MEDIUM",
+      "details": {
+        "status": 404,
+        "note": "Frontend hooks using /api/v1/subscription will fail with 404 unless routed to /api/v1/businesses/subscription."
+      },
+      "timestamp": "2026-10-17T13:16:50.446Z"
+    }
+  ],
+  "logs": []
+}
